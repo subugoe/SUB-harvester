@@ -5,6 +5,6 @@
 define("DB_SERVER",		"localhost");
 define("DB_USERNAME", 	"root");
 define("DB_PASSWORD", 	"");
-define("DB_NAME", 		"eromm_search");
+define("DB_NAME", 		"harvesting");
 
 ?>
