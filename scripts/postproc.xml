@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+    Diese Datei beinhaltet Löschanfragen, die nach jedem Indexvorgang durchgeführt werden.
+    Sie wurde für die Quelle archive.org eingführt, um dort eine nicht unerhebliche Anzahl an 
+    Records out of Scope bequem über die setSpec selektiert werden kann.
+    
+    Weitere Löschanfragen können einfach ergänzt werden - zur Sicherheit immer die oai_repository_id
+    mit angeben.
+-->
+<delete>
+    <!-- archive.org | ID:42 -->
+    <!-- Biodiversity wird direkt geharvestet. -->
+    <query>oai_setspec:"collection:biodiversity" AND oai_repository_id:42</query>
+</delete>
