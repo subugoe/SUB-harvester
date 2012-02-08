@@ -6,24 +6,24 @@
 // ***** Allgmein *****
 
 // Adresse des Solr-Index
-define("SOLR",				'http://localhost:8983/solr');
+define("SOLR",				'http://vlib.sub.uni-goettingen.de/solr');
 
 // Verzeichnis in dem die geharvesteten OAI-Daten gespeichert werden
-define("HARVEST_FOLDER",	'/web/http/weromm/eromm_search/harvest');
+define("HARVEST_FOLDER",	'/var/www/harvesting/harvest');
 //define("HARVEST_FOLDER",	'C:/eromm_search/harvest');
 
 // Verzeichnis in dem nach dem Indexieren alle Daten in einer Datei gezippt gespeichert werden
-define("ARCHIVE_FOLDER",	'/web/http/weromm/eromm_search/archive');
+define("ARCHIVE_FOLDER",	'/var/www/harvesting/archive');
 //define("ARCHIVE_FOLDER",	'C:/eromm_search/archive');
 
 // Verzeichnis in dem die für den Index Vorbereiteten Daten zwischengespeichert werden
 // bevor sie in das Archiv bzw. das Fehlerverzeichnis verschoben werden
-define("TEMP_FOLDER",	'/web/http/weromm/eromm_search/temp');
+define("TEMP_FOLDER",	'/var/www/harvesting/temp');
 //define("TEMP_FOLDER",	'C:/eromm_search/temp');
 
 // Verzeichnis in alle Daten eines Sets verschoben werden, wenn beim Harvesten
 // oder Indexieren Fehler autraten (zum Nachvollziehen)
-define("ERROR_FOLDER",	'/web/http/weromm/eromm_search/error');
+define("ERROR_FOLDER",	'/var/www/harvesting/error');
 //define("ERROR_FOLDER",	'C:/eromm_search/error');
 
 
