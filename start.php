@@ -103,7 +103,7 @@ $content .= "
 			<hr style=\"width: 30%; text-align: center; margin-top: 15px;\"/>
 			<div id=\"log_display\">";
 
-require_once("classes/log.php");
+require_once(dirname(__FILE__) . '/classes/log.php');
 
 $log = new log($db_link, -1, -1, 20, 0);
 $content .= $log->getOutput();

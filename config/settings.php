@@ -3,7 +3,15 @@
  * Enthält die Einstellungen für die Scripte
  */
 
+
+// ***** MYSQL Verbindungsdaten *****
+include(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_connect.php');
+
+
+
 // ***** Allgmein *****
+
+define("SERVICE_NAME", 		'SUB');
 
 // Adresse des Solr-Index
 define("SOLR",				'http://vlib.sub.uni-goettingen.de/solr');
@@ -25,11 +33,13 @@ define("TEMP_FOLDER",	'/var/www/harvesting/temp');
 // oder Indexieren Fehler autraten (zum Nachvollziehen)
 define("ERROR_FOLDER",	'/var/www/harvesting/error');
 //define("ERROR_FOLDER",	'C:/eromm_search/error');
+echo(HARVEST_FOLDER);
 
 
 // CHMOD setzen TODO
 // Die Berechtigung mit der neue Daten geschrieben werden
 define("CHMOD",				0777);
+
 
 
 // ***** Indexer *****
@@ -40,23 +50,26 @@ define("SOLR_INDEXER",		SOLR.'/update');
 define("SOLR_PING",			SOLR.'/admin/ping');
 
 
+
 // ***** Harvester *****
 
 // Der vom Harvester verwendete User-Agent
-define("USERAGENT",				"eromm-oai-harvesting-bot/1.2 (+http://www.eromm.org)");
+define("USERAGENT",				'eromm-oai-harvesting-bot/1.2 (+http://www.eromm.org)');
+
 // Wartezeit swischen den Listrecords-Anfragen beim Harvesten
 define("LISTRECORDS_DELAY",		5);
+
 // Minimalgeschwindigkeit in Bytes pro Sekunde die über den Zeitraum SPEED_TIME nicht unterschritten werden darf (sonst Abbruch des Harvestens)
 define("SPEED_LIMIT",			1024);
+
 // Zeitraum in dem die Minimageschwindigkeit (SPEED_LIMIT) erreicht werden muss in Sekunden
 define("SPEED_TIME",			180);
+
 // Maximale Anzahl der Versuche einer Anfrage (HTTP)
 define("ERROR_RETRY",			8);
+
 // Verzögerung bis zum Wiederholen einer Anfrage (HTTP) im Fehlerfall in Sekunden
 define("ERROR_RETRY_DELAY",		40);
-
-
-
 
 
 ?>

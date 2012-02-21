@@ -26,7 +26,7 @@ while (!feof($file)) {
 fclose($file);
 	
 // Datenbankverbindung herstellen	
-require_once("./db_connect.php");
+require_once(dirname(__FILE__) . '/config/settings.php');
 $db_link = @mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
 
 if (!$db_link) {

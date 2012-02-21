@@ -6,7 +6,7 @@
 
 
 // Funktionen einbinden
-require_once("./update_oai_source_funcs.php");
+require_once(dirname(__FILE__) . '/update_oai_source_funcs.php');
 
 // Datensatz freigeben, dabei wird auch der Token verglichen, für den Fall, dass er schon abgelaufen ist
 // TODO? Richtig wäre, den Datensatz erst am Ende freizugeben, aber es ist so unwahrscheinlich, dass ihn zwischenzeitlich (in dem Bruchteil der Sekunde) jemand öffnet

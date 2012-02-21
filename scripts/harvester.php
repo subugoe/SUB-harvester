@@ -9,7 +9,7 @@
  */
 
 // Settings laden
-require_once("./settings.php");
+require_once(dirname(__FILE__) . '/../config/settings.php');
 // Funktionen einbinden
 require_once("./scripts_funcs.php");
 

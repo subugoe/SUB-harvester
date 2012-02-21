@@ -4,7 +4,7 @@
  */
 
 // Einstellungen einbinden
-require_once("./scripts/settings.php");
+require_once(dirname(__FILE__) . '/config/settings.php');
 
 // Ermittelt die Anzahl der Indexeinträge der Quelle mit der $oai_source_id 
 // mit oai_datestamp bis zum Zeitpunkt $until (Format "JJJJ-MM-TT")

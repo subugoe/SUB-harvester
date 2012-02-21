@@ -9,9 +9,6 @@
  *    2.4 Quelle (oai_sources)
  */
 
-// TODO auslagern
-
-define("SOLR",				'http://localhost:8983/solr');
 
 // Kopf
 $content .= "	<h2>OAI-Quelle löschen</h2>";

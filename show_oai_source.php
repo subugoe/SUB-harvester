@@ -4,8 +4,6 @@
  * Zeigt Informationen zu einer OAI-Quelle an
  */
 
-// TODO auslagern
-define("SOLR",				'http://localhost:8983/solr');
 
 // Wird diese Seite von einer Editierseite aufgerufen, muss der entsprechende Datensatz wieder freigegeben werden.
 if (isset($_POST['edit_id'])) {
@@ -214,7 +212,6 @@ $index_entry_count = 0;
 
 // Index abfragen
 $ch = curl_init();
-
 curl_setopt($ch, CURLOPT_URL, SOLR."/select?version=2.2&rows=0&q=oai_repository_id%3A".$oai_source_data['id']);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
