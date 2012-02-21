@@ -17,16 +17,19 @@ $content = "";
 $javascript = "";
 $jquery = "jquery-1.6.2.min.js";
 
+require_once(dirname(__FILE__) . '/config/settings.php');
+
 // Template laden
 $file = fopen(dirname(__FILE__) . '/templates/html_template.html', "r");
 	
 while (!feof($file)) {
-        $output .= fgets($file);
+    $output .= fgets($file);
 }
 fclose($file);
-	
+$output = str_replace("%name%", SERVICE_NAME, $output);
+
+
 // Datenbankverbindung herstellen	
-require_once(dirname(__FILE__) . '/config/settings.php');
 $db_link = @mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
 
 if (!$db_link) {

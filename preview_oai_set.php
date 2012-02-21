@@ -16,9 +16,10 @@ $file = fopen(dirname(__FILE__) . '/templates/html_template.html', "r");
 $output = "";
 
 while (!feof($file)) {
-        $output .= fgets($file);
+    $output .= fgets($file);
 }
 fclose($file);
+$output = str_replace("%name%", SERVICE_NAME, $output);
 
 $output = str_replace("%javascript%", 
 	"<script src=\"jquery-1.6.2.min.js\" type=\"text/javascript\" charset=\"utf-8\"></script>\n<script src=\"preview_oai_set.js\" type=\"text/javascript\" charset=\"utf-8\"></script>", $output);
