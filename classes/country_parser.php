@@ -20,7 +20,7 @@ class country_parser {
 		
 		$hasSelectedItem = false;
 		$options = "";
-		
+
 		while ($row = mysql_fetch_array($results, MYSQL_ASSOC)) {
 			$selectedText = '';
 			if (strtoupper($selected) == $row['code']) {
@@ -34,7 +34,7 @@ class country_parser {
 		if (!$hasSelectedItem) {
 			$select .= "<option value=\"\" disabled=\"disabled\" selected=\"selected\">Bitte auswählen</option>\n";
 		}
-		$select .= "</select>\n";
+		$select .= $options . "</select>\n";
 		
 		return $select;
 	}
