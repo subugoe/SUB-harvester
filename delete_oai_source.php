@@ -79,7 +79,7 @@ if (array_key_exists('confirmed', $_POST)) {
 			unlink($temp_filename);
 			
 			// Commit senden
-			$post = array('file' => '@'.getcwd().'/templates/commit.xml');
+			$post = array('file' => '@'. dirname(__FILE__) . '/templates/commit.xml');
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $post); 
 			
 			$response = curl_exec($ch);

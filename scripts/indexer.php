@@ -600,7 +600,7 @@ foreach ($day_folders as $day_folder) {
 											WHERE id = ".$set_folder;
 									
 									// Daten bleiben im Index
-									$post = array('file' => '@'.getcwd().'/commit.xml');
+									$post = array('file' => '@' . dirname(__FILE__) '../templates/commit.xml');
 									
 									// Damit wurde ein Set der Quelle erfolgreich indexiert
 									$source_indexing_successful = true;
@@ -625,7 +625,7 @@ foreach ($day_folders as $day_folder) {
 											WHERE id = ".$set_folder;
 									
 									// TODO Verzeichnisse müssen noch ersetzt werden!!!!!
-									$post = array('file' => '@'.getcwd().'/rollback.xml');
+									$post = array('file' => '@' . dirname(__FILE__) '../templates/rollback.xml');
 									
 									// Da bei der Indexierung ein Fehler aufgetreten ist, werden die geharvesteten Dateien
 									// und die bisher konvertierten Dateien in den Fehlerordner verschoben. 
@@ -726,12 +726,12 @@ foreach ($day_folders as $day_folder) {
 set_time_limit(600);
 // Alle Löschanfragen sind in der Datei postproc.xml,
 // dort können auch weitere Korrekturen eingfügt werden.
-$post = array('file' => '@'.getcwd().'/postproc.xml');
+$post = array('file' => '@' . dirname(__FILE__) '../templates/postproc.xml');
 curl_setopt($oai_indexer_ch, CURLOPT_POSTFIELDS, $post); 
 $http_response = curl_exec($oai_indexer_ch);
 
 // Commit
-$post = array('file' => '@'.getcwd().'/commit.xml');
+$post = array('file' => '@' . dirname(__FILE__) '../templates/commit.xml');
 curl_setopt($oai_indexer_ch, CURLOPT_POSTFIELDS, $post); 
 $http_response = curl_exec($oai_indexer_ch);
 
@@ -741,7 +741,7 @@ $http_response = curl_exec($oai_indexer_ch);
 // Zur Sicherheit, falls optimize bei großen Commits länger dauert.
 set_time_limit(1200);
 // Fehler abfangen? TODO
-$post = array('file' => '@'.getcwd().'/optimize.xml');
+$post = array('file' => '@' . dirname(__FILE__) '../templates/optimize.xml');
 curl_setopt($oai_indexer_ch, CURLOPT_POSTFIELDS, $post); 
 $http_response = curl_exec($oai_indexer_ch);
 // Doppelt, sonst gibt Solr den Speicher nicht frei (warum auch immer...)
