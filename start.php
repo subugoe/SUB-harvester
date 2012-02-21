@@ -16,11 +16,6 @@ $content .= "
 					<input type=\"hidden\" name=\"do\" value=\"show_oai_source\"></input>\n
 				</form>\n
 			</div>
-			<form method=\"post\" action=\"../index.php\" accept-charset=\"UTF-8\">\n
-				<p style=\"text-align: right; margin-top: -20px;\">\n		
-					<input type=\"submit\" value=\"" . SERVICE_NAME . " Web Search Startseite\"></input>\n
-				</p>\n
-			</form>\n
 			<h2>OAI-Quellen anzeigen / editieren</h2>
 			<form method=\"post\" action=\"index.php\" accept-charset=\"UTF-8\">\n
 				<p style=\"text-align: center; margin-top:10px;\">\n
