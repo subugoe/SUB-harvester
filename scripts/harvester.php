@@ -11,7 +11,7 @@
 // Settings laden
 require_once(dirname(__FILE__) . '/../config/settings.php');
 // Funktionen einbinden
-require_once("./scripts_funcs.php");
+require_once(dirname(__FILE__) . '/scripts_funcs.php');
 
 // --------------------------------------------------------------------------------
 
@@ -35,7 +35,6 @@ fclose($file);
 
 
 // Datenbankverbindung herstellen	
-require_once("../db_connect.php");
 @$db_link = mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
 
 if (!$db_link) {
