@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Script, dass das Harvesten der OAI-Quellen steuert.
+ * Script, das das Harvesten der OAI-Quellen steuert.
  * Es führt keine Weiterverabeitung der Daten durch. Diese Aufgabe übernimmt das
  * Indexerscript.
  * 
@@ -207,7 +207,7 @@ foreach($harvest_tasks as $oai_source) {
 		
 		
 		// Bestimmung des from-Paramters
-		// In der Regel ist der Zeitpunkt, der in den Setdaten gespeicher ist,
+		// In der Regel ist der Zeitpunkt, der in den Setdaten gespeichert ist,
 		// es gibt aber Ausnahmen, bei denen bestimmte Quellen-Einstellung
 		// einen anderen Wert erfordern. Dieser gilt dann für alle Sets der Quelle.
 		
