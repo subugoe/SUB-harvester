@@ -12,10 +12,17 @@ if ($_POST['add_oai_source'] != "") {
 	
 	$ch = curl_init();
 	
-	// Überprüfen ob die URL einen Port enthält
-	
 	$url = trim($_POST['add_oai_source']);
+
+	// Versuchen, den Ländercode anhand der TLD zu erraten.
+	$hostname = parse_url($url, PHP_URL_HOST);
+	$tld = "";
+	if ($hostname) {
+		$nameComponents = explode('.', $hostname);
+		$tld = $nameComponents[count($nameComponents) - 1];
+	}
 	
+	// Überprüfen ob die URL einen Port enthält
 	/*
 	$pattern = '?:\d+?';
 	preg_match($pattern, $url, $matches);
@@ -29,7 +36,6 @@ if ($_POST['add_oai_source'] != "") {
 		// Port aus URL entfernen
 		$url = str_replace($matches[0], "", $url);
 	}
-	
 	*/
 	
 	curl_setopt($ch, CURLOPT_URL, $url."?verb=Identify");
@@ -74,7 +80,7 @@ if ($_POST['add_oai_source'] != "") {
 			
 			require_once("./classes/country_parser.php");
 			$countries = new country_parser($db_link);
-			$content .= $countries->getSelect();			
+			$content .= $countries->getSelect($tld);
 			
 			$content .= "						</td>\n";
 			$content .= "					</tr>\n";
