@@ -162,17 +162,7 @@
     
     <!-- Template for DC-Metadata -->
     <xsl:template match="oai:metadata/oai_dc:dc">
-        <!-- URLs -->
-        <xsl:apply-templates select="eromm_oai:oai_url"/>
-        <!-- dc:format -->    
-        <xsl:apply-templates select="dc:format[text() = 'application/pdf']"/>
-        <xsl:apply-templates select="dc:format[text() = 'image/jpeg']"/>
-        <xsl:apply-templates select="dc:format[text() = 'image/png']"/>
-        <xsl:apply-templates select="dc:format[text() = 'image/tiff']"/>
-        
-        <!-- Special for archive.org -->
-        <xsl:apply-templates select="dc:format[contains(text(), 'PDF')]"/>
-        <xsl:apply-templates select="dc:format[contains(text(), 'Single Page Processed')]"/>
+        <xsl:apply-templates select="*"/>
         
         <!-- dc:title - -->
         <field name="oai_title">
@@ -198,52 +188,7 @@
             </xsl:choose>
         </field>
     
-        <!-- Indexfield -->
-        <!-- If this Element ("field") is empty (can't really happen... I hope) the item cannot be found -->
-        <field name="oai_index">
-            <!-- dc:title is always indexed if it exists -->
-            <xsl:if test="dc:title">
-                <xsl:apply-templates select="dc:title" mode="index"/>
-            </xsl:if>
-            
-            <xsl:if test="$i_cre = 1 and dc:creator and string-length(dc:creator) &gt; 0">
-                <xsl:apply-templates select="dc:creator" mode="index"/>
-            </xsl:if>   
-            
-            <xsl:if test="$i_con = 1 and dc:contributor and string-length(dc:contributor) &gt; 0">
-                <xsl:apply-templates select="dc:contributor" mode="index"/>
-            </xsl:if>
-            
-            <xsl:if test="$i_pub = 1 and dc:publisher and string-length(dc:publisher) &gt; 0">
-                <xsl:apply-templates select="dc:publisher" mode="index"/>
-            </xsl:if>
-            
-            <!-- dc:date is preprocessed by PHP and the result saven in the element eromm_oai:date which is used for the XSLT -->
-            <xsl:if test="$i_dat = 1 and eromm_oai:date and string-length(eromm_oai:date) &gt; 0">
-                <xsl:apply-templates select="eromm_oai:date" mode="index"/>
-            </xsl:if>
-            
-            <xsl:if test="$i_ide = 1 and dc:identifier and string-length(dc:identifier) &gt; 0">
-                <xsl:apply-templates select="dc:identifier" mode="index"/>
-            </xsl:if>
-            
-            <xsl:if test="$i_rel = 1 and dc:relation and string-length(dc:relation) &gt; 0">
-                <xsl:apply-templates select="dc:relation" mode="index"/>
-            </xsl:if>
-            
-            <xsl:if test="$i_sub = 1 and dc:subject and string-length(dc:subject) &gt; 0">
-                <xsl:apply-templates select="dc:subject" mode="index"/>
-            </xsl:if>
-            
-            <xsl:if test="$i_des = 1 and dc:description and string-length(dc:description) &gt; 0">
-                <xsl:apply-templates select="dc:description" mode="index"/> 
-            </xsl:if>
-            
-            <xsl:if test="$i_sou = 1 and dc:source and string-length(dc:source) &gt; 0">
-                <xsl:apply-templates select="dc:source" mode="index"/> 
-            </xsl:if>
-        </field>
-    
+
         <!-- ISBD-field -->
         <!-- This might be empty - solr doesn't mind though -->
         <!-- Punctuation might collide with the content (e. g. ",, ") - this is handled
@@ -288,6 +233,7 @@
             </xsl:if>
         </field>
     </xsl:template>
+
     
     <!-- Template for URLs -->
     <xsl:template match="eromm_oai:oai_url">
@@ -296,35 +242,6 @@
         </field>
     </xsl:template>
     
-    <!-- Template for dc:format / MIME-Type -->
-    <xsl:template match="dc:format[text() = 'application/pdf']">
-        <xsl:if test="position() = 1"> 
-            <field name="oai_format">
-                <xsl:value-of select="."/>
-            </field>
-        </xsl:if>
-    </xsl:template>
-    <xsl:template match="dc:format[text() = 'image/jpeg']">    
-        <xsl:if test="position() = 1"> 
-            <field name="oai_format">
-                <xsl:value-of select="."/>
-            </field>
-        </xsl:if>
-    </xsl:template>
-    <xsl:template match="dc:format[text() = 'image/png']">
-        <xsl:if test="position() = 1"> 
-            <field name="oai_format">
-                <xsl:value-of select="."/>
-            </field>
-        </xsl:if>
-    </xsl:template>
-    <xsl:template match="dc:format[text() = 'image/tiff']">
-        <xsl:if test="position() = 1"> 
-            <field name="oai_format">
-                <xsl:value-of select="."/>
-            </field>
-        </xsl:if>
-    </xsl:template>
     
     <!-- Special for archive.org -->
     <xsl:template match="dc:format[contains(text(), 'PDF')]">
@@ -338,41 +255,113 @@
         </xsl:if>
     </xsl:template>
     
+
+
+	<xsl:template match="dc:title">
+		<field name="title">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:creator">
+		<field name="author">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:contributor">
+		<field name="contributor">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:publisher">
+		<field name="publisher">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:subject">
+		<field name="subject">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:description">
+		<field name="description">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:date">
+		<field name="date">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:type">
+		<field name="type">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:language">
+		<field name="language">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:format">
+		<field name="content_type">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:identifier">
+		<field name="identifier">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:relation">
+		<field name="link">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:rights">
+		<field name="rights">
+			<xsl:value-of select="."/>
+		</field>
+	</xsl:template>
+
+	<xsl:template match="dc:source">
+<!--
+		<field name="source">
+			<xsl:value-of select="."/>
+		</field>
+-->
+	</xsl:template>
+
+	<xsl:template match="dc:coverage">
+<!--
+		<field name="coverage">
+			<xsl:value-of select="."/>
+		</field>
+-->
+	</xsl:template>
+	
+	
+	<xsl:template match="*">
+		<field name="ignoredField">
+			<xsl:value-of select="name(.)"/>
+		</field>
+	</xsl:template>
+
+	
+	
     
-    <!--
-        Index-Templates
-    -->
     
-    <xsl:template match="dc:title" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="dc:creator" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="dc:contributor" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="dc:publisher" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="eromm_oai:date" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="dc:identifier" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="dc:relation" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="dc:subject" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="dc:description" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
-    <xsl:template match="dc:source" mode="index">
-        <xsl:value-of select="concat(' ', ., ' ')"/>
-    </xsl:template>
     
     
     <!--
