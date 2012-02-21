@@ -46,7 +46,7 @@ if (array_key_exists('confirmed', $_POST)) {
 	
 	$delete_xml = "";
 	// Löschanweisung laden
-	$file = fopen('./templates/remove_oai_source.xml', "r");
+	$file = fopen(dirname(__FILE__) . '/templates/remove_oai_source.xml', "r");
 	while (!feof($file)) {
 	        $delete_xml .= fgets($file);
 	}

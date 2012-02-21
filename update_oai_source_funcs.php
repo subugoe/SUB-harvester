@@ -52,7 +52,7 @@ function delete_source_dateRange($oai_source_id, $until) {
 	
 		$delete_xml = "";
 		// Löschanweisung laden
-		$file = fopen('./templates/remove_source_daterange.xml', "r");
+		$file = fopen(dirname(__FILE__) . '/templates/remove_source_daterange.xml', "r");
 		while (!feof($file)) {
 		        $delete_xml .= fgets($file);
 		}

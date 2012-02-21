@@ -18,7 +18,7 @@ $javascript = "";
 $jquery = "jquery-1.6.2.min.js";
 
 // Template laden
-$file = fopen('./templates/html_template.html', "r");
+$file = fopen(dirname(__FILE__) . '/templates/html_template.html', "r");
 	
 while (!feof($file)) {
         $output .= fgets($file);
