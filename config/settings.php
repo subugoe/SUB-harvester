@@ -33,7 +33,6 @@ define("TEMP_FOLDER",	'/var/www/harvesting/temp');
 // oder Indexieren Fehler autraten (zum Nachvollziehen)
 define("ERROR_FOLDER",	'/var/www/harvesting/error');
 //define("ERROR_FOLDER",	'C:/eromm_search/error');
-echo(HARVEST_FOLDER);
 
 
 // CHMOD setzen TODO
