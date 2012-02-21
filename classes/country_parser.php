@@ -19,6 +19,7 @@ class country_parser {
 		$results = mysql_query($sql, $this->db_link);
 		
 		$hasSelectedItem = false;
+		$options = "";
 		
 		while ($row = mysql_fetch_array($results, MYSQL_ASSOC)) {
 			$selectedText = '';
@@ -26,17 +27,14 @@ class country_parser {
 				$selectedText = 'selected="selected" ';
 				$hasSelectedItem = true;
 			}
-			$select .= "<option ". $selectedText . "value=\"" . $row['code'] . "\">" . $row['name_german'] . "</option>\n";
+			$options .= "<option ". $selectedText . "value=\"" . $row['code'] . "\">" . $row['name_german'] . "</option>\n";
 		}
-
-		$select .= "</select>\n";
-		
-		$prepend = "<select name=\"country\" id=\"config_country\" size=\"1\">\n";
+	
+		$select = "<select name=\"country\" id=\"config_country\" size=\"1\">\n";
 		if (!$hasSelectedItem) {
-			$prepend .= "<option value=\"\" disabled=\"disabled\" selected=\"selected\">Bitte auswählen</option>\n";
+			$select .= "<option value=\"\" disabled=\"disabled\" selected=\"selected\">Bitte auswählen</option>\n";
 		}
-		
-		$select = $prepend . $select;
+		$select .= "</select>\n";
 		
 		return $select;
 	}
