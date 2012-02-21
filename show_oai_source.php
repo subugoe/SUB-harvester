@@ -456,7 +456,7 @@ if (!$oai_pseudoset_data['harvest']) {
 			$content .= "				<tr>\n";
 			$content .= "					<td colspan=\"2\" style=\"vertical-align: top;\">\n";
 			$content .= "						<ul class=\"show_source_lists\">\n";
-			$content .="							<li><span style=\"color: #272ec6;\">Alle Sets werden geharvested. Zur Ansicht der Sets bitte Quelle zum Editieren öffnen.</span></li>\n";
+			$content .="							<li><span style=\"color: #272ec6;\">Alle Sets werden geharvested. Zur Ansicht der Sets bitte Quelle zum Bearbeiten öffnen.</span></li>\n";
 			$content .= "						</ul>\n";
 			$content .= "					</td>\n";
 			break;
@@ -565,9 +565,9 @@ $content .= "\"></input>\n";
 $content .= "				</div>\n";
 // Buttons
 $content .= "				<p style=\"text-align: center; margin-top: 25px;\">\n";
-$content .= "					<input type=\"submit\" value=\" Editieren\" onclick=\"edit(".$oai_source_data['id'].")\"></input>&nbsp;\n";
-$content .= "					<input type=\"submit\" value=\" Löschen\" onclick=\"remove(".$oai_source_data['id'].")\"></input>&nbsp;\n";
-$content .= "					<input type=\"submit\" value=\" Zur Trefferliste\" onclick=\"document.forms[0].action = 'index.php#filter'\"></input>\n";
+$content .= "					<input type=\"submit\" value=\"Bearbeiten\" onclick=\"edit(".$oai_source_data['id'].")\"></input>&nbsp;\n";
+$content .= "					<input type=\"submit\" value=\"Löschen\" onclick=\"remove(".$oai_source_data['id'].")\"></input>&nbsp;\n";
+$content .= "					<input type=\"submit\" value=\"Zur Trefferliste\" onclick=\"document.forms[0].action = 'index.php#filter'\"></input>\n";
 $content .= "				</p>\n";		
 $content .= "			</form>\n";
 $content .= "			<hr style=\"margin-top:30px; color:#8F0006; width: 50%;\" />\n";

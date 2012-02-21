@@ -325,7 +325,7 @@ $content .= "				<p style=\"text-align: center; margin-top: 25px;\">\n";
 
 if (!isset($_POST['confirmed'])) {
 	$content .= "					<input type=\"submit\" value=\" OAI-Quelle Löschen\" onclick=\"remove(".$oai_source_data['id'].")\"></input><br /><br /><br />\n";
-	$content .= "					<input type=\"submit\" value=\" Editieren\" onclick=\"edit(".$oai_source_data['id'].")\"></input>&nbsp;\n";
+	$content .= "					<input type=\"submit\" value=\" Bearbeiten\" onclick=\"edit(".$oai_source_data['id'].")\"></input>&nbsp;\n";
 	$content .= "					<input type=\"submit\" value=\" Anzeigen\" onclick=\"show(".$oai_source_data['id'].")\"></input><br />\n";
 }
 $content .= "					<input type=\"submit\" value=\" Zurück zur Trefferliste\" onclick=\"document.forms[0].action = 'index.php#filter'\"></input>\n";

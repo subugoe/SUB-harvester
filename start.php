@@ -16,7 +16,7 @@ $content .= "
 					<input type=\"hidden\" name=\"do\" value=\"show_oai_source\"></input>\n
 				</form>\n
 			</div>
-			<h2>OAI-Quellen anzeigen / editieren</h2>
+			<h2>OAI-Quellen anzeigen und bearbeiten</h2>
 			<form method=\"post\" action=\"index.php\" accept-charset=\"UTF-8\">\n
 				<p style=\"text-align: center; margin-top:10px;\">\n
 					<input type=\"submit\" value=\"Alle OAI-Quellen anzeigen\"></input>\n

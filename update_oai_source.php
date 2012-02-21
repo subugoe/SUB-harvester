@@ -23,7 +23,7 @@ if ($_POST['edit_abort']) {
 } else {
 	// Kopf
 	$content .= "	<p style=\"text-align: right; margin-top: -20px;\"><input type=\"button\" value=\" Zur Startseite\" onclick=\"gotoStart();\"></input></p>\n";
-	$content .= "	<h2>OAI-Quelle editieren</h2>";
+	$content .= "	<h2>OAI-Quelle bearbeiten</h2>";
 	
 	// Prüfen, ob der Datensatz noch reserviert war
 	if (mysql_affected_rows($db_link) == 1) {
@@ -255,7 +255,7 @@ if ($_POST['edit_abort']) {
 		
 	} else {
 		// Die Session ist abgelaufen
-		$content .= "			<p>Die Editiersession ist abgelaufen und der Datensatz wurde in der Zwischenzeit zum Editieren geöffnet.</p>";
+		$content .= "			<p>Die Session ist abgelaufen und der Datensatz wurde in der Zwischenzeit zum Bearbeiten geöffnet.</p>";
 		$content .= "			<p style=\"color: red; font-weight: bold;\">Die Änderungen wurden nicht gespeichert.</p>";
 	}
 	

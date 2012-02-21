@@ -99,7 +99,7 @@ if ($_POST['id'] != "") {
 	$content .= "	</div>";
 	
 	$content .= "	<p style=\"text-align: right; margin-top: -20px;\"><input type=\"submit\" value=\" Zur Startseite\" onclick=\"document.forms[0].elements['edit_abort'].value = 1;\"></input></p>\n";
-	$content .= "	<h2>OAI-Quelle editieren</h2>";
+	$content .= "	<h2>OAI-Quelle bearbeiten</h2>";
 	
 	// Ausgabe generieren
 	// Kann der Datensatz editiert werden?
