@@ -16,7 +16,7 @@ require_once(dirname(__FILE__) . '/scripts_funcs.php');
 // --------------------------------------------------------------------------------
 
 // Für Verzeichnisnamen
-$current_date = date('Y-m-d-h-i-s');
+$current_date = date('Y-m-d') . 'T' . date('H-i-s');
 
 
 // Prüfen, ob bereits ein Harvestprozess läuft
