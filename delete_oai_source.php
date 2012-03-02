@@ -117,7 +117,7 @@ if (array_key_exists('confirmed', $_POST)) {
 			$content .= "<p>Der Index ist nicht erreichbar. Die Einträge konnten nicht gelöscht werden. Bitte manuell alle Einträge der ID <em>".$_POST['id']."</em> löschen.</p>";
 		}
 	} else {
-		$content .= "<p>Fehler beim Erzeugen der Temporären Datei. Die Einträge konnten nicht gelöscht werden. Bitte manuell alle Einträge der ID <em>".$_POST['id']."</em> löschen.</p>";
+		$content .= "<p>Fehler beim Erzeugen der temporären Datei. Die Einträge konnten nicht gelöscht werden. Bitte manuell alle Einträge der ID <em>".$_POST['id']."</em> löschen.</p>";
 	}
 	
 	

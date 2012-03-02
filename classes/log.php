@@ -123,7 +123,7 @@ class log {
 					$even = TRUE;
 				}
 
-				$this->output .= "					<td style=\"text-align: center;\"><img ".( $row['type'] == 0 ? "src=\"resource/images/harvester.png\" title=\"Harvester\" alt=\"Harvester\"" : "src=\"resources/images/indexer.png\" title=\"Indexer\" alt=\"Indexer\"" )."/></td>\n";
+				$this->output .= "					<td style=\"text-align: center;\"><img ".( $row['type'] == 0 ? "src=\"resources/images/harvester.png\" title=\"Harvester\" alt=\"Harvester\"" : "src=\"resources/images/indexer.png\" title=\"Indexer\" alt=\"Indexer\"" )."/></td>\n";
 				$this->output .= "					<td style=\"text-align: center;\">".$row['time']."</td>\n";
 				$this->output .= is_null($oai_source_id) ? "<td><a class=\"".( $row['status'] == 1 ? "oai_source_link_log_error" : "oai_source_link_log" )."\"href=\"javascript:void(0)\" onclick=\"show(".$row['source_id'].")\">".htmlspecialchars(($row['source_name']))."</td>\n" : "";
 				$this->output .= "					<td style=\"text-align: center;\">".( $row['set_spec'] == 'allSets' ? "<span style=\"font-weight: bold\">∞</span>" : htmlspecialchars($row['set_name']) )."</td>\n";
