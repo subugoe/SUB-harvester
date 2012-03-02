@@ -7,10 +7,10 @@
  * Beim Indexieren erzeugt dieses Script Logmeldungen.
  */
 
-// Settings laden
-require_once(dirname(__FILE__) . '/../config/settings.php');
 // Funktionen einbinden
 require_once(dirname(__FILE__) . '/scripts_funcs.php');
+// Einstellungen laden
+readConfiguration();
 
 // ---------------------------------------------------------------------------------
 
