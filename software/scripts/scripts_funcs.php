@@ -8,7 +8,7 @@
 // Ist die Variable HARVESTER_CONFIGURATION_NAME gesetzt, werden die Einstellungen
 // aus dem Unterordner des config Ordners mit dem Namen des Variableninhalts geladen.
 function readConfiguration () {
-	$configurationPath = dirname(__FILE__) . '/../config';
+	$configurationPath = dirname(__FILE__) . '/../../configuration';
 	$configurationName = getenv('HARVESTER_CONFIGURATION_NAME');
 	if ($configurationName) {
 		$configurationPath .= '/' . $configurationName;

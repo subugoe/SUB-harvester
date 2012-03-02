@@ -17,14 +17,10 @@ $content = "";
 $javascript = "";
 $jquery = "resources/javascript/jquery-1.6.2.min.js";
 
-// Konfiguration laden
-$configurationPath = dirname(__FILE__) . '/config';
-$configurationName = getenv('HARVESTER_CONFIGURATION_NAME');
-if ($configurationName) {
-	$configurationPath .= '/' . $configurationName;
-}
-$configurationPath .= '/settings.php';
-require_once($configurationPath);
+// Funktionen einbinden
+require_once(dirname(__FILE__) . '/scripts/scripts_funcs.php');
+// Einstellungen laden
+readConfiguration();
 
 // Template laden
 $file = fopen(dirname(__FILE__) . '/templates/html_template.html', "r");
