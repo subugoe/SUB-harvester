@@ -11,66 +11,66 @@ require_once("./classes/button_creator.php");
 
 $oai_source = new oai_source_data("post", 0, 0);
 
-$sql = "INSERT INTO `oai_sources` (
-			`url`, 
-			`name`, 
-			`view_creator`, 
-			`view_contributor`, 
-			`view_publisher`, 
-			`view_date`, 
-			`view_identifier`, 
-			`index_relation`, 
-			`index_creator`, 
-			`index_contributor`, 
-			`index_publisher`, 
-			`index_date`, 
-			`index_identifier`, 
-			`index_subject`, 
-			`index_description`, 
-			`index_source`, 
-			`dc_date_postproc`, 
-			`identifier_filter`, 
-			`identifier_resolver`, 
-			`identifier_resolver_filter`, 
-			`identifier_alternative`, 
-			`country_code`, 
-			`active`, 
-			`added`, 
-			".( strlen($oai_source->getFrom()) == 10 ? "`from`, " : "" )."
-			`harvest_period`, 
-			".( strlen($oai_source->getFrom()) == 10 ? "`last_harvest`, ": "" )."
+$sql = "INSERT INTO oai_sources (
+			url,
+			name,
+			view_creator,
+			view_contributor,
+			view_publisher,
+			view_date,
+			view_identifier,
+			index_relation,
+			index_creator,
+			index_contributor,
+			index_publisher,
+			index_date,
+			index_identifier,
+			index_subject,
+			index_description,
+			index_source,
+			dc_date_postproc,
+			identifier_filter,
+			identifier_resolver,
+			identifier_resolver_filter,
+			identifier_alternative,
+			country_code,
+			active,
+			added,
+			" . ( strlen($oai_source->getFrom()) == 10 ? "from, " : "" )."
+			`harvest_period`,
+			" . ( strlen($oai_source->getFrom()) == 10 ? "last_harvest, ": "" )."
 			`reindex`, 
 			`comment` ) 
 		VALUES (
-		'".mysql_real_escape_string($oai_source->getUrl())."', 
-		'".mysql_real_escape_string(stripslashes($oai_source->getName()))."', 
-		".$oai_source->getViewCreator().", 
-		".$oai_source->getViewContributor().", 
-		".$oai_source->getViewPublisher().", 
-		".$oai_source->getViewDate().", 
-		".$oai_source->getViewIdentifier().", 
-		".$oai_source->getIndexRelation().", 
-		".$oai_source->getIndexCreator().", 
-		".$oai_source->getIndexContributor().", 
-		".$oai_source->getIndexPublisher().", 
-		".$oai_source->getIndexDate().", 
-		".$oai_source->getIndexIdentifier().", 
-		".$oai_source->getIndexSubject().", 
-		".$oai_source->getIndexDescription().", 
-		".$oai_source->getIndexSource().", 
-		".$oai_source->getDcDatePostproc().", 
-		'".mysql_real_escape_string(stripslashes($oai_source->getIdentifierFilter()))."', 
-		'".mysql_real_escape_string(stripslashes($oai_source->getIdentifierResolver()))."',
-		'".mysql_real_escape_string(stripslashes($oai_source->getIdentifierResolverFilter()))."',
-		'".mysql_real_escape_string(stripslashes($oai_source->getIdentifierAlternative()))."',
-		'".$oai_source->getCountry()."',
-		'".$oai_source->getActive()."',
+		'" . mysql_real_escape_string($oai_source->getUrl()) . "',
+		'" . mysql_real_escape_string($oai_source->getName()) . "',
+		" . intval($oai_source->getViewCreator()) . ",
+		" . intval($oai_source->getViewContributor()) . ",
+		" . intval($oai_source->getViewPublisher()) . ",
+		" . intval($oai_source->getViewDate()) . ",
+		" . intval($oai_source->getViewIdentifier()) . ",
+		" . intval($oai_source->getIndexRelation()) . ",
+		" . intval($oai_source->getIndexCreator()) . ",
+		" . intval($oai_source->getIndexContributor()) . ",
+		" . intval($oai_source->getIndexPublisher()) . ",
+		" . intval($oai_source->getIndexDate()) . ",
+		" . intval($oai_source->getIndexIdentifier()) . ",
+		" . intval($oai_source->getIndexSubject()) . ",
+		" . intval($oai_source->getIndexDescription()) . ",
+		" . intval($oai_source->getIndexSource()) . ",
+		" . intval($oai_source->getDcDatePostproc()) . ",
+		'" . mysql_real_escape_string($oai_source->getIdentifierFilter()) . "',
+		'" . mysql_real_escape_string($oai_source->getIdentifierResolver()) . "',
+		'" . mysql_real_escape_string($oai_source->getIdentifierResolverFilter()) . "',
+		'" . mysql_real_escape_string($oai_source->getIdentifierAlternative()) . "',
+		'" . mysql_real_escape_string($oai_source->getCountry()) . "',
+		" . intval($oai_source->getActive()) . ",
 		NOW(), 
-		". (strlen($oai_source->getFrom()) == 10 ? "'".$oai_source->getFrom()."', " : "") ." 
-		'".$oai_source->getHarvestPeriod()."', 
-		". (strlen($oai_source->getFrom()) == 10 ? "'".$oai_source->getFrom()."', " : "") ." 
+		" . (strlen($oai_source->getFrom()) == 10 ? "'" . mysql_real_escape_string($oai_source->getFrom()) . "', " : "") ."
+		'" . mysql_real_escape_string($oai_source->getHarvestPeriod()) . "',
+		" . (strlen($oai_source->getFrom()) == 10 ? "'" . mysql_real_escape_string($oai_source->getFrom()) . "', " : "") ."
 		0,
-		'".mysql_real_escape_string(stripslashes($oai_source->getComment()))."')";
+		'" . mysql_real_escape_string($oai_source->getComment()) . "')";
 
 // $content .= "<p>".$sql."</p>\n";
 
@@ -80,22 +80,29 @@ if (mysql_query($sql, $db_link)) {
 	
 	$source_id = mysql_insert_id($db_link);
 	
-	$sql = "INSERT INTO `oai_sets` ( 
-				`id`,
-				`oai_source` ,
-				`setSpec` ,
-				`setName` ,
-				`online` ,
-				`harvest` ,
-				`harvest_status` ,
-				`index_status`
+	$sql = "INSERT INTO oai_sets (
+				id,
+				oai_source,
+				setSpec,
+				setName,
+				online,
+				harvest,
+				harvest_status,
+				index_status
 				)
 				VALUES ";
 
 	$sets = $oai_source->getSets();
 	
 	foreach($sets as $set) {
-		$sql .= "(NULL , ". $source_id.", '".mysql_real_escape_string($set['setSpec'])."', '".mysql_real_escape_string(stripslashes($set['setName']))."', TRUE, ".(isset($set['harvest']) ? 1 : 0).", -1, -1), ";
+		$sql .= "(NULL,"
+				. intval($source_id) . ",
+				'" . mysql_real_escape_string($set['setSpec']) . "',
+				'" . mysql_real_escape_string($set['setName']) . "',
+				TRUE," .
+				(isset($set['harvest']) ? 1 : 0) .",
+				-1,
+				-1), ";
 	}
 	
 	$sql = substr($sql, 0, -2);

@@ -7,25 +7,25 @@
 
 // Wird diese Seite von einer Editierseite aufgerufen, muss der entsprechende Datensatz wieder freigegeben werden.
 if (isset($_POST['edit_id'])) {
-	$EditIDEscaped = mysql_real_escape_string($_POST['edit_id']);
-	$EditTokenEscaped = mysql_real_escape_string($_POST['edit_token']);
-
-	$sql = "DELETE FROM `oai_source_edit_sessions`
-			WHERE oai_source = " . $EditIDEscaped . "
-			AND MD5(timestamp) = '". $EditTokenEscaped ."'";
+	$sql = "DELETE FROM oai_source_edit_sessions
+			WHERE oai_source = " . intval($_POST['edit_id']) . "
+			AND MD5(timestamp) = '" . mysql_real_escape_string($_POST['edit_token']) . "'";
 	$result = mysql_query($sql, $db_link);
-	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+	if (!$result) {
+		die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+	}
 }
 
 
 // MySQL-Abfragen
 // Abfrage des Status
-$IDEscaped = mysql_real_escape_string($_POST['id']);
 $sql = "SELECT MAX(harvest_status) + MAX(index_status) AS status
-		FROM `oai_sets`
-		WHERE oai_source = ". $IDEscaped ." AND harvest = TRUE";
+		FROM oai_sets
+		WHERE oai_source = " . intval($_POST['id']) . " AND harvest = TRUE";
 $result = mysql_query($sql, $db_link);
-if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+if (!$result) {
+	die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+}
 $oai_source_status = mysql_result($result, 0);
 
 // Abfrage der Informationen zur Quelle
@@ -61,9 +61,10 @@ $sql = "SELECT 	oai_sources.id ,
 				DATE_FORMAT(MAX(oai_sets.last_harvested), '%W, %e. %M %Y, %k:%i Uhr') AS last_harvested ,
 				DATE_FORMAT(MAX(oai_sets.last_indexed), '%W, %e. %M %Y, %k:%i Uhr') AS last_indexed ,
 				DATE_FORMAT(oai_sources.last_harvest + INTERVAL oai_sources.harvest_period DAY + INTERVAL 1 DAY, '%W, %e. %M %Y') AS next_harvest
-				FROM (`oai_sources` INNER JOIN `countries` ON oai_sources.country_code = countries.code) INNER JOIN `oai_sets` ON oai_sources.id = oai_sets.oai_source
-				WHERE oai_sources.id =" . $IDEscaped ."
-				GROUP BY oai_sources.id";
+		FROM (oai_sources INNER JOIN countries ON oai_sources.country_code = countries.code)
+				INNER JOIN oai_sets ON oai_sources.id = oai_sets.oai_source
+		WHERE oai_sources.id = " . intval($_POST['id']) ."
+		GROUP BY oai_sources.id";
 $result = mysql_query($sql, $db_link);
 if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 $oai_source_data = mysql_fetch_array($result, MYSQL_ASSOC);
@@ -92,7 +93,7 @@ $content .= "			<div style=\"display: none;\">\n";
 $content .= "				<input type=\"hidden\" id=\"limit\" value=\"20\"/>\n";
 $content .= "				<input type=\"hidden\" id=\"status\" value=\"-1\"/>\n";
 $content .= "				<input type=\"hidden\" id=\"type\" value=\"-1\"/>\n";
-$content .= "				<input type=\"hidden\" id=\"id\" value=\"" . $IDEscaped . "\"/>\n";
+$content .= "				<input type=\"hidden\" id=\"id\" value=\"" . intval($_POST['id']) . "\"/>\n";
 $content .= "			</div>\n";
 $content .= "			<p style=\"text-align: right; margin-top: -20px;\"><input type=\"button\" value=\" Zur Startseite\" onclick=\"gotoStart()\"></input></p>\n";
 $content .= "			<h2>OAI-Quelle anzeigen</h2>\n";
@@ -383,8 +384,8 @@ $content .= "			</table>\n";
 
 // Abfrage des Pseudo-Sets
 $sql = "SELECT setname, harvest
-		FROM `oai_sets`
-		WHERE setspec LIKE '%allSets%' AND oai_source = " . $IDEscaped;
+		FROM oai_sets
+		WHERE setspec LIKE '%allSets%' AND oai_source = " . intval($_POST['id']);
 $result = mysql_query($sql, $db_link);
 if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 $oai_pseudoset_data = mysql_fetch_array($result, MYSQL_ASSOC);
@@ -392,8 +393,8 @@ $oai_pseudoset_data = mysql_fetch_array($result, MYSQL_ASSOC);
 
 // Abfrage Anzahl der Sets einer OAI-Quelle
 $sql = "SELECT COUNT(id)
-		FROM `oai_sets`
-		WHERE setspec NOT LIKE '%allSets%' AND oai_source = " . $IDEscaped;
+		FROM oai_sets
+		WHERE setspec NOT LIKE '%allSets%' AND oai_source = " . intval($_POST['id']);
 $result = mysql_query($sql, $db_link);
 if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 $total_set_count = mysql_result($result, 0);
@@ -404,8 +405,8 @@ if (!$oai_pseudoset_data['harvest']) {
 
 	// Abfrage der Sets
 	$sql = "SELECT setname, setspec
-			FROM `oai_sets`
-			WHERE setspec NOT LIKE '%allSets%' AND harvest = TRUE AND oai_source = " . $IDEscaped;
+			FROM oai_sets
+			WHERE setspec NOT LIKE '%allSets%' AND harvest = TRUE AND oai_source = " . intval($_POST['id']);
 	$result = mysql_query($sql, $db_link);
 	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 

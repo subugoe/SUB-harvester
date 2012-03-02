@@ -12,7 +12,6 @@
 
 // Kopf
 $content .= "	<h2>OAI-Quelle löschen</h2>";
-$IDEscaped = mysql_real_escape_string($_POST['id']);
 
 if (array_key_exists('confirmed', $_POST)) {
 	
@@ -126,15 +125,15 @@ if (array_key_exists('confirmed', $_POST)) {
 	
 	// Falls noch eine Session gespeichert ist...
 	// Falls der Datensatz gerade editiert wird - Pech für den Editierenden... dies wird nicht geprüft.
-	$sql = "DELETE FROM `oai_source_edit_sessions` 
-			WHERE oai_source = " . $IDEscaped;
+	$sql = "DELETE FROM oai_source_edit_sessions
+			WHERE oai_source = " . intval($_POST['id']);
 	$result = mysql_query($sql, $db_link);
 	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 	
-	$sql = "DELETE FROM `oai_logs` 
+	$sql = "DELETE FROM oai_logs
 			WHERE oai_set IN ( 
-				SELECT id FROM `oai_sets` 
-				WHERE oai_source = " . $IDEscaped ."
+				SELECT id FROM oai_sets 
+				WHERE oai_source = " . intval($_POST['id']) . "
 			)";
 	$result = mysql_query($sql, $db_link);
 	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
@@ -142,8 +141,8 @@ if (array_key_exists('confirmed', $_POST)) {
 	$content .= "	<em>".mysql_affected_rows($db_link)."</em> Logeinträge gelöscht (Tabelle \"oai_logs\").<br />";
 	
 	// Sets der OAI-Quelle löschen
-	$sql = "DELETE FROM `oai_sets` 
-	 		WHERE oai_source = " . $IDEscaped;
+	$sql = "DELETE FROM oai_sets
+			WHERE oai_source = " . intval($_POST['id']);
 	$result = mysql_query($sql, $db_link);
 	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 	
@@ -151,8 +150,8 @@ if (array_key_exists('confirmed', $_POST)) {
 	$content .= "	<em>".mysql_affected_rows($db_link)."</em> Sets gelöscht (Tabelle \"oai_sets\").<br />";
 	
 	// OAi-Quelle löchen
-	$sql = "DELETE FROM `oai_sources` 
-	 		WHERE id = " . $IDEscaped;
+	$sql = "DELETE FROM oai_sources
+			WHERE id = " . intval($_POST['id']);
 	$result = mysql_query($sql, $db_link);
 	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 	
@@ -175,10 +174,10 @@ if (array_key_exists('confirmed', $_POST)) {
 				oai_sources.id AS id,
 				oai_sources.url AS url,
 				oai_sources.name AS name,
-				DATE_FORMAT(oai_sources.added, '%W, %e. %M %Y, %k:%i Uhr') AS added ,
+				DATE_FORMAT(oai_sources.added, '%W, %e. %M %Y, %k:%i Uhr') AS added,
 				COUNT(oai_sets.id) - 1 AS sets 
-			FROM `oai_sources` INNER JOIN `oai_sets` ON oai_sources.id = oai_sets.oai_source
-			WHERE oai_sources.id = " . $IDEscaped . "
+			FROM oai_sources INNER JOIN oai_sets ON oai_sources.id = oai_sets.oai_source
+			WHERE oai_sources.id = " . intval($_POST['id']) . "
 			GROUP BY oai_sources.id";
 	$result = mysql_query($sql, $db_link);
 	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}

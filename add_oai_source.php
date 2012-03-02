@@ -13,8 +13,7 @@ if ($_POST['add_oai_source'] != "") {
 	$url = trim($_POST['add_oai_source']);
 	
 	// Ist die OAI URL bereits vorhanden?
-	$urlEscaped = mysql_real_escape_string($url);
-	$sql = "SELECT `id` FROM `oai_sources` WHERE url=\"$urlEscaped\"";
+	$sql = "SELECT id FROM oai_sources WHERE url = '" . mysql_real_escape_string($url) . "'";
 	$results = mysql_query($sql, $db_link);
 	if ($results && mysql_num_rows($results) > 0) {
 		$match = mysql_fetch_array($results, MYSQL_ASSOC);

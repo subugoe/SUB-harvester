@@ -37,15 +37,16 @@ function insert_log($set_id, $status, $message, $db_link, $add, $delete, $type) 
 			message,
 			added, 
 			deleted 
-		) VALUES (
+		)
+		VALUES (
 			NULL, 
 			NOW(), 
-			".intval($set_id).",
-			".intval($status).",
-			".intval($type).",
-			'".mysql_real_escape_string($message)."',
-			".intval($add).",
-			".intval($delete)."
+			" . intval($set_id) . ",
+			" . intval($status) . ",
+			" . intval($type) . ",
+			'" . mysql_real_escape_string($message) . "',
+			" . intval($add) . ",
+			" . intval($delete) . "
 		)";
 	
 	// Besteht die Verbindung noch?

@@ -15,7 +15,7 @@ class country_parser {
 	
 	// Gibt den HTML-Code für eine Auswahlliste zurück - die erste Option ist leer.
 	public function getSelect($selected = "") {
-		$sql = "SELECT `name_german`, `code` FROM `countries` ORDER BY `name_german` ASC";
+		$sql = "SELECT name_german, code FROM countries ORDER BY name_german ASC";
 		$results = mysql_query($sql, $this->db_link);
 		
 		$hasSelectedItem = false;

@@ -8,14 +8,13 @@
 // Wird diese Seite von einer Editierseite aufgerufen, muss der entsprechende Datensatz wieder freigegeben werden.
 
 if (isset($_POST['edit_id'])) {
-	$EditIDEscaped = mysql_real_escape_string($_POST['edit_id']);
-	$EditTokenEscaped = mysql_real_escape_string($_POST['edit_token']);
-
-	$sql = "DELETE FROM `oai_source_edit_sessions`
-			WHERE oai_source = " . $EditIDEscaped . "
-			AND MD5(timestamp) = '" . $EditTokenEscaped . "'";
+	$sql = "DELETE FROM oai_source_edit_sessions
+			WHERE oai_source = " . intval($_POST['edit_id']) . "
+			AND MD5(timestamp) = '" . mysql_real_escape_string($_POST['edit_token']) . "'";
 	$result = mysql_query($sql, $db_link);
-	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+	if (!$result) {
+		die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+	}
 }
 
 $content .= "<p style=\"text-align: right; margin-top: -20px;\"><input type=\"button\" value=\" Zur Startseite\" onclick=\"gotoStart()\"></input></p>\n";
@@ -23,15 +22,19 @@ $content .= "<h2>OAI-Quellen</h2>\n";
 $content .= "<p style=\"text-align:center; margin-top: 30px;\">";
 
 // Abfrage der Anzahl der OAI-Quellen
-$sql = "SELECT COUNT( 'id' ) FROM `oai_sources`";
+$sql = "SELECT COUNT('id') FROM oai_sources";
 $result = mysql_query($sql, $db_link);
-if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+if (!$result) {
+	die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+}
 $count_oai_sources = mysql_result($result, 0);
 
 // Abfrage der Anzahl der Sets, die Pseudosets "allSets" und "noSetSupport" werden ignoriert)
-$sql = "SELECT COUNT( 'id' ) AS 'count_oai_sets' FROM `oai_sets` WHERE NOT setspec LIKE '%allSets%'";
+$sql = "SELECT COUNT('id') AS count_oai_sets FROM oai_sets WHERE NOT setspec LIKE '%allSets%'";
 $result = mysql_query($sql, $db_link);
-if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+if (!$result) {
+	die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+}
 $count_oai_sets = mysql_result($result, 0);
 
 // Kein Mechanismus zur Unterscheidung von Plural und Singular - da sollten immer mehr als 1 Quelle, bzw. mehr als 1 Set drin sein...
@@ -40,15 +43,19 @@ $content .= "Zurzeit befinden sich insgesamt <em>".$count_oai_sources." OAI-Quel
 
 
 // Abfrage der Anzahl der aktiven OAI-Quellen
-$sql = "SELECT COUNT('id') AS 'count_active_oai_sources' FROM `oai_sources` WHERE active = 1";
+$sql = "SELECT COUNT('id') AS count_active_oai_sources FROM oai_sources WHERE active = 1";
 $result = mysql_query($sql, $db_link);
-if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+if (!$result) {
+	die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+}
 $count_active_oai_sources = mysql_result($result, 0);
 
 // Abfrage der Anzahl der geharvesteten Sets
-$sql = "SELECT COUNT( 'id' ) AS 'count_oai_sets' FROM `oai_sets` WHERE harvest = 1 AND NOT (setspec LIKE '%allSets%' OR setspec LIKE '%noSetSupport%')";
+$sql = "SELECT COUNT('id') AS count_oai_sets FROM oai_sets WHERE harvest = 1 AND NOT (setspec LIKE '%allSets%' OR setspec LIKE '%noSetSupport%')";
 $result = mysql_query($sql, $db_link);
-if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+if (!$result) {
+	die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+}
 $count_harvested_oai_sets = mysql_result($result, 0);
 
 $content .= "Aus den <em>".$count_active_oai_sources." aktiven OAI-Quellen</em> werden <em>".$count_harvested_oai_sets." Sets</em> geharvestet.\n</p>\n";
@@ -274,10 +281,11 @@ if ($current_show_status > 0) {
 	$condition = $current_show_status == 1 ? "NOT IN" : "IN";
 	$sql_query_select_oai_sources_where .= $where_set ? " AND" : " WHERE";
 	$where_set = true;
-	$sql_query_select_oai_sources_where .= " oai_sources.id ".$condition." (SELECT DISTINCT oai_source
-					FROM `oai_sets`
-					WHERE harvest_status >0
-					OR index_status >0)";
+	$sql_query_select_oai_sources_where .= " oai_sources.id " . $condition . "
+					(SELECT DISTINCT oai_source
+					FROM oai_sets
+					WHERE harvest_status > 0
+					OR index_status > 0)";
 
 	unset($condition); // zur Sicherheit
 }
@@ -307,7 +315,7 @@ if (strlen($current_filter_url) >= 3) {
 	foreach ($current_filter_url_single as $filter_url) {
 		if (strlen($filter_url) >= 3) {
 			$current_filter_url_parsed .= strlen($current_filter_url_parsed) == 0 ? "" : " AND ";
-			$current_filter_url_parsed .= "url LIKE '%".$filter_url."%'";
+			$current_filter_url_parsed .= "url LIKE '%" . $filter_url . "%'";
 		}
 	}
 }
@@ -319,8 +327,9 @@ if ((isset($current_filter_name_parsed) ? strlen($current_filter_name_parsed) >=
 	$sql_query_select_oai_sources_where .= $where_set ? " AND (" : " WHERE (";
 
 	// Zum "where" string hinzufügen
-	$sql_query_select_oai_sources_where .= (isset($current_filter_name_parsed) ? strlen($current_filter_name_parsed) > 0 : false) ?  "MATCH (name) AGAINST ('".$current_filter_name_parsed."' IN BOOLEAN MODE)" : "";
-	$sql_query_select_oai_sources_where .= (isset($current_filter_name_parsed) && isset($current_filter_url_parsed) ? strlen($current_filter_name_parsed) > 0 && strlen($current_filter_url_parsed) > 0 : false) ? " ".$current_filter_bool." " : "";
+	$sql_query_select_oai_sources_where .= (isset($current_filter_name_parsed) ? strlen($current_filter_name_parsed) > 0 : false) ?
+		"MATCH (name) AGAINST ('" . $current_filter_name_parsed . "' IN BOOLEAN MODE)" : "";
+	$sql_query_select_oai_sources_where .= (isset($current_filter_name_parsed) && isset($current_filter_url_parsed) ? strlen($current_filter_name_parsed) > 0 && strlen($current_filter_url_parsed) > 0 : false) ? " " . $current_filter_bool . " " : "";
 	$sql_query_select_oai_sources_where .= (isset($current_filter_url_parsed) ? strlen($current_filter_url_parsed) > 0 : false) ? $current_filter_url_parsed : "";
 	$sql_query_select_oai_sources_where .= ")";
 }
@@ -328,9 +337,13 @@ if ((isset($current_filter_name_parsed) ? strlen($current_filter_name_parsed) >=
 
 // Abfrage der Anzahl der ausgewählten OAI-Quellen, JOIN wird wenn möglich übergangen
 if($current_show_status > 0) {
-	$sql = "SELECT COUNT( DISTINCT oai_sources.id ) FROM `oai_sources` INNER JOIN `oai_sets` ON oai_sources.id = oai_sets.oai_source".$sql_query_select_oai_sources_where;
+	$sql = "SELECT COUNT( DISTINCT oai_sources.id )
+			FROM oai_sources INNER JOIN oai_sets ON oai_sources.id = oai_sets.oai_source" .
+			$sql_query_select_oai_sources_where;
 } else {
-	$sql = "SELECT COUNT( DISTINCT oai_sources.id ) FROM `oai_sources`".$sql_query_select_oai_sources_where;
+	$sql = "SELECT COUNT( DISTINCT oai_sources.id )
+			FROM oai_sources" .
+			$sql_query_select_oai_sources_where;
 }
 $result = mysql_query($sql, $db_link);
 if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
@@ -409,11 +422,11 @@ if($count_selected_oai_sources > 0) {
 				COUNT(oai_sets.id) AS total_sets,
 				SUM(oai_sets.harvest) AS active_sets
 			FROM
-				`oai_sources` INNER JOIN `oai_sets` ON oai_sources.id = oai_sets.oai_source"
-			.$sql_query_select_oai_sources_where." "
-			." GROUP BY oai_sources.id, oai_sources.name, oai_sources.url, oai_sources.active, oai_sources.added"
-			." ORDER BY ".$current_sortby." ".$current_sorthow
-			." LIMIT ".$current_start.", ".$current_limit;
+				oai_sources INNER JOIN oai_sets ON oai_sources.id = oai_sets.oai_source"
+		.	$sql_query_select_oai_sources_where
+		."	GROUP BY oai_sources.id, oai_sources.name, oai_sources.url, oai_sources.active, oai_sources.added"
+		."	ORDER BY " . $current_sortby . " " . $current_sorthow
+		."	LIMIT " . $current_start . ", " . $current_limit;
 
 	// echo $sql;
 
@@ -428,7 +441,7 @@ if($count_selected_oai_sources > 0) {
 		// Ist nur nötig, wenn es nur ein "aktives" set gibt.
 		if ($row['active_sets'] == 1) {
 
-			$sql = "SELECT setSpec FROM oai_sets WHERE oai_source = ".$row['id']." AND harvest = 1";
+			$sql = "SELECT setSpec FROM oai_sets WHERE oai_source = " . $row['id'] . " AND harvest = 1";
 			$result_allsets = mysql_query($sql, $db_link);
 			if (!$result_allsets) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 

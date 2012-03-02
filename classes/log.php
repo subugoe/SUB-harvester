@@ -43,13 +43,13 @@ class log {
 			if($status >= 0) {
 				// Wurde schon auf eine Quelle eingegrenzt?
 				$sql .= is_null($oai_source_id) ? "" : "AND ";
-				$sql .= "oai_logs.status = " . mysql_real_escape_string($status) . " ";
+				$sql .= "oai_logs.status = " . intval($status) . " ";
 			}
 
 			if($type >= 0) {
 				// Wurde schon auf eine Quelle eingegrenzt?
 				$sql .= !is_null($oai_source_id) || $status >= 0 ? "AND " : "";
-				$sql .= "oai_logs.type = " . mysql_real_escape_string($type) . " ";
+				$sql .= "oai_logs.type = " . intval($type) . " ";
 			}
 		}
 

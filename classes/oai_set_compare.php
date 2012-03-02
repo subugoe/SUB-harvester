@@ -16,12 +16,14 @@ class oai_set_compare {
 	public function __construct ($current_sets, $oai_source_id, $db_link) {
 
 		// Abfrage der in der Datenbank gespeicherten Sets
-		$sql = "SELECT `setSpec` , `setName` , `id` , `harvest` , `online`
-				FROM `oai_sets`
-				WHERE `oai_source` = " . intval($oai_source_id) . "
-				ORDER BY `setName` ASC";
+		$sql = "SELECT setSpec, setName, id, harvest, online
+				FROM oai_sets
+				WHERE oai_source = " . intval($oai_source_id) . "
+				ORDER BY setName ASC";
 		$result = mysql_query($sql, $db_link);
-		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+		if (!$result) {
+			die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+		}
 
 		// Neben den mehrdimensionalen Arrays mit setSpec und setName werden
 		// flache Arrays mit dem setSpec für die Suche angelegt. Sie besitzen den gleichen Index.
@@ -76,11 +78,13 @@ class oai_set_compare {
 
 		// Abfrage Request-url
 
-		$sql = "SELECT `url`
-				FROM `oai_sources`
-				WHERE `id` = " . intval($oai_source_id);
+		$sql = "SELECT url
+				FROM oai_sources
+				WHERE id = " . intval($oai_source_id);
 		$result = mysql_query($sql, $db_link);
-		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+		if (!$result) {
+			die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+		}
 
 		$url = mysql_fetch_array($result, MYSQL_ASSOC);
 		$this->url = $url['url'];
