@@ -5,10 +5,10 @@
  **************   EROMM Search - OAI-Harvester   ***************
  **************                                  ***************
  ***************************************************************
- * 
+ *
  * Diese Datei dient zur Konfiguration des OAI-Harvesters
  * von EROMM Search.
- * 
+ *
  */
 
 $mysq_error_message = "Ein Fehler in der Datenbankabfrage";
@@ -17,11 +17,18 @@ $content = "";
 $javascript = "";
 $jquery = "resources/javascript/jquery-1.6.2.min.js";
 
-require_once(dirname(__FILE__) . '/config/settings.php');
+// Konfiguration laden
+$configurationPath = dirname(__FILE__) . '/config';
+$configurationName = getenv('HARVESTER_CONFIGURATION_NAME');
+if ($configurationName) {
+	$configurationPath .= '/' . $configurationName;
+}
+$configurationPath .= '/settings.php';
+require_once($configurationPath);
 
 // Template laden
 $file = fopen(dirname(__FILE__) . '/templates/html_template.html', "r");
-	
+
 while (!feof($file)) {
     $output .= fgets($file);
 }
@@ -29,7 +36,7 @@ fclose($file);
 $output = str_replace("%name%", SERVICE_NAME, $output);
 
 
-// Datenbankverbindung herstellen	
+// Datenbankverbindung herstellen
 $db_link = @mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
 
 if (!$db_link) {
@@ -39,15 +46,15 @@ if (!$db_link) {
 } else {
 
 	// Konfiguration ist möglich
-	
+
 	// Sprache für PHP-Funktionen
 	setlocale(LC_ALL,"de_DE.utf8");
-	
+
 	// DB-Einstellungen
 	mysql_select_db(DB_NAME, $db_link);
 	mysql_query("SET NAMES 'utf8'");
 	mysql_query("SET CHARACTER SET 'utf8'");
-	
+
 	// Sprache setzen
 	$sql = "SET lc_time_names = 'de_DE'";
 	$result = mysql_query($sql, $db_link);

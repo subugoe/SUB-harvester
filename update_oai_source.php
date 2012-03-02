@@ -10,8 +10,12 @@ require_once(dirname(__FILE__) . '/update_oai_source_funcs.php');
 
 // Datensatz freigeben, dabei wird auch der Token verglichen, für den Fall, dass er schon abgelaufen ist
 // TODO? Richtig wäre, den Datensatz erst am Ende freizugeben, aber es ist so unwahrscheinlich, dass ihn zwischenzeitlich (in dem Bruchteil der Sekunde) jemand öffnet
+$EditIDEscaped = mysql_real_escape_string($_POST['edit_id']);
+$EditTokenEscaped = mysql_real_escape_string($_POST['edit_token']);
+
 $sql = "DELETE FROM `oai_source_edit_sessions` 
-		WHERE oai_source = ".$_POST['edit_id']." AND MD5(timestamp) = '".$_POST['edit_token']."'";
+		WHERE oai_source = " . $EditIDEscaped . "
+		AND MD5(timestamp) = '" . $EditTokenEscaped ."'";
 $result = mysql_query($sql, $db_link);
 if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 
@@ -58,7 +62,7 @@ if ($_POST['edit_abort']) {
 				oai_sources.reindex AS 'reindex', 
 				oai_sets.harvest AS 'allSets_harvest' 
 				FROM `oai_sources` INNER JOIN oai_sets ON oai_sources.id = oai_sets.oai_source 
-				WHERE oai_sources.id = ".$_POST['edit_id']." AND oai_sets.setSpec = 'allSets'";
+				WHERE oai_sources.id = " . $EditIDEscaped ." AND oai_sets.setSpec = 'allSets'";
 		$result = mysql_query($sql, $db_link);
 		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 		$source_data_db = mysql_fetch_array($result, MYSQL_ASSOC);
@@ -142,20 +146,20 @@ if ($_POST['edit_abort']) {
 					index_subject = ".(isset($_POST['index_subject']) ? 1 : 0)." , 
 					index_description = ".(isset($_POST['index_description']) ? 1 : 0)." , 
 					index_source = ".(isset($_POST['index_source']) ? 1 : 0)." , 
-					dc_date_postproc = ".$_POST['dc_date_postproc']." , 
+					dc_date_postproc = ". mysql_real_escape_string($_POST['dc_date_postproc']) ." ,
 					identifier_filter = '".mysql_real_escape_string(stripslashes($_POST['identifier_filter']))."' , 
 					identifier_resolver = '".mysql_real_escape_string(stripslashes($_POST['identifier_resolver']))."' , 
 					identifier_resolver_filter = '".mysql_real_escape_string(stripslashes($_POST['identifier_resolver_filter']))."' , 
 					identifier_alternative = '".mysql_real_escape_string(stripslashes($_POST['identifier_alternative']))."' , 
-					country_code = '".$_POST['country']."' , 
+					country_code = '" . mysql_real_escape_string($_POST['country']) . "' ,
 					active = ".(isset($_POST['active']) ? 1 : 0)." , 
-					`from` = ".(strlen($_POST['from']) != 10 ? 'NULL' : "'".$_POST['from']."'")." , 
+					`from` = ".(strlen($_POST['from']) != 10 ? 'NULL' : "'". mysql_real_escape_string($_POST['from']) ."'")." ,
 					harvested_since = ".( strlen($_POST['from']) == 10 && !is_null($source_data_db['harvested_since']) && ($source_data_db['harvested_since'] < $_POST['from']) ? "'".$_POST['from']."'" : !is_null($source_data_db['harvested_since']) ? "'".$source_data_db['harvested_since']."'" : "NULL" )." , 
-					last_harvest = ".( $new_last_harvest == "NULL" ? "NULL" : "'".$new_last_harvest."'" )." , 
-					harvest_period = ".$_POST['harvest_period']." , 
-					reindex = ".$reindex." , 
-					comment = '".mysql_real_escape_string(stripslashes($_POST['comment']))."' 
-					WHERE id = ".$_POST['edit_id'];
+					last_harvest = ".( $new_last_harvest == "NULL" ? "NULL" : "'".mysql_real_escape_string($new_last_harvest)."'" )." ,
+					harvest_period = " . intval($_POST['harvest_period']) . " ,
+					reindex = " . $reindex . " ,
+					comment = '" . mysql_real_escape_string(stripslashes($_POST['comment'])) . "'
+					WHERE id = " . $EditIDEscaped;
 		$result = mysql_query($sql, $db_link);
 		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}	
 		
@@ -169,7 +173,7 @@ if ($_POST['edit_abort']) {
 				$sql = "UPDATE `oai_sets` SET 
 						online = '1' , 
 						harvest = ".(isset($set['harvest']) ? 1 : 0)." 
-						WHERE id = ".$set['id'];
+						WHERE id = " . intval($set['id']);
 				$result = mysql_query($sql, $db_link);
 				if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}	
 			}
@@ -190,7 +194,12 @@ if ($_POST['edit_abort']) {
 				VALUES ";
 	
 			foreach($_POST['sets']['new'] as $set) {
-				$sql .= "(NULL , ".$_POST['edit_id'].", '".mysql_real_escape_string($set['setSpec'])."', '".mysql_real_escape_string(stripslashes($set['setName']))."', TRUE, ".(isset($set['harvest']) ? 1 : 0).", -1, 0), ";
+				$sql .= "(NULL, "
+						. $EditIDEscaped . ", '"
+						. mysql_real_escape_string($set['setSpec']) . "', '"
+						. mysql_real_escape_string(stripslashes($set['setName'])) . "', "
+						. "TRUE, "
+						. (isset($set['harvest']) ? 1 : 0).", -1, 0), ";
 			}
 			
 			$sql = substr($sql, 0, -2);
@@ -205,7 +214,7 @@ if ($_POST['edit_abort']) {
 						online = '0' , 
 						setName = '".mysql_real_escape_string(stripslashes($set['setName']))."' , 
 						harvest = ".(isset($set['harvest']) ? 1 : 0)."  
-						WHERE id = ".$set['id'];
+						WHERE id = " . intval($set['id']);
 				$result = mysql_query($sql, $db_link);
 				if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}	
 			}

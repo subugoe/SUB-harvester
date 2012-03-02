@@ -40,12 +40,12 @@ function insert_log($set_id, $status, $message, $db_link, $add, $delete, $type) 
 		) VALUES (
 			NULL, 
 			NOW(), 
-			".$set_id.", 
-			".$status.", 
-			".$type.", 
+			".intval($set_id).",
+			".intval($status).",
+			".intval($type).",
 			'".mysql_real_escape_string($message)."',
-			".$add.",
-			".$delete."
+			".intval($add).",
+			".intval($delete)."
 		)";
 	
 	// Besteht die Verbindung noch?

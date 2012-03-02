@@ -7,7 +7,8 @@
 
 
 if ($_POST['id'] != "") {
-	
+	$IDEscaped = mysql_real_escape_string($_POST['id']);
+
 	/*
 	 * Prüfung ob der Datensatz nicht gesperrt ist.
 	 * Dazu dient die Datenbanktabelle oai_source_edit_sessions
@@ -23,7 +24,7 @@ if ($_POST['id'] != "") {
 		// Abfrage der Tabelle
 		$sql = "SELECT CAST((NOW() - timestamp) AS SIGNED) AS seconds_alive , MD5(timestamp) as token 
 				FROM `oai_source_edit_sessions` 
-				WHERE oai_source = ".$_POST['id'];
+				WHERE oai_source = " . $IDEscaped;
 		$result = mysql_query($sql, $db_link);
 		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 		
@@ -34,7 +35,7 @@ if ($_POST['id'] != "") {
 						`oai_source` , `timestamp`
 					)
 					VALUES (
-						'".$_POST['id']."',	NOW()
+						'" . $IDEscaped . "',	NOW()
 					)";
 			$result = mysql_query($sql, $db_link);
 			if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
@@ -42,7 +43,7 @@ if ($_POST['id'] != "") {
 			// Token abfragen
 			$sql = "SELECT MD5(timestamp) as token 
 					FROM `oai_source_edit_sessions` 
-					WHERE oai_source = ".$_POST['id'];
+					WHERE oai_source = " . $IDEscaped;
 			$result = mysql_query($sql, $db_link);
 			if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 			$session_data = mysql_fetch_array($result, MYSQL_ASSOC);
@@ -60,14 +61,14 @@ if ($_POST['id'] != "") {
 				// Den Timestamp der Session aktualiseren
 				$sql = "UPDATE `oai_source_edit_sessions` 
 						SET timestamp = NOW() 
-						WHERE oai_source = ".$_POST['id'];
+						WHERE oai_source = " . $IDEscaped;
 				$result = mysql_query($sql, $db_link);
 				if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 				
 				// Token abfragen
 				$sql = "SELECT MD5(timestamp) as token 
 						FROM `oai_source_edit_sessions` 
-						WHERE oai_source = ".$_POST['id'];
+						WHERE oai_source = " . $IDEscaped;
 				$result = mysql_query($sql, $db_link);
 				if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 				$session_data = mysql_fetch_array($result, MYSQL_ASSOC);
@@ -109,7 +110,7 @@ if ($_POST['id'] != "") {
 		// Abfrage der Informationen zur Quelle aus der Datenbank (es werden fast alle Felder gebraucht => "*")
 		$sql = "SELECT * 
 				FROM oai_sources 
-				WHERE id =".$_POST['id']; 
+				WHERE id =" . $IDEscaped;
 		$result = mysql_query($sql, $db_link);
 		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 		$oai_source_data = mysql_fetch_array($result, MYSQL_ASSOC);

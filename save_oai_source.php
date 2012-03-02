@@ -95,7 +95,7 @@ if (mysql_query($sql, $db_link)) {
 	$sets = $oai_source->getSets();
 	
 	foreach($sets as $set) {
-		$sql .= "(NULL , ".$source_id.", '".mysql_real_escape_string($set['setSpec'])."', '".mysql_real_escape_string(stripslashes($set['setName']))."', TRUE, ".(isset($set['harvest']) ? 1 : 0).", -1, -1), ";
+		$sql .= "(NULL , ". $source_id.", '".mysql_real_escape_string($set['setSpec'])."', '".mysql_real_escape_string(stripslashes($set['setName']))."', TRUE, ".(isset($set['harvest']) ? 1 : 0).", -1, -1), ";
 	}
 	
 	$sql = substr($sql, 0, -2);
