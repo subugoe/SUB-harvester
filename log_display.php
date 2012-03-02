@@ -4,10 +4,9 @@
  */
 
 
-require_once("./classes/log.php");
+require_once(dirname(__FILE__) . "/classes/log.php");
 
 // Datenbankverbindung herstellen	
-require_once("./db_connect.php");
 $db_link = @mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
 
 if (!$db_link) {

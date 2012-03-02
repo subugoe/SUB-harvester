@@ -6,8 +6,8 @@
  */
 
 
-require_once("./classes/oai_source_data.php");
-require_once("./classes/button_creator.php");
+require_once(dirname(__FILE__) . "/classes/oai_source_data.php");
+require_once(dirname(__FILE__) . "/classes/button_creator.php");
 
 $oai_source = new oai_source_data("post", 0, 0);
 

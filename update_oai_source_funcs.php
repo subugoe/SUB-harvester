@@ -3,8 +3,6 @@
  * Stellt Funktionen für update_oai_source.php zur Verfügung
  */
 
-// Einstellungen einbinden
-require_once(dirname(__FILE__) . '/config/settings.php');
 
 // Ermittelt die Anzahl der Indexeinträge der Quelle mit der $oai_source_id 
 // mit oai_datestamp bis zum Zeitpunkt $until (Format "JJJJ-MM-TT")

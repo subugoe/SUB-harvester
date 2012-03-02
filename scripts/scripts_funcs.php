@@ -4,14 +4,28 @@
  */
 
 
+// Liest die Konfigurationsdatei ein.
+// Ist die Variable HARVESTER_CONFIGURATION_NAME gesetzt, werden die Einstellungen
+// aus dem Unterordner des config Ordners mit dem Namen des Variableninhalts geladen.
+function readConfiguration () {
+	$configurationPath = dirname(__FILE__) . '/../config';
+	$configurationName = getenv('HARVESTER_CONFIGURATION_NAME');
+	if ($configurationName) {
+		$configurationPath .= '/' . $configurationName;
+	}
+	$configurationPath .= '/settings.php';
+	require_once($configurationPath);
+}
+
+
 // Prüft, ob die Datenbankverbindung noch besteht, 
 // versucht im Fehlerfall eine Wiederherstellung
 // Gibt den DB-Link zurück
 function mysql_connection_check($db_link) {
 	
 	if (!mysql_ping($db_link)) {
-		// Versuchen, Verbinung wiederherszustellen
-		require_once("../db_connect.php");
+		// Versuchen, die Verbindung wiederherzustellen
+		readConfiguration();
 		$db_link = mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, TRUE);
 		
 		// DB-Einstellungen

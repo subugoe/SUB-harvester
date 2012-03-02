@@ -5,7 +5,7 @@
  * fragt dabei Name, Indexierung, Anzeige und Sets der Quelle ab.
  */
 
-require_once("./classes/button_creator.php");
+require_once(dirname(__FILE__) . "/classes/button_creator.php");
 
 
 if ($_POST['add_oai_source'] != "") {
@@ -17,7 +17,8 @@ if ($_POST['add_oai_source'] != "") {
 	$results = mysql_query($sql, $db_link);
 	if ($results && mysql_num_rows($results) > 0) {
 		$match = mysql_fetch_array($results, MYSQL_ASSOC);
-		$content .= "<p>
+		$content .= "
+			<p>
 				Diese OAI-Quelle existiert bereits: Weiterleitung zur Bearbeitungsseite.
 			</p>
 			<form method=\"post\" id=\"forwarding\" action=\"index.php\" accept-charset=\"UTF-8\">
@@ -68,7 +69,7 @@ if ($_POST['add_oai_source'] != "") {
 		// Ist der Server erreichbar und ist seine Antwort nicht leer?
 		if ($http_response && curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200) {
 		
-			require_once("./classes/oai_identify_parser.php");
+			require_once(dirname(__FILE__) . "/classes/oai_identify_parser.php");
 			
 			$oai_identify = new oai_identify_parser($http_response);
 			
@@ -98,7 +99,7 @@ if ($_POST['add_oai_source'] != "") {
 				$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_country\">Land:</td>\n";
 				$content .= "						<td align=\"left\">\n";
 				
-				require_once("./classes/country_parser.php");
+				require_once(dirname(__FILE__) . "/classes/country_parser.php");
 				$countries = new country_parser($db_link);
 				$content .= $countries->getSelect($tld);
 				
@@ -269,7 +270,7 @@ if ($_POST['add_oai_source'] != "") {
 				$content .= "					    <col width=\"auto\"/>\n";
 				$content .= "					 </colgroup>\n";
 				
-				require_once("./classes/oai_listsets_parser.php");
+				require_once(dirname(__FILE__) . "/classes/oai_listsets_parser.php");
 				$sets = new oai_listsets_parser($_POST['add_oai_source']);
 				
 				if ($sets->listSetsSuccessful()) {		

@@ -142,7 +142,7 @@ if ($_POST['id'] != "") {
 		$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_country\">Land:</td>\n";
 		$content .= "						<td align=\"left\">\n";
 		
-		require_once("./classes/country_parser.php");
+		require_once(dirname(__FILE__) . "/classes/country_parser.php");
 		$countries = new country_parser($db_link);
 		$content .= $countries->getSelect($oai_source_data['country_code']);			
 		
@@ -305,12 +305,12 @@ if ($_POST['id'] != "") {
 		
 		$content .= "				<h3>Zu harvestende Sets</h3>\n";
 		
-		require_once("./classes/oai_listsets_parser.php");
+		require_once(dirname(__FILE__) . "/classes/oai_listsets_parser.php");
 		$sets = new oai_listsets_parser($oai_source_data['url']);
 		
 		if ($sets->listSetsSuccessful()) {		
 			$current_sets = $sets->getSets();
-			require_once("./classes/oai_set_compare.php");
+			require_once(dirname(__FILE__) . "/classes/oai_set_compare.php");
 			$set_compare = new oai_set_compare($current_sets, $_POST['id'], $db_link);
 			$content .= $set_compare->getTables();
 		} else {
