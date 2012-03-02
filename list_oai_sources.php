@@ -449,15 +449,15 @@ if($count_selected_oai_sources > 0) {
 		$content .= "						<td style=\"text-align: left;\">".htmlspecialchars($row['url'])."</td>\n";
 		$content .= "						<td style=\"text-align: center;\">".$row['added_view']."</td>\n";
 		$content .= "						<td style=\"text-align: center;\">".($allsets ? "<span style=\"font-weight: bold\">∞</span>" : $row['active_sets'])." (".(($row['total_sets'])-1).")</td>\n";
-		
+
 		if($row['active']) {
-			$content .= "						<td style=\"text-align: center;\"><img src=\"./images/ok.png\" alt=\"OAI-Quelle wird geharvested\" title=\"OAI-Quelle wird geharvested\" /></td>\n";	
+			$content .= "						<td style=\"text-align: center;\"><img src=\"resources/images/ok.png\" alt=\"OAI-Quelle wird geharvested\" title=\"OAI-Quelle wird geharvested\" /></td>\n";
 		} else {
-			$content .= "						<td style=\"text-align: center;\"><img src=\"./images/not_ok.png\" alt=\"OAI-Quelle wird nicht geharvested\" title=\"OAI-Quelle wird nicht geharvested\" /></td>\n";
+			$content .= "						<td style=\"text-align: center;\"><img src=\"resources/images/not_ok.png\" alt=\"OAI-Quelle wird nicht geharvested\" title=\"OAI-Quelle wird nicht geharvested\" /></td>\n";
 		}
-		
+
 		if($row['status'] > 0 ) {
-			$content .= "						<td style=\"text-align: center;\"><img src=\"./images/error.png\" alt=\"Fehler!\" title=\"Fehler!\" /></td>\n";
+			$content .= "						<td style=\"text-align: center;\"><img src=\"resources/images/error.png\" alt=\"Fehler!\" title=\"Fehler!\" /></td>\n";
 		} else {
 			$content .= "						<td></td>\n";
 		}

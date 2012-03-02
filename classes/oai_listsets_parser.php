@@ -180,19 +180,19 @@ class oai_listsets_parser {
 			$case = $this->error_code == "noSetHierarchy" ? "noSetHierarchy" : "noSets";
 			
 			$rows .= "<tr style=\"background-color: #B1D0B9;\">\n";
-			$rows .= "<td><input type=\"button\" name=\"set_".$i."_preview\" value=\"Preview\" onclick=\"preview()\"></input>&nbsp;<a href=\"".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc\" onclick=\"window.open(this.href, '_blank'); return false;\"><img style=\"vertical-align: top;\" src=\"images/xml.png\" alt=\"OAI-XML anzeigen\" title=\"OAI-XML anzeigen\" /></a></td>\n";
+			$rows .= "<td><input type=\"button\" name=\"set_".$i."_preview\" value=\"Preview\" onclick=\"preview()\"></input>&nbsp;<a href=\"".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc\" onclick=\"window.open(this.href, '_blank'); return false;\"><img style=\"vertical-align: top;\" src=\"resources/images/xml.png\" alt=\"OAI-XML anzeigen\" title=\"OAI-XML anzeigen\" /></a></td>\n";
 			$rows .= "<td align=\"right\" valign=\"middle\"><input id=\"set1\" name=\"set1\" type=\"checkbox\" checked=\"checked\" disabled=\"disabled\"></td>\n";
 			$rows .= "<td align=\"left\" valign=\"middle\" class=\"table_field_description\"><label for=\"set".$i."\">Komplette OAI-Quelle harvesten</label></input><input style=\"visibility: hidden;\" name=\"sets[".$i."][harvest]\" type=\"checkbox\" checked=\"checked\"></input>\n";
 			$rows .= "<input type=\"hidden\" name=\"sets[".$i."][setName]\" value=\"".$case."\"></input>\n";
 			$rows .= "<input type=\"hidden\" name=\"sets[".$i."][setSpec]\" value=\"allSets\"></input>\n";
 			$rows .= "</td>\n";
 			$rows .= "</tr>\n";
-			
-			
+
+
 		} else {
-			
+
 			$rows .= "<tr style=\"background-color: #B1D0B9;\">\n";
-			$rows .= "<td valign=\"middle\"><input type=\"button\" name=\"set_".$i."_preview\" value=\"Preview\" onclick=\"preview()\"></input>&nbsp;<a href=\"".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc\" onclick=\"window.open(this.href, '_blank'); return false;\"><img style=\"vertical-align: top;\" src=\"images/xml.png\" alt=\"OAI-XML anzeigen\" title=\"OAI-XML anzeigen\" /></a></td>\n";
+			$rows .= "<td valign=\"middle\"><input type=\"button\" name=\"set_".$i."_preview\" value=\"Preview\" onclick=\"preview()\"></input>&nbsp;<a href=\"".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc\" onclick=\"window.open(this.href, '_blank'); return false;\"><img style=\"vertical-align: top;\" src=\"resources/images/xml.png\" alt=\"OAI-XML anzeigen\" title=\"OAI-XML anzeigen\" /></a></td>\n";
 			$rows .= "<td align=\"right\" valign=\"middle\"><input id=\"set".$i."\" name=\"sets[".$i."][harvest]\" type=\"checkbox\" onclick=\"validateSets()\"></input></td>\n";
 			$rows .= "<td align=\"left\" valign=\"middle\" class=\"table_field_description\"><label for=\"set".$i."\">Komplette OAI-Quelle harvesten</label>\n";
 			$rows .= "<input type=\"hidden\" name=\"sets[".$i."][setName]\" value=\"allSets\"></input>\n";
@@ -209,8 +209,8 @@ class oai_listsets_parser {
 				} else {
 					$rows .= "<tr style=\"background-color: #b9c8fe;\">\n";
 				}
-	
-				$rows .= "<td><input type=\"button\" name=\"set_".$i."_preview\" value=\"Preview\" onclick=\"preview('". str_replace("'", "\'", $set['setSpec']) ."', '". str_replace("'", "\'", $set['setName']) ."')\"></input>&nbsp;<a href=\"".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc&amp;set=".$set['setSpec']."\" onclick=\"window.open(this.href, '_blank'); return false;\"><img style=\"vertical-align: top;\" src=\"images/xml.png\" alt=\"OAI-XML anzeigen\" title=\"OAI-XML anzeigen\" /></a></td>\n";
+
+				$rows .= "<td><input type=\"button\" name=\"set_".$i."_preview\" value=\"Preview\" onclick=\"preview('". str_replace("'", "\'", $set['setSpec']) ."', '". str_replace("'", "\'", $set['setName']) ."')\"></input>&nbsp;<a href=\"".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc&amp;set=".$set['setSpec']."\" onclick=\"window.open(this.href, '_blank'); return false;\"><img style=\"vertical-align: top;\" src=\"resources/images/xml.png\" alt=\"OAI-XML anzeigen\" title=\"OAI-XML anzeigen\" /></a></td>\n";
 				$rows .= "<td align=\"right\" valign=\"middle\"><input id=\"set".$i."\" name=\"sets[".$i."][harvest]\" type=\"checkbox\" onclick=\"validateSets()\"></input></td>\n";
 				$rows .= "<td align=\"left\" valign=\"middle\" class=\"table_field_description\"><label for=\"set".$i."\">".( htmlentities($set['setName'], ENT_QUOTES, 'UTF-8') )." <span style=\"font-weight: normal;\">(".( htmlentities($set['setSpec'], ENT_QUOTES, 'UTF-8') ).")</span></label>\n";
 				$rows .= "<input type=\"hidden\" name=\"sets[".$i."][setName]\" value=\"".( htmlentities($set['setName'], ENT_QUOTES, 'UTF-8') )."\"></input>\n";

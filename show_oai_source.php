@@ -106,7 +106,7 @@ $content .= "					<td align=\"left\" class=\"table_field_data\">".( htmlentities
 // Fehlerzeichen
 $content .= "					<td rowspan=\"16\" align=\"left\" style=\"vertical-align: middle;\">";
 if ($oai_source_status > 0) {
-	$content .= "<a href=\"#logs\"><img title=\"Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.\" alt=\"Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.\" src=\"./images/big_error.png\" /></a>";
+	$content .= "<a href=\"#logs\"><img title=\"Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.\" alt=\"Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.\" src=\"resources/images/big_error.png\" /></a>";
 }
 $content .= "</td>\n";
 $content .= "				</tr>\n";
@@ -139,9 +139,9 @@ $content .= "					<td align=\"right\" class=\"table_field_description\">Aktiv:</
 // Harvest-Status
 $content .= "					<td align=\"left\" class=\"table_field_data\">";
 if ($oai_source_data['active']) {
-	$content .= "<img title=\"OAI-Quelle wird geharvested\" alt=\"OAI-Quelle wird geharvested\" src=\"./images/ok.png\" />";
+	$content .= "<img title=\"OAI-Quelle wird geharvested\" alt=\"OAI-Quelle wird geharvested\" src=\"resources/images/ok.png\" />";
 } else {
-	$content .= "<img src=\"./images/not_ok.png\" alt=\"OAI-Quelle wird nicht geharvested\" title=\"OAI-Quelle wird nicht geharvested\" />";
+	$content .= "<img src=\"resources/images/not_ok.png\" alt=\"OAI-Quelle wird nicht geharvested\" title=\"OAI-Quelle wird nicht geharvested\" />";
 }
 $content .= "</td>\n";
 $content .= "				</tr>\n";
@@ -151,9 +151,9 @@ $content .= "					<td align=\"right\" class=\"table_field_description\">Neuindex
 // Neuindexierung
 $content .= "					<td align=\"left\" class=\"table_field_data\">";
 if ($oai_source_data['reindex']) {
-	$content .= "<img title=\"OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert\" alt=\"OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert\" src=\"./images/ok.png\" />";
+	$content .= "<img title=\"OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert\" alt=\"OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert\" src=\"resources/images/ok.png\" />";
 } else {
-	$content .= "<img src=\"./images/not_ok.png\" alt=\"OAI-Quelle ist nicht zur Neuindexierung markiert\" title=\"OAI-Quelle ist nicht zur Neuindexierung markiert\" />";
+	$content .= "<img src=\"resources/images/not_ok.png\" alt=\"OAI-Quelle ist nicht zur Neuindexierung markiert\" title=\"OAI-Quelle ist nicht zur Neuindexierung markiert\" />";
 }
 $content .= "</td>\n";
 $content .= "				</tr>\n";
