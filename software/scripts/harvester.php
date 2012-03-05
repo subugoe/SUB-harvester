@@ -106,44 +106,43 @@ if (!$result) {
 if (mysql_num_rows($result) == 0) {
 	// Heute keine Quelle zum Harvesten
 	// Meldung in Textdatei, da Logs mit Sets verknüpft sind - passt einfach nicht in DB
-	
 	$filename = HARVEST_FOLDER."/".$current_date."/no_harvest_scheduled.txt";
 	$file = fopen($filename, "w");
 	fputs($file, "Kein Quelle zum Harvesten vorgesehen.");
 	fclose($file);
-	
+
 } else {
-	
+
 // Aus der Datenbankabfrage ein mehrdimensionales Array mit den Harvestaufgaben aufbauen.
-	
+
 $source_id = "";
 $harvest_tasks = Array();
 
 while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-	
+
 	// Neue Quelle?
 	if ($source_id != $row['source_id']) {
-		$harvest_tasks[] = 
+		$harvest_tasks[] =
 			Array(
-				"source_id"			=> $row['source_id'] , 
-				"url"				=> $row['url'] , 
+				"source_id"			=> $row['source_id'] ,
+				"url"				=> $row['url'] ,
 				"source_name"		=> $row['source_name'] ,
 				"reindex"			=> $row['reindex'] ,
-				"start_from"		=> $row['start_from'] , 
-				"harvested_since"	=> $row['harvested_since'] , 
+				"start_from"		=> $row['start_from'] ,
+				"harvested_since"	=> $row['harvested_since'] ,
 				"sets"				=> Array()
 			);
 		$source_id = $row['source_id'];
 	}
-	
+
 	// Setdaten hinzufügen
-	$harvest_tasks[count($harvest_tasks)-1]['sets'][] = 
+	$harvest_tasks[count($harvest_tasks)-1]['sets'][] =
 		Array(
 			"set_id"			=> $row['set_id'] ,
-			"setName"			=> $row['setName'] , 
+			"setName"			=> $row['setName'] ,
 			"setSpec"			=> $row['setSpec'] ,
-			"harvest_status"	=> $row['harvest_status'] , 
-			"from"				=> $row['from'] 
+			"harvest_status"	=> $row['harvest_status'] ,
+			"from"				=> $row['from']
 		);
 }
 
@@ -304,21 +303,24 @@ foreach($harvest_tasks as $oai_source) {
 				// Harvestvorgang (zur Sicherheit wird dort noch einen Tag zurück gerechnet
 				// für evtl. Zeitzonenprobleme)
 				$oai_last_harvest = date("Y-m-d H:i:s", time());
-				
+
 				// Zählt, wie oft eine Anfrage abgebrochen worden ist.
 				$error_counter = 0;
-				
+
+				$resumptionToken = NULL;
+				$continue = TRUE;
+
 				do {
 					// Zeit in Sekunden, bis das Script abbricht. Muss vor jedem Schleifendurchlauf neu
 					// gesetzt werden.
 					set_time_limit(SPEED_TIME + 30);
-					
+
 					$url = $oai_source['url']."?verb=ListRecords";
-					
-					if (isset($resumptionToken)) {
-						// Abfrage mit resumptionToken 
+
+					if ($resumptionToken !== NULL) {
+						// Abfrage mit resumptionToken
 						$url .= "&resumptionToken=".urlencode($resumptionToken);
-				
+
 					} else {
 						// Die erste Anfrage
 						// Format
@@ -374,25 +376,25 @@ foreach($harvest_tasks as $oai_source) {
 							// Neuer Parseversuch
 							$xml_parseable = @$dom->loadXML($http_response);
 						}
-						
+
 						if ($xml_parseable) {
-						
+
 							// ResumptionToken
 							$resumptionToken_node = $dom->getElementsByTagName('resumptionToken');
-							
+
 							if ($resumptionToken_node->length == 0) {
-								unset($resumptionToken);
+								$continue = FALSE;
 							} else {
 								$resumptionToken = $resumptionToken_node->item(0)->nodeValue;
 								// Das resumptionToken-Element darf nicht leer sein
 								if (strlen($resumptionToken) == 0) {
-									unset($resumptionToken);
+									$continue = FALSE;
 								}
 							}
-							
+
 							// Gibt es in der Antwort der Quelle einen Errorcode? (oder mehrere...)
 							$error_nodes = $dom->getElementsByTagName('error');
-							
+
 							if ($error_nodes->length > 0) {
 								// Es gibt Fehler
 								// Meist gibt es nur eine error-node, aber das Protokoll erlaubt mehrere
@@ -443,7 +445,7 @@ foreach($harvest_tasks as $oai_source) {
 									insert_log($oai_set['set_id'], 1, $message, $db_link, 0, 0, 0);
 									$harvest_successful = false;
 									$log_created = true;
-									unset($resumptionToken);	
+									$continue = FALSE;
 								}
 							}
 
@@ -466,13 +468,13 @@ foreach($harvest_tasks as $oai_source) {
 								$log_created = true;
 								$harvest_successful = false;
 								// Nach dem Speichern wird die Schleife damit abgebrochen
-								unset($resumptionToken);
+								$continue = FALSE;
 							}
 						}
-						
+
 						// Speichern
 						$filename = HARVEST_FOLDER."/".$current_date."/".$oai_source['source_id']."/".$oai_set['set_id']."/oai_".$i.".xml";
-			
+
 						$file = fopen($filename, "w");
 						fputs($file, $http_response);
 						fclose($file);
@@ -505,16 +507,13 @@ foreach($harvest_tasks as $oai_source) {
 							break;
 						}
 					}
-					
+
 					sleep(LISTRECORDS_DELAY);
 
-				// Zum Abbruch muss der Resumption Token leer sein	
-				} while (isset($resumptionToken));
-				
-				// Muss vor dem nächsten Set reseted werden
-				// Falls noch nicht geschehen (bei Fehlern, die die Schleife abbrechen)
-				unset($resumptionToken);	
-				
+				// Zum Abbruch muss der Resumption Token leer sein
+				} while ($continue);
+
+
 				if (!$log_created) {
 					// Es wurde noch kein Logeintrag erzeugt.
 					insert_log($oai_set['set_id'], 0, $records_harvested." Record".( $records_harvested > 1 ? "s" : "" )." geharvested.", $db_link, $records_harvested, 0, 0);
