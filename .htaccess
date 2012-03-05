@@ -1,0 +1,5 @@
+AuthType Basic
+AuthName "Bitte anmelden"
+AuthUserFile ./.htpasswd
+Require user harvest
+
