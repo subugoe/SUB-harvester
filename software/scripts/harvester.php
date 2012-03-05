@@ -19,8 +19,12 @@ readConfiguration();
 $current_date = date('Y-m-d') . 'T' . date('H-i-s');
 
 
-// Prüfen, ob bereits ein Harvestprozess läuft
+// wenn nötig, »harvest« Ordner anlegen
+if (!file_exists(HARVEST_FOLDER)) {
+	mkdir(HARVEST_FOLDER, CHMOD, TRUE);
+}
 
+// Prüfen, ob bereits ein Harvestprozess läuft
 if (file_exists(HARVEST_FOLDER."/HARVESTING.txt")) {
 	// Harvesten nicht starten
 	echo utf8_decode("Es läuft bereits ein Harvesting-Prozess - Vorgang für $current_date abgebrochen.");
