@@ -17,7 +17,7 @@ define("SERVICE_NAME", 		'SUB');
 // Adresse des Solr-Index
 define("SOLR",				'http://vlib.sub.uni-goettingen.de/solr');
 
-define("DATA_FOLDER",		'/var/www/harvesting/data/geo-leo-artikel');
+define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/geo-leo-artikel');
 //define("DATA_FOLDER",		'C:/harvest_data');
 
 
