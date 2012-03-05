@@ -635,7 +635,7 @@ mysql_close($db_link);
 } // DB-link if else geht hier zu
 
 unlink(HARVEST_FOLDER."/HARVESTING.txt");
-echo "Harvester Ende.";
+echo "Harvester Ende.\n";
 
 } // Ende ELSE Fileexist HARVESTING
 ?>
