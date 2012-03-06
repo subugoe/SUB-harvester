@@ -393,6 +393,11 @@ p.result_web {
 	margin-bottom: 0px;
 }
 
+p.buttons {
+	text-align: center;
+	margin-top: 25px;
+}
+
 ul.result_links {
 	list-style-image: url(resources/images/internet.png);
 }
@@ -433,6 +438,10 @@ td.table_field_data textarea[disabled='disabled'] {
 	color: black;
 	border: 1px solid #272EC6;
 	background-color: #efefef;
+}
+
+form input.default {
+	font-weight: bold;
 }
 
 table.sets td {

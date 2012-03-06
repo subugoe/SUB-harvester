@@ -320,8 +320,13 @@ if ($_POST['id'] != "") {
 		
 		
 		// Speichern- & Abbrechen-Button
-		
-		$content .= "			<p style=\"text-align: center; margin-top: 25px;\"><input type=\"submit\" value=\" Abbrechen\" onclick=\"document.forms[0].elements['edit_abort'].value = 1;\"></input>&nbsp;&nbsp;<input ".( $sets->listSetsSuccessful() | $sets->getErrorCode() == 'noSetHierarchy' ? "" : "disabled=\"disabled\""  )." type=\"submit\" value=\" Speichern\"></input></p>";
+
+		$content .= "
+			<p class='buttons'>
+				<input type='submit' value='Löschen' onclick='remove(" . $oai_source_data['id'] . ")'></input>
+				<input type='submit' value='Abbrechen' onclick='document.forms[0].elements[\"edit_abort\"].value = 1;'></input>
+				<input " . ($sets->listSetsSuccessful() | $sets->getErrorCode() == 'noSetHierarchy' ? "" : "disabled='disabled'"). " type='submit' value='Speichern' class='default'></input>
+			</p>";
 		//$content .= "		</form>\n";
 		
 	} else {
