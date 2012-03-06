@@ -60,8 +60,10 @@ if (!$db_link) {
 	// Welche Funktion wird aufgerufen?
 	// Die Umsetzung erfolgt zur besseren Übersicht in externen Dateien
 	// Ggf. wird hier Javascript eingebunden.
+	$parameters = $_POST;
+	$parameters = array_merge($parameters, $_GET);
 
-	switch(isset($_POST['do']) ? $_POST['do'] : "" ) {
+	switch(isset($parameters['do']) ? $parameters['do'] : "" ) {
 
 		case "":
 			$output = str_replace("%javascript%", "<script src=\"$jquery\" type=\"text/javascript\" charset=\"utf-8\"></script>\n<script src=\"resources/javascript/start.js\" type=\"text/javascript\" charset=\"utf-8\"></script>", $output);
@@ -102,6 +104,11 @@ if (!$db_link) {
 			$output = str_replace("%javascript%", "<script src=\"resources/javascript/delete_oai_source.js\" type=\"text/javascript\" charset=\"utf-8\"></script>", $output);
 			require_once(dirname(__FILE__) . "/delete_oai_source.php");
 			break;
+
+		case "preview_oai_set":
+			require_once(dirname(__FILE__) . "/preview_oai_set.php");
+			break;
+
 
 	}
 

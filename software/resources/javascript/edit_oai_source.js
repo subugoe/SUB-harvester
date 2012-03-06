@@ -163,20 +163,21 @@ function checkbox_checker(name) {
 
 // Ruft die Previewseite mit den entsprechenden Parametern auf
 function preview(setSpec, setName) {
-	
-	
+
+
 	if (validate('preview')) {
-	
+
 		// URL mit GET-Variablen erzeugen
-		var url = "preview_oai_set.php";
-		
-		url += "?name=" + encodeURIComponent(document.forms[0].name.value);
+		var url = "index.php";
+
+		url += "?do=preview_oai_set"
+		url += "&name=" + encodeURIComponent(document.forms[0].name.value);
 		url += "&url=" + encodeURIComponent(document.forms[0].url.value);
 		url += "&country=" + encodeURIComponent(document.forms[0].country.options[document.forms[0].country.selectedIndex].value);
-		
+
 		url += ( (setSpec == null) ? "" : "&setSpec=" + encodeURI(setSpec) );
 		url += ( (setName == null) ? "" : "&setName=" + encodeURI(setName) );
-	  
+
 		url += "&i_cre=" + checkbox_checker('index_creator');
 		url += "&i_con=" + checkbox_checker('index_contributor');
 		url += "&i_pub=" + checkbox_checker('index_publisher');
