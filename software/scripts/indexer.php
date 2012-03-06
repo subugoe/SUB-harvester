@@ -69,24 +69,32 @@ curl_setopt($oai_indexer_ch, CURLOPT_POST, 1);
 $day_folders = scandir(HARVEST_FOLDER);
 //print_r($day_folders);
 
+// wenn nötig, »temp« und »archive« Ordner anlegen
+if (!file_exists(TEMP_FOLDER)) {
+	mkdir(TEMP_FOLDER, CHMOD, TRUE);
+}
+if (!file_exists(ARCHIVE_FOLDER)) {
+	mkdir(ARCHIVE_FOLDER, CHMOD, TRUE);
+}
+
 // Alle "Tagesverzeichnisse" durchgehen, z. B. "2011-01-01"
 // Es wird nicht geprüft, ob das Verzeichnis einen Datumscode besitzt, es werden alle Verzeichnisse
 // durchgegangen, unabhängig von ihrer Bezeichnung
 foreach ($day_folders as $day_folder) {
-	
+
 	// Gleiches Verzeichnis im Temp-Ordner anlegen
 	// Fehler abfangen TODO
 	@mkdir(TEMP_FOLDER."/".$day_folder, CHMOD);
-	
+
 	// Nur Unterverzeichnisse, kein Sprung in höhere Ebenen, Harvester-Sperrdatei ignorieren
 	if ($day_folder != "." && $day_folder != ".." && $day_folder != "HARVESTING.txt" && is_dir(HARVEST_FOLDER."/".$day_folder)) {
 		$source_folders = scandir(HARVEST_FOLDER."/".$day_folder);
 		//print_r($source_folders);
-		
-		
+
+
 		// Zipdatei zum Archivieren von erfolgreichen Indexierungsvorgängen anlegen
 		$archive = new ZipArchive();
-		
+
 		// Falls der Indexer schon Dateien dieses Tagesverzeichnisses bearbeitet hat
 		// gibt es schon eine Zip-Datei.
 		if(!file_exists(ARCHIVE_FOLDER."/".$day_folder.".zip")) {
