@@ -5,22 +5,23 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:eromm_oai="http://www.eromm.org/eromm_oai_harvester/" 
+    xmlns:eromm_oai="http://www.eromm.org/eromm_oai_harvester/"
     exclude-result-prefixes="oai xsi oai_dc dc eromm_oai"
     version="1.0">
-    
+
+	<xsl:import href="iso-639-1-to-639-2b.xsl"/>
     <xsl:output method="xml" indent="yes"/>
-    
-    <!-- 
-        Parameters 
+
+    <!--
+        Parameters
     -->
-    
+
     <!-- Misc  | default = "unset" -->
     <xsl:param name="timestamp" select="string('unset')"/>
     <xsl:param name="country_code" select="string('unset')"/>
     <xsl:param name="oai_repository_id" select="string('unset')"/>
     <xsl:param name="oai_set_id" select="string('unset')"/>
-    
+
     <!-- Indexsettings | 0 = false (default), 1 = true -->
     <xsl:param name="i_cre" select="0"/>
     <xsl:param name="i_con" select="0"/>
@@ -306,9 +307,13 @@
 	</xsl:template>
 
 	<xsl:template match="dc:language">
-		<field name="language">
-			<xsl:value-of select="."/>
-		</field>
+		<xsl:if test="string-length(.) &gt; 3">
+			<field name="language">
+				<xsl:call-template name="languageCodeConverter">
+					<xsl:with-param name="languageCode" select="."/>
+				</xsl:call-template>
+			</field>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="dc:format">
