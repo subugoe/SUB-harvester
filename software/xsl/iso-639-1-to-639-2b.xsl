@@ -5,8 +5,8 @@
 	* Preprocess the language codes by converting them to lowercase and removing quotation marks.
 	* Preprocesses regional codes like de_DE by just keeping the first to letters.
 	* Coverts the 2-letter language codes found into their ISO 639-2/B equivalents.
-	* Passes through all language codes not falling in any of the categories above.	
-	
+	* Passes through all language codes not falling in any of the categories above.
+
 	Underlying list taken from Wikipedia:
 		http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 
@@ -20,20 +20,21 @@
 
 	<xsl:output indent="yes" method="xml" version="1.0" encoding="UTF-8"/>
 
-	<!-- 
+	<!--
 		Template languageCodeConverter
 		Parameter:	languageCode - string
 		Returns:	String with ISO 639-2/B language code corresponding to $languageCode.
-					Input string, if there is no match.	
+					Input string, if there is no match.
 	-->
 	<xsl:template name="languageCodeConverter">
 		<xsl:param name="languageCode"/>
+		<!-- Convert language code to lower case and remote dots. -->
 		<xsl:variable name="lowerCaseLanguageCode" select="translate(
 			$languageCode,
-			'ABCDEFGHIJKLMNOPQRSTUVWXYZ',		
+			'ABCDEFGHIJKLMNOPQRSTUVWXYZ.',
 			'abcdefghijklmnopqrstuvwxyz'  )"/>
 
-		<!-- 
+		<!--
 			Strip regional part from language code, e.g. de_DE => de
 		-->
 		<xsl:variable name="myLanguageCode">
@@ -425,7 +426,7 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		
+
 		<xsl:if test="$resultCode != ''">
 			<xsl:value-of select="$resultCode"/>
 		</xsl:if>
