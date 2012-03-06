@@ -304,10 +304,19 @@
 	</xsl:template>
 
 	<xsl:template match="dc:date">
+<!--
+		<field name="date">
+			<xsl:value-of select="."/>
+		</field>
+-->
+	</xsl:template>
+
+	<xsl:template match="eromm_oai:date">
 		<field name="date">
 			<xsl:value-of select="."/>
 		</field>
 	</xsl:template>
+
 
 	<xsl:template match="dc:type">
 		<field name="type">
