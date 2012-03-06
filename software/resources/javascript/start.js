@@ -15,15 +15,15 @@ function navigate(start) {
 	$('#limit').val($('#max_hit_display').val());
 	$('#status').val($('#show_status_select').val());
 	$('#type').val($('#show_type_select').val());
-	
+
 	$('#log_display').empty();
-	
+
 	$.ajax({
-		url: "log_display.php",
+		url: "index.php",
 		type: "POST",
-		data: "start="+start+"&limit="+$('#limit').val()+"&status="+$('#status').val()+"&type="+$('#type').val(),
+		data: "do=log_display&start="+start+"&limit="+$('#limit').val()+"&status="+$('#status').val()+"&type="+$('#type').val(),
 	  	success: function(html){
-			$('#log_display').append(html);
+			$('#log_display').append(jQuery(html).slice(0,5));
 	  	}
 	});
 	

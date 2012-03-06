@@ -115,6 +115,10 @@ if (!$db_link) {
 			require_once(dirname(__FILE__) . "/preview_oai_set.php");
 			break;
 
+		case "log_display":
+			require_once(dirname(__FILE__) . "/log_display.php");
+			break;
+
 
 	}
 

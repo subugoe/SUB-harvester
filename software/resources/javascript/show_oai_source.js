@@ -30,11 +30,11 @@ function navigate(start) {
 	$('#log_display').empty();
 	
 	$.ajax({
-		url: "log_display.php",
+		url: "index.php",
 		type: "POST",
-		data: "start="+start+"&limit="+$('#limit').val()+"&status="+$('#status').val()+"&type="+$('#type').val()+"&id="+$('#id').val(),
+		data: "do=log_display&start="+start+"&limit="+$('#limit').val()+"&status="+$('#status').val()+"&type="+$('#type').val()+"&id="+$('#id').val(),
 	  	success: function(html){
-			$('#log_display').append(html);
+			$('#log_display').append(jQuery(html).slice(0,5));
 	  	}
 	});
 	
