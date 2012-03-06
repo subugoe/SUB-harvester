@@ -286,6 +286,15 @@
 		<field name="subject">
 			<xsl:value-of select="."/>
 		</field>
+		<xsl:if test="substring(../../../oai:header/oai:identifier, 1, 14) = 'oai:arXiv.org:'">
+			<xsl:call-template name="splitter">
+				<xsl:with-param name="list" select="."/>
+				<xsl:with-param name="separator">,</xsl:with-param>
+				<xsl:with-param name="metadataType">subject.msc</xsl:with-param>
+				<xsl:with-param name="minLength">5</xsl:with-param>
+				<xsl:with-param name="maxLength">5</xsl:with-param>
+			</xsl:call-template>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="dc:description">
@@ -371,27 +380,70 @@
 		</field>
 -->
 	</xsl:template>
-	
-	
+
+
 	<xsl:template match="*">
 		<field name="ignoredField">
 			<xsl:value-of select="name(.)"/>
 		</field>
 	</xsl:template>
 
-	
-	
-    
-    
-    
-    
+
+
+
+
+	<xsl:template name="splitter">
+		<xsl:param name="list"/>
+		<xsl:param name="separator"/>
+		<xsl:param name="metadataType"/>
+		<xsl:param name="minLength"/>
+		<xsl:param name="maxLength"/>
+
+		<xsl:variable name="firstItem">
+			<xsl:choose>
+				<xsl:when test="contains($list, $separator)">
+					<xsl:value-of select="normalize-space(substring-before($list, $separator))"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="normalize-space($list)"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+
+		<xsl:variable name="remainingItems" select="substring-after($list, $separator)"/>
+
+
+		<xsl:if test="$firstItem">
+			<xsl:if test="(not($minLength) or string-length($firstItem) = $minLength)
+							and (not($maxLength) or string-length($firstItem) = $maxLength)">
+				<field>
+					<xsl:attribute name="type">
+						<xsl:value-of select="$metadataType"/>
+					</xsl:attribute>
+					<xsl:value-of select="$firstItem"/>
+				</field>
+			</xsl:if>
+		</xsl:if>
+
+		<xsl:if test="$remainingItems">
+			<xsl:call-template name="splitter">
+				<xsl:with-param name="list" select="$remainingItems"/>
+				<xsl:with-param name="separator" select="$separator"/>
+				<xsl:with-param name="metadataType" select="$metadataType"/>
+			</xsl:call-template>
+		</xsl:if>
+	</xsl:template>
+
+
+
+
     <!--
         View-Templates ISBD
         Lots of conditions for proper punctuation and restrictions on the number of displayed elements and chars per element
         TODO: punctuation might be wrong if there are empty elements
         TODO: punctuation might be wrong if elements end on parts of punctuation
     -->
-    
+
     <xsl:template match="dc:creator" mode="view">
         <xsl:if test="position() &lt; 4">
             <xsl:if test="position() = 1">/ </xsl:if>
