@@ -234,6 +234,16 @@ a:hover.result_link_top {
 	font-size: 13px;
 }
 
+a.OAILink {
+	display: inline-block;
+	width: 57px;
+	height: 22px;
+	background: url(../images/xml.png) no-repeat;
+	text-indent: -10000em;
+	position: relative;
+	top: -3px;
+}
+
 em {
 	color:#000000;
 	font-weight:bold;
@@ -423,4 +433,42 @@ td.table_field_data textarea[disabled='disabled'] {
 	color: black;
 	border: 1px solid #272EC6;
 	background-color: #efefef;
+}
+
+table.sets td {
+	vertical-align: middle;
+}
+
+table.sets td.column1 {
+	width:150px;
+}
+
+table.sets td.column2 {
+	width: 20px;
+}
+
+table.sets td.column3 {
+	width: auto;
+}
+
+label span.setSpec {
+	font-weight: normal;
+	font-size: 80%;
+}
+
+table.sets tr:nth-child(2n) {
+	background: #f5f5f5;
+}
+
+table.sets tr:nth-child(2n+1) {
+	background: #eee;
+}
+
+p.filterField {
+	margin-top: 1em;
+	font-size: 166%;
+}
+
+input.filterField {
+	font-size: 166%;
 }
