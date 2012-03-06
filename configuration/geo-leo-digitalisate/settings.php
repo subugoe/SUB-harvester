@@ -15,7 +15,7 @@ include(dirname(__FILE__) . '/db_connect.php');
 define("SERVICE_NAME", 		'GEO-LEO Digitalisate');
 
 // Adresse des Solr-Index
-define("SOLR",				'http://vlib.sub.uni-goettingen.de/solr');
+define("SOLR",				'http://localhost:8080/solr/geo-leo-digitalisate');
 
 define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/geo-leo-digitalisate');
 //define("DATA_FOLDER",		'C:/harvest_data');

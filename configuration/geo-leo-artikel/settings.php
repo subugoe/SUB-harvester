@@ -12,10 +12,10 @@ include(dirname(__FILE__) . '/db_connect.php');
 // ***** Allgmein *****
 
 // Name des Dienstes; wird auf den Webseiten genutzt
-define("SERVICE_NAME", 		'SUB');
+define("SERVICE_NAME", 		'GEO-LEO Artikel');
 
 // Adresse des Solr-Index
-define("SOLR",				'http://vlib.sub.uni-goettingen.de/solr');
+define("SOLR",				'http://localhost:8080/solr/geo-leo-artikel');
 
 define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/geo-leo-artikel');
 //define("DATA_FOLDER",		'C:/harvest_data');

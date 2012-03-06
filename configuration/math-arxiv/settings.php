@@ -15,7 +15,7 @@ include(dirname(__FILE__) . '/db_connect.php');
 define("SERVICE_NAME", 		'Mathe arXiv');
 
 // Adresse des Solr-Index
-define("SOLR",				'http://vlib.sub.uni-goettingen.de/solr');
+define("SOLR",				'http://localhost:8080/solr/math-arxiv');
 
 define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/math-arxiv');
 //define("DATA_FOLDER",		'C:/harvest_data');
