@@ -323,13 +323,29 @@
 	</xsl:template>
 
 	<xsl:template match="dc:identifier">
-		<field name="identifier">
-			<xsl:value-of select="."/>
-		</field>
+		<xsl:choose>
+			<xsl:when test="substring(., 1, 7) = 'http://'
+							or substring(., 1, 8) = 'https://'
+							or substring(., 1, 6) = 'ftp://'">
+				<field name="url">
+					<xsl:value-of select="."/>
+				</field>
+			</xsl:when>
+			<xsl:when test="substring(., 1, 4) = 'doi'">
+				<field name="doi">
+					<xsl:value-of select="."/>
+				</field>
+			</xsl:when>
+			<xsl:otherwise>
+				<field name="identifier">
+					<xsl:value-of select="."/>
+				</field>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xsl:template match="dc:relation">
-		<field name="link">
+		<field name="relation">
 			<xsl:value-of select="."/>
 		</field>
 	</xsl:template>
