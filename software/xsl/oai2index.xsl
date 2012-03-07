@@ -340,8 +340,18 @@
 		</field>
 	</xsl:template>
 
-	<xsl:template match="dc:identifier">
+	<xsl:template match="dc:identifier | dc:relation">
 		<xsl:choose>
+			<xsl:when test="substring(., 1, 4) = 'doi:'">
+				<field name="doi">
+					<xsl:value-of select="substring(., 5)"/>
+				</field>
+			</xsl:when>
+			<xsl:when test="substring(., 1, 18) = 'http://dx.doi.org/'">
+				<field name="doi">
+					<xsl:value-of select="substring(., 19)"/>
+				</field>
+			</xsl:when>
 			<xsl:when test="substring(., 1, 7) = 'http://'
 							or substring(., 1, 8) = 'https://'
 							or substring(., 1, 6) = 'ftp://'">
@@ -349,23 +359,15 @@
 					<xsl:value-of select="."/>
 				</field>
 			</xsl:when>
-			<xsl:when test="substring(., 1, 4) = 'doi'">
-				<field name="doi">
-					<xsl:value-of select="."/>
-				</field>
-			</xsl:when>
 			<xsl:otherwise>
-				<field name="identifier">
+				<field>
+					<xsl:attribute name="name">
+						<xsl:value-of select="local-name(.)"/>
+					</xsl:attribute>
 					<xsl:value-of select="."/>
 				</field>
 			</xsl:otherwise>
 		</xsl:choose>
-	</xsl:template>
-
-	<xsl:template match="dc:relation">
-		<field name="relation">
-			<xsl:value-of select="."/>
-		</field>
 	</xsl:template>
 
 	<xsl:template match="dc:rights">
