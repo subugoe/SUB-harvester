@@ -771,6 +771,6 @@ curl_close($oai_indexer_ch);
 
 } // Ende else "Datenbankverbindung hergestellt"
 
-echo "Indexer Ende.";
+echo "Indexer Ende.\n";
 
 ?>
