@@ -9,6 +9,49 @@ class log {
 
 	private $output = "";
 
+
+	// Erzeugt Pager mit Knöpfen zum Vor- und Zurücknavigieren und
+	// Anzeige der aktuellen Position.
+	private function pager ($limit, $start, $total_log_entries) {
+		$result = "
+			<div class='pager'>";
+
+		if ($start != 0) {
+			$result .= "
+				<div class='navigationButton first'>
+					<input type='button' value='Neueste' id='goto_first_page' onclick='navigate(0)' " . ($start === 0 ? "disabled='disabled'" : "") . "></input>
+				</div>
+				<div class='navigationButton previous'>
+					<input type='button' value='Neuere' onclick='navigate(" . ($start - $limit) . ")'></input>
+				</div>";
+		}
+		if ($start + $limit < $total_log_entries) {
+			$result .= "
+				<div class='navigationButton next'>
+					<input type='button' value='Ältere' onclick='navigate(" . ($start + $limit) . ")'></input>
+				</div>";
+		}
+
+		$result .= "
+				<p class='pageInfo'>
+					" . ($start+1) . " bis ";
+
+		if ($total_log_entries >= $start + $limit) {
+			$result .= ($limit + $start);
+		} else {
+			$result .= $total_log_entries;
+		}
+
+		$result .= " von " . $total_log_entries . "
+				</p>";
+
+		$result .= "
+			</div>";
+
+		return $result;
+	}
+
+
 	// Der Konstruktor generiert gemäß der Parameter den Output, der aus einer
 	// Tabelle besteht. Diese wird in die aufrufende Webseite eingebunden.
 	// Ist eine Quellen-ID angegeben werden nur die Logmeldungen dieser Quelle
@@ -76,25 +119,17 @@ class log {
 
 		} else {
 
-			$this->output .= "<p style=\"text-align: center; color: #8f0006; font-size: 14px;\"><em>".($start+1)."</em> bis <em>";
-			if ($total_log_entries >= $start + $limit) {
-				$this->output .= ($limit + $start);
-			} else {
-				$this->output .= $total_log_entries;
-			}
-			$this->output .= "</em> von <em>".$total_log_entries."</em></p>\n";
-
-
+			$this->output .= $this->pager($limit, $start, $total_log_entries);
 
 			// Tabelle bauen
 			$this->output .= "			<table id=\"oai_log_list\" border=\"1\" cellpadding=\"3px\" width=\"100%\" rules=\"cols\" style=\"border-color: #b8b8b8; margin-top: 10px;\">\n";
 			$this->output .= "				<colgroup>\n";
 			$this->output .= "			    	<col width=\"3%\" />\n";
-			$this->output .= "				    <col width=\"12%\" />\n";
+			$this->output .= "				    <col width=\"14%\" />\n";
 
-			$this->output .= is_null($oai_source_id) ? "<col width=\"25%\" />\n" : "";
+			$this->output .= is_null($oai_source_id) ? "<col width=\"24%\" />\n" : "";
 
-			$this->output .= "				    <col width=\"25%\" />\n";
+			$this->output .= "				    <col width=\"24%\" />\n";
 
 			$this->output .= is_null($oai_source_id) ? "<col width=\"35%\" />\n" : "<col width=\"60%\" />\n";
 
@@ -134,22 +169,11 @@ class log {
 
 			$this->output .= "			</table>\n";
 
-			// Navigation
-
-			$this->output .= "			<div style=\"margin-top: 20px; margin-bottom: 75px; margin-left: auto; margin-right: auto; width: 95%;\">\n";
-			if ($start != 0) {
-				$this->output .= "				<div style=\"text-align: left; float:left;\"><input type=\"button\" value=\"Zurück\" onclick=\"navigate(".($start - $limit).")\"></input></div>\n";
-			}
-
-			if ($start + $limit < $total_log_entries) {
-				$this->output .= "				<div style=\"text-align: right; float: right;\"><input type=\"button\" value=\"Weiter\" onclick=\"navigate(".($start + $limit).")\"></input></div>\n";
-			}
-
-			$this->output .= "			</div>\n";
+			$this->output .= $this->pager($limit, $start, $total_log_entries);
 		}
 	}
 
-	// Liefert den Output zurück, die Verarbeitung geschiet bereits im Konstruktor
+	// Liefert den Output zurück, die Verarbeitung geschieht bereits im Konstruktor
 	public function getOutput() {
 		return $this->output;
 	}

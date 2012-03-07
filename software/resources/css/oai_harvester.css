@@ -481,3 +481,21 @@ p.filterField {
 input.filterField {
 	font-size: 166%;
 }
+
+div.pager {
+	margin: 1em 0;
+}
+
+p.pageInfo {
+	margin: 0px 200px;
+	padding-top: 3px;
+	text-align: center;
+}
+
+div.navigationButton.next, div.navigationButton.last {
+	float: right;
+}
+
+div.navigationButton.previous, div.navigationButton.first {
+	float: left;
+}

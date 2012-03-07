@@ -70,8 +70,7 @@ $content .= "
 				<em>Anzahl der Meldungen:</em>
 				<select id=\"max_hit_display\" name=\"limit_select\" size=\"1\" onchange=\"navigate(0)\">
 					<option value=\"5\" >5</option>
-					<option value=\"20\" selected=\"selected\">20</option>
-
+					<option value=\"10\" selected=\"selected\">10</option>
 					<option value=\"50\" >50</option>
 					<option value=\"100\" >100</option>
 					<option value=\"150\" >150</option>
@@ -94,13 +93,11 @@ $content .= "
 					<option value=\"1\" >Indexer</option>
 				</select>
 			</p>
-			<p style=\"text-align: center;\"><input id=\"goto_first_page\" type=\"button\" value=\"Zur 1. Seite\" onclick=\"navigate(0)\" disabled=\"disabled\"></input></p>
-			<hr style=\"width: 30%; text-align: center; margin-top: 15px;\"/>
 			<div id=\"log_display\">";
 
 require_once(dirname(__FILE__) . '/../classes/log.php');
 
-$log = new log($db_link, -1, -1, 20, 0);
+$log = new log($db_link, -1, -1, 10, 0);
 $content .= $log->getOutput();
 
 $content .=	"</div>";

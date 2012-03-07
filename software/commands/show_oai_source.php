@@ -602,8 +602,6 @@ $content .= "					<option value=\"0\" >Harvester</option>\n";
 $content .= "					<option value=\"1\" >Indexer</option>\n";
 $content .= "				</select>\n";
 $content .= "			</p>\n";
-$content .= "			<p style=\"text-align: center;\"><input id=\"goto_first_page\" type=\"button\" value=\"Zur 1. Seite\" onclick=\"navigate(0)\" disabled=\"disabled\"></input></p>\n";
-$content .= "			<hr style=\"width: 30%; text-align: center; margin-top: 15px;\"/>\n";
 $content .= "			<div id=\"log_display\">";
 
 require_once(dirname(__FILE__) . "/../classes/log.php");
