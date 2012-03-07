@@ -325,10 +325,10 @@
 	</xsl:template>
 
 	<xsl:template match="dc:language">
-		<xsl:if test="string-length(.) &gt; 3">
+		<xsl:if test="string-length(.) &lt; 3">
 			<field name="language">
 				<xsl:call-template name="languageCodeConverter">
-					<xsl:with-param name="languageCode" select="."/>
+					<xsl:with-param name="languageCode" select="normalize-space(.)"/>
 				</xsl:call-template>
 			</field>
 		</xsl:if>
