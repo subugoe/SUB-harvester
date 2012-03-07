@@ -29,13 +29,19 @@ if (!$db_link) {
 
 } else {
 
-	
+
 // DB-Einstellungen
 mysql_select_db(DB_NAME);
 mysql_query("SET NAMES 'utf8'");
 mysql_query("SET CHARACTER SET 'utf8'");
-	
-	
+
+
+// wenn nötig, »error« Ordner anlegen
+if (!file_exists(ERROR_FOLDER)) {
+	mkdir(ERROR_FOLDER, CHMOD, TRUE);
+}
+
+
 // Http-Handler zum Senden der Daten an Solr initialisieren
 $solr_ping = curl_init();
 
