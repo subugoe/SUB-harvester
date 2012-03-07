@@ -11,7 +11,7 @@ if ($_POST['id'] != "") {
 	 * Prüfung ob der Datensatz nicht gesperrt ist.
 	 * Dazu dient die Datenbanktabelle oai_source_edit_sessions
 	 */
-	
+
 	// Wurde das Formular bereits mit einem Token aufgerufen (z. B. Zurück bei Löschen)
 	// diesen Token übernehmen.
 	if(array_key_exists('edit_id', $_POST)) {
@@ -25,7 +25,7 @@ if ($_POST['id'] != "") {
 				WHERE oai_source = " . intval($_POST['id']);
 		$result = mysql_query($sql, $db_link);
 		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
-		
+
 		if (mysql_num_rows($result) == 0) {
 			// Es gibt keine Session zu diesem Datensatz
 			// Ein Sperreintrag wird erstellt
@@ -37,7 +37,7 @@ if ($_POST['id'] != "") {
 					)";
 			$result = mysql_query($sql, $db_link);
 			if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
-		
+
 			// Token abfragen
 			$sql = "SELECT MD5(timestamp) as token
 					FROM oai_source_edit_sessions
@@ -45,24 +45,24 @@ if ($_POST['id'] != "") {
 			$result = mysql_query($sql, $db_link);
 			if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 			$session_data = mysql_fetch_array($result, MYSQL_ASSOC);
-			
+
 			$token = $session_data['token'];
-		
+
 		} else {
 			// Es gibt bereits eine Session
-			
+
 			$session_data = mysql_fetch_array($result, MYSQL_ASSOC);
-			
+
 			if ($session_data['seconds_alive'] > 3600) {
 				// Die Session ist aber abgelaufen
-				
+
 				// Den Timestamp der Session aktualiseren
 				$sql = "UPDATE oai_source_edit_sessions
-						SET timestamp = NOW() 
+						SET timestamp = NOW()
 						WHERE oai_source = " . intval($_POST['id']);
 				$result = mysql_query($sql, $db_link);
 				if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
-				
+
 				// Token abfragen
 				$sql = "SELECT MD5(timestamp) as token
 						FROM oai_source_edit_sessions
@@ -70,23 +70,23 @@ if ($_POST['id'] != "") {
 				$result = mysql_query($sql, $db_link);
 				if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 				$session_data = mysql_fetch_array($result, MYSQL_ASSOC);
-				
-				$token = $session_data['token'];	
-			
+
+				$token = $session_data['token'];
+
 			} else {
 				// Der Datensatz ist gesperrt
 				$token = false;
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	// Header
 	$content .= "<form method=\"post\" action=\"index.php\" onsubmit=\"return validate()\" accept-charset=\"UTF-8\">\n";
 	$content .= "	<div>";
-	
-	
+
+
 	// do
 	$content .= "		<input type=\"hidden\" name=\"do\" value=\"update_oai_source\"></input>\n";
 	// edit_id
@@ -96,13 +96,13 @@ if ($_POST['id'] != "") {
 	// edito_abort
 	$content .= "		<input type=\"hidden\" name=\"edit_abort\" value=\"0\"></input>\n";
 	$content .= "	</div>";
-	
+
 	$content .= "	<p style=\"text-align: right; margin-top: -20px;\"><input type=\"submit\" value=\" Zur Startseite\" onclick=\"document.forms[0].elements['edit_abort'].value = 1;\"></input></p>\n";
 	$content .= "	<h2>OAI-Quelle bearbeiten</h2>";
-	
+
 	// Ausgabe generieren
 	// Kann der Datensatz editiert werden?
-	
+
 	if ($token) {
 		// Datensatz ist nicht gesperrt.
 		// Abfrage der Informationen zur Quelle aus der Datenbank (es werden fast alle Felder gebraucht => "*")
@@ -112,7 +112,7 @@ if ($_POST['id'] != "") {
 		$result = mysql_query($sql, $db_link);
 		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
 		$oai_source_data = mysql_fetch_array($result, MYSQL_ASSOC);
-		
+
 		$content .= "<p style=\"text-align: center;\">";
 		// Hinweis, bzw. Anzeigen einer vollständigen Neuindexierung
 		if($oai_source_data['reindex']) {
@@ -120,10 +120,10 @@ if ($_POST['id'] != "") {
 		} else {
 			$content .= "Achtung: Änderungen an der Indexierung (auch Land) führen zu einer kompletten Neuindexierung der OAI-Quelle.";
 		}
-		$content .= "</p>";		 
-	
+		$content .= "</p>";
+
 		// Allgemeine Einstellungen
-		
+
 		$content .= "				<h3>Allgemeine Einstellungen</h3>\n";
 		$content .= "				<table border=\"0\" width=\"100%\">\n";
 		$content .= "					<colgroup>\n";
@@ -141,11 +141,11 @@ if ($_POST['id'] != "") {
 		$content .= "					<tr>\n";
 		$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_country\">Land:</td>\n";
 		$content .= "						<td align=\"left\">\n";
-		
-		require_once(dirname(__FILE__) . "/classes/country_parser.php");
+
+		require_once(dirname(__FILE__) . "/../classes/country_parser.php");
 		$countries = new country_parser($db_link);
-		$content .= $countries->getSelect($oai_source_data['country_code']);			
-		
+		$content .= $countries->getSelect($oai_source_data['country_code']);
+
 		$content .= "						</td>\n";
 		$content .= "					</tr>\n";
 		$content .= "					<tr>\n";
@@ -166,7 +166,7 @@ if ($_POST['id'] != "") {
 		$content .= "					</tr>";
 		$content .= "				</table>\n";
 
-		
+
 		// Nachbearbeitung
 		$content .= "				<h3>Nachbearbeitung</h3>\n";
 		$content .= "				<table border=\"0\" width=\"100%\">\n";
@@ -190,8 +190,8 @@ if ($_POST['id'] != "") {
 		$content .= "						<td></td>\n";
 		$content .= "					</tr>\n";
 		$content .= "				</table>\n";
-		
-		
+
+
 		// Indexierte Elemente
 		$content .= "				<h3>Indexierte Elemente</h3>\n";
 		$content .= "				<table border=\"0\" width=\"100%\">\n";
@@ -233,10 +233,10 @@ if ($_POST['id'] != "") {
 		$content .= "						<td></td>\n";
 		$content .= "					</tr>\n";
 		$content .= "				</table>\n";
-				
-		
+
+
 		// Angezeigte Elemente
-			
+
 		$content .= "				<h3>Angezeigte Elemente</h3>\n";
 		$content .= "				<table border=\"0\" width=\"100%\">\n";
 		$content .= "					<colgroup>\n";
@@ -271,11 +271,11 @@ if ($_POST['id'] != "") {
 		$content .= "						<td></td>\n";
 		$content .= "					</tr>\n";
 		$content .= "				</table>\n";
-		
-		
-		
+
+
+
 		// Einstellungen zur Verlinkung
-		
+
 		$content .= "				<h3>Verlinkungseinstellungen</h3>\n";
 		$content .= "				<table border=\"0\" width=\"100%\">\n";
 		$content .= "					<colgroup>\n";
@@ -299,26 +299,26 @@ if ($_POST['id'] != "") {
 		$content .= "						<td align=\"left\"><input name=\"identifier_resolver_filter\" id=\"config_identifier_resolver\" type=\"text\" size=\"100\" maxlength=\"100\" ".($oai_source_data['identifier_resolver_filter'] != "" ? "value=\"".$oai_source_data['identifier_resolver_filter']."\" " : "" )."></input></td>\n";
 		$content .= "					</tr>\n";
 		$content .= "				</table>\n";
-		
-		
+
+
 		// Geharvestete Sets
-		
+
 		$content .= "				<h3>Zu harvestende Sets</h3>\n";
-		
-		require_once(dirname(__FILE__) . "/classes/oai_listsets_parser.php");
+
+		require_once(dirname(__FILE__) . "/../classes/oai_listsets_parser.php");
 		$sets = new oai_listsets_parser($oai_source_data['url']);
-		
-		if ($sets->listSetsSuccessful()) {		
+
+		if ($sets->listSetsSuccessful()) {
 			$current_sets = $sets->getSets();
-			require_once(dirname(__FILE__) . "/classes/oai_set_compare.php");
+			require_once(dirname(__FILE__) . "/../classes/oai_set_compare.php");
 			$set_compare = new oai_set_compare($current_sets, $_POST['id'], $db_link);
 			$content .= $set_compare->getTables();
 		} else {
 			$content .= "<p ".( $sets->getErrorCode() == 'noSetHierarchy' ? " id=\"noSetHierarchy\" " : "" )."style=\"color: red;\">".$sets->getErrorMessage()." Es sind keine Änderungen an den Set-Einstellungen möglich.</p>";
 			$content .= $sets->getSetTableRows();
-		}	
-		
-		
+		}
+
+
 		// Speichern- & Abbrechen-Button
 
 		$content .= "
@@ -328,23 +328,23 @@ if ($_POST['id'] != "") {
 				<input " . ($sets->listSetsSuccessful() | $sets->getErrorCode() == 'noSetHierarchy' ? "" : "disabled='disabled'"). " type='submit' value='Speichern' class='default'></input>
 			</p>";
 		//$content .= "		</form>\n";
-		
+
 	} else {
 		// Datensatz ist gesperrt.
-		
-		$content .= "			<p>Der Datensatz wird gerade von einem anderen Benutzer editiert und ist deshalb gesperrt.</p>";
+
+		$content .= "			<p>Der Datensatz wird gerade von einem anderen Benutzer bearbeitet und ist deshalb gesperrt.</p>";
 	}
 
 	// Zurück zur Trefferliste
 	//$content .= "			<form method=\"post\" action=\"index.php\" accept-charset=\"UTF-8\">\n";
 	$content .= "				<div>\n";
 	//$content .= "					<input type=\"hidden\" name=\"do\" value=\"list_oai_sources\"></input>\n";
-	
+
 	// from
 	if ($token) {
 		$content .= "				<input type=\"hidden\" id=\"current_from\" name=\"current_from_db\" value=\"".$oai_source_data['from']."\" />";
 	}
-	
+
 	// new_from_day_before
 	$content .= "				<input type=\"hidden\" id=\"new_from_day_before_id\" name=\"new_from_day_before\" value=\"\" />";
 
@@ -352,74 +352,71 @@ if ($_POST['id'] != "") {
 	$content .= "				<input type=\"hidden\" name=\"filter_name\" value=\"";
 	$current_filter_name = isset($_POST['filter_name']) ? $_POST['filter_name'] : "";
 	$content .= $current_filter_name."\"></input>\n";
-	
+
 	// filter_url
 	$content .= "				<input type=\"hidden\" name=\"filter_url\" value=\"";
 	$current_filter_url = isset($_POST['filter_url']) ? $_POST['filter_url'] : "";
 	$content .= $current_filter_url."\"></input>\n";
-	
+
 	// filter_bool
 	$content .= "				<input type=\"hidden\" name=\"filter_bool\" value=\"";
 	$current_filter_bool = isset($_POST['filter_bool']) ? $_POST['filter_bool'] : "AND";
 	$content .= $current_filter_bool."\"></input>\n";
-	
+
 	// sortby
 	$content .= "				<input type=\"hidden\" name=\"sortby\" value=\"";
 	$current_sortby = isset($_POST['sortby']) ? $_POST['sortby'] : "name";
 	$content .= $current_sortby."\"></input>\n";
-	
+
 	// sorthow
 	$content .= "				<input type=\"hidden\" name=\"sorthow\" value=\"";
 	$current_sorthow = isset($_POST['sorthow']) ? $_POST['sorthow'] : "ASC";
 	$content .= $current_sorthow."\"></input>\n";
-	
+
 	// id
 	$content .= "				<input type=\"hidden\" id=\"oai_repository_id\" name=\"id\" value=\"";
 	$content .= isset($_POST['id']) ? $_POST['id'] : "none";
 	$content .= "\"></input>\n";
-	
+
 	// start
 	$content .= "				<input type=\"hidden\" name=\"start\" value=\"";
 	$current_start = isset($_POST['start']) ? $_POST['start'] : "0";
 	$content .= $current_start;
 	$content .= "\"></input>\n";
-	
+
 	// limit
 	$content .= "				<input type=\"hidden\" name=\"limit\" value=\"";
 	$current_limit = isset($_POST['limit']) ? $_POST['limit'] : 20;
 	$content .= $current_limit;
 	$content .= "\"></input>\n";
-	
+
 	// show_active
 	$content .= "				<input type=\"hidden\" name=\"show_active\" value=\"";
 	$current_show_active = isset($_POST['show_active']) ? $_POST['show_active'] : 0;
 	$content .= $current_show_active;
 	$content .= "\"></input>\n";
-	
+
 	// show_status
 	$content .= "				<input type=\"hidden\" name=\"show_status\" value=\"";
 	$current_show_status = isset($_POST['show_status']) ? $_POST['show_status'] : 0;
 	$content .= $current_show_status;
 	$content .= "\"></input>\n";
-	
+
 	if ($token) {
 		// edit_id
 		$content .= "				<input type=\"hidden\" name=\"edit_id\" value=\"".$_POST['id']."\"></input>\n";
 		// token
 		$content .= "				<input type=\"hidden\" name=\"edit_token\" value=\"".$token."\"></input>\n";
 	}
-	
+
 	$content .= "			</div>\n";
 	$content .= "				<p style=\"text-align: center; margin-top: 5px;\">\n";
 	$content .= "					<input type=\"submit\" value=\" Zur Trefferliste\" onclick=\"document.forms[0].action = 'index.php#filter';document.forms[0].elements['do'].value = 'list_oai_sources'\"></input>&nbsp;\n";
-	if ($token) {
-		$content .= "					<input type=\"submit\" value=\" Löschen\" onclick=\"remove(".$oai_source_data['id'].")\"></input>\n";
-	}
-	$content .= "				</p>\n";		
+	$content .= "				</p>\n";
 	$content .= "			</form>\n";
-	
-	
-	
+
+
+
 } else {
 	$content .= "<meta http-equiv=\"refresh\" content=\"0; URL=./index.php\" />";
 }

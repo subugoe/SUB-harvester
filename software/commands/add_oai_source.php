@@ -1,17 +1,17 @@
 <?php
 
 /*
- * Erstellt das Eingabeformular für eine OAI-Quelle und 
+ * Erstellt das Eingabeformular für eine OAI-Quelle und
  * fragt dabei Name, Indexierung, Anzeige und Sets der Quelle ab.
  */
 
-require_once(dirname(__FILE__) . "/classes/button_creator.php");
+require_once(dirname(__FILE__) . "/../classes/button_creator.php");
 
 
 if ($_POST['add_oai_source'] != "") {
-	
+
 	$url = trim($_POST['add_oai_source']);
-	
+
 	// Ist die OAI URL bereits vorhanden?
 	$sql = "SELECT id FROM oai_sources WHERE url = '" . mysql_real_escape_string($url) . "'";
 	$results = mysql_query($sql, $db_link);
@@ -40,17 +40,17 @@ if ($_POST['add_oai_source'] != "") {
 			$nameComponents = explode('.', $hostname);
 			$tld = $nameComponents[count($nameComponents) - 1];
 		}
-	
+
 		$ch = curl_init();
-		
+
 		// Überprüfen ob die URL einen Port enthält
 		/*
 		$pattern = '?:\d+?';
 		preg_match($pattern, $url, $matches);
 		print_r($matches);
-		
+
 		echo str_replace(":", "", $matches[0]);
-		
+
 		if (count($matches) > 0) {
 			// Es gibt einen Port, Port setzen
 			curl_setopt($ch, CURLOPT_PORT, str_replace(":", "", $matches[0]));
@@ -58,29 +58,29 @@ if ($_POST['add_oai_source'] != "") {
 			$url = str_replace($matches[0], "", $url);
 		}
 		*/
-		
+
 		curl_setopt($ch, CURLOPT_URL, $url."?verb=Identify");
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		// Ignoriere SSL-Zertifikate
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		
+
 		$http_response = curl_exec($ch);
-		
+
 		// Ist der Server erreichbar und ist seine Antwort nicht leer?
 		if ($http_response && curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200) {
-		
-			require_once(dirname(__FILE__) . "/classes/oai_identify_parser.php");
-			
+
+			require_once(dirname(__FILE__) . "/../classes/oai_identify_parser.php");
+
 			$oai_identify = new oai_identify_parser($http_response);
-			
+
 			if ($oai_identify->isResponseValid()) {
-				
+
 				$content .= "<p style=\"text-align: right; margin-top: -20px;\"><input type=\"button\" value=\" Zur Startseite\" onclick=\"gotoStart()\"></input></p>\n";
-				$content .= "<h2>OAI-Quelle hinzufügen</h2>";		 
+				$content .= "<h2>OAI-Quelle hinzufügen</h2>";
 				$content .= "			<form method=\"post\" action=\"index.php\" onsubmit=\"return validate()\" accept-charset=\"UTF-8\">\n";
-	
+
 				// Allgemeine Einstellungen
-				
+
 				$content .= "				<h3>Allgemeine Einstellungen</h3>\n";
 				$content .= "				<table border=\"0\" width=\"100%\">\n";
 				$content .= "					<colgroup>\n";
@@ -98,11 +98,11 @@ if ($_POST['add_oai_source'] != "") {
 				$content .= "					<tr>\n";
 				$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_country\">Land:</td>\n";
 				$content .= "						<td align=\"left\">\n";
-				
-				require_once(dirname(__FILE__) . "/classes/country_parser.php");
+
+				require_once(dirname(__FILE__) . "/../classes/country_parser.php");
 				$countries = new country_parser($db_link);
 				$content .= $countries->getSelect($tld);
-				
+
 				$content .= "						</td>\n";
 				$content .= "					</tr>\n";
 				$content .= "					<tr>\n";
@@ -122,10 +122,10 @@ if ($_POST['add_oai_source'] != "") {
 				$content .= "						<td align=\"left\" valign=\"middle\"><textarea name=\"comment\" cols=\"75\" rows=\"10\"></textarea></td>\n";
 				$content .= "					</tr>";
 				$content .= "				</table>\n";
-				
-				
+
+
 				// Nachbearbeitung
-				
+
 				$content .= "				<h3>Nachbearbeitung</h3>\n";
 				$content .= "				<table border=\"0\" width=\"100%\">\n";
 				$content .= "					<colgroup>\n";
@@ -148,10 +148,10 @@ if ($_POST['add_oai_source'] != "") {
 				$content .= "						<td></td>\n";
 				$content .= "					</tr>\n";
 				$content .= "				</table>\n";
-				
-				
+
+
 				// Indexierte Elemente
-				
+
 				$content .= "				<h3>Indexierte Elemente</h3>\n";
 				$content .= "				<table border=\"0\" width=\"100%\">\n";
 				$content .= "					<colgroup>\n";
@@ -192,10 +192,10 @@ if ($_POST['add_oai_source'] != "") {
 				$content .= "						<td></td>\n";
 				$content .= "					</tr>\n";
 				$content .= "				</table>\n";
-				
-				
+
+
 				// Angezeigte Elemente
-				
+
 				$content .= "				<h3>Angezeigte Elemente</h3>\n";
 				$content .= "				<table border=\"0\" width=\"100%\">\n";
 				$content .= "					<colgroup>\n";
@@ -230,11 +230,11 @@ if ($_POST['add_oai_source'] != "") {
 				$content .= "					<tr>\n";
 				$content .= "						<td></td>\n";
 				$content .= "					</tr>\n";
-				$content .= "				</table>\n";			
-				
-				
+				$content .= "				</table>\n";
+
+
 				// Einstellungen zur Verlinkung
-				
+
 				$content .= "				<h3>Verlinkungseinstellungen</h3>\n";
 				$content .= "				<table border=\"0\" width=\"100%\">\n";
 				$content .= "					<colgroup>\n";
@@ -258,49 +258,53 @@ if ($_POST['add_oai_source'] != "") {
 				$content .= "						<td align=\"left\"><input name=\"identifier_resolver_filter\" id=\"config_identifier_resolver\" type=\"text\" size=\"100\" maxlength=\"100\"></input></td>\n";
 				$content .= "					</tr>\n";
 				$content .= "				</table>\n";
-				
-				
+
+
 				// Geharvestete Sets
-				
-				$content .= "				<h3>Zu harvestende Sets</h3>\n";
-				$content .= "				<table border=\"0\" width=\"auto\" cellpadding=\"4\" rules=\"none\">\n";
-				$content .= "					<colgroup>\n";
-				$content .= "					    <col width=\"13%\"/>\n";
-				$content .= "					    <col width=\"2%\" />\n";
-				$content .= "					    <col width=\"auto\"/>\n";
-				$content .= "					 </colgroup>\n";
-				
-				require_once(dirname(__FILE__) . "/classes/oai_listsets_parser.php");
+
+				$content .= "
+				<h3>Zu harvestende Sets</h3>
+					<table class='sets realSets'>
+						<thead>
+							<th>Info</th>
+							<th></th>
+							<th>Name und ID</th>
+						</thead>
+						<tbody>";
+
+				require_once(dirname(__FILE__) . "/../classes/oai_listsets_parser.php");
 				$sets = new oai_listsets_parser($_POST['add_oai_source']);
-				
-				if ($sets->listSetsSuccessful()) {		
+
+				if ($sets->listSetsSuccessful()) {
 					$content .= $sets->getSetTableRows();
 				} else {
 					$content .= $sets->getSetTableRows();
 					$content .= "<th colspan=\"3\" align=\"left\" style=\"text-indent: 3em; color: #272EC6;\">".$sets->getErrorMessage()."</th>";
 				}
-				
-				$content .= "				</table>\n";
-	
-				
+
+				$content .= "
+						</tbody>
+					</table>";
+
+
 				// Speichern- & Abbrechen-Button
-				
+
 				$content .= "			<p style=\"text-align: center; margin-top: 25px;\"><input type=\"button\" value=\" Abbrechen\" onclick=\"gotoStart()\"></input>&nbsp;&nbsp;<input type=\"submit\" value=\" Speichern\"></input></p>";
 				$content .= "			</form>";
-				
-				
+
+
 			} else {
 				$button_creator = new button_creator();
 				$content .= "			<p class=\"errormsg\">Die OAI-Quelle liefert eine nicht valide Antwort. Sie kann nicht hinzugefügt werden.</p>\n";
-				$content .= $button_creator->createButton("Zurück");		
+				$content .= $button_creator->createButton("Zurück");
 			}
-			
+
 		} else {
 			$button_creator = new button_creator();
 			$content .= "			<p class=\"errormsg\">Die URL ist ungültig oder der Sever nicht erreichbar.</p>\n";
 			$content .= $button_creator->createButton("Zurück");
 		}
-		
+
 		curl_close($ch);
 	}
 } else {

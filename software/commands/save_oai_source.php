@@ -6,8 +6,8 @@
  */
 
 
-require_once(dirname(__FILE__) . "/classes/oai_source_data.php");
-require_once(dirname(__FILE__) . "/classes/button_creator.php");
+require_once(dirname(__FILE__) . "/../classes/oai_source_data.php");
+require_once(dirname(__FILE__) . "/../classes/button_creator.php");
 
 $oai_source = new oai_source_data("post", 0, 0);
 
@@ -39,8 +39,8 @@ $sql = "INSERT INTO oai_sources (
 			" . ( strlen($oai_source->getFrom()) == 10 ? "from, " : "" )."
 			`harvest_period`,
 			" . ( strlen($oai_source->getFrom()) == 10 ? "last_harvest, ": "" )."
-			`reindex`, 
-			`comment` ) 
+			`reindex`,
+			`comment` )
 		VALUES (
 		'" . mysql_real_escape_string($oai_source->getUrl()) . "',
 		'" . mysql_real_escape_string($oai_source->getName()) . "',
@@ -65,7 +65,7 @@ $sql = "INSERT INTO oai_sources (
 		'" . mysql_real_escape_string($oai_source->getIdentifierAlternative()) . "',
 		'" . mysql_real_escape_string($oai_source->getCountry()) . "',
 		" . intval($oai_source->getActive()) . ",
-		NOW(), 
+		NOW(),
 		" . (strlen($oai_source->getFrom()) == 10 ? "'" . mysql_real_escape_string($oai_source->getFrom()) . "', " : "") ."
 		'" . mysql_real_escape_string($oai_source->getHarvestPeriod()) . "',
 		" . (strlen($oai_source->getFrom()) == 10 ? "'" . mysql_real_escape_string($oai_source->getFrom()) . "', " : "") ."
@@ -77,9 +77,9 @@ $sql = "INSERT INTO oai_sources (
 $button_creator = new button_creator();
 
 if (mysql_query($sql, $db_link)) {
-	
+
 	$source_id = mysql_insert_id($db_link);
-	
+
 	$sql = "INSERT INTO oai_sets (
 				id,
 				oai_source,
@@ -93,7 +93,7 @@ if (mysql_query($sql, $db_link)) {
 				VALUES ";
 
 	$sets = $oai_source->getSets();
-	
+
 	foreach($sets as $set) {
 		$sql .= "(NULL,"
 				. intval($source_id) . ",
@@ -104,16 +104,16 @@ if (mysql_query($sql, $db_link)) {
 				-1,
 				-1), ";
 	}
-	
+
 	$sql = substr($sql, 0, -2);
-	
+
 	// Debug-Code
 	//$content .= "<p>".$sql."</p>";
-	
-	if (mysql_query($sql, $db_link)) {	
+
+	if (mysql_query($sql, $db_link)) {
 		$content .= "<p>OAI-Quelle gespeichert.</p>\n";
 		$content .= $button_creator->createButton("Zur Startseite");
-		
+
 	} else {
 		$content .= "<p>Die Sets konnten nicht gespeichert werden. Bitte OAI-Quelle (über phpMyAdmin) löschen und ggf. neu anlegen.</p>\n";
 		$content .= $button_creator->createButton("Zurück");

@@ -606,7 +606,7 @@ $content .= "			<p style=\"text-align: center;\"><input id=\"goto_first_page\" t
 $content .= "			<hr style=\"width: 30%; text-align: center; margin-top: 15px;\"/>\n";
 $content .= "			<div id=\"log_display\">";
 
-require_once(dirname(__FILE__) . "/classes/log.php");
+require_once(dirname(__FILE__) . "/../classes/log.php");
 $log = new log($db_link, -1, -1, 20, 0, $_POST['id']);
 $content .= $log->getOutput();
 $content .=	"</div>";

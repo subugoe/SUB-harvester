@@ -10,7 +10,7 @@ $content .= "
 				<input type=\"hidden\" id=\"limit\" value=\"20\"/>
 				<input type=\"hidden\" id=\"status\" value=\"-1\"/>
 				<input type=\"hidden\" id=\"type\" value=\"-1\"/>
-					
+
 				<form method=\"post\" action=\"index.php\" accept-charset=\"UTF-8\">\n
 					<input type=\"hidden\" name=\"id\" value=\"\"></input>\n
 					<input type=\"hidden\" name=\"do\" value=\"show_oai_source\"></input>\n
@@ -43,7 +43,7 @@ $content .= "
 							<select name=\"filter_bool_select\" size=\"1\">
 								<option value=\"AND\" selected=\"selected\">und</option>
 								<option value=\"OR\">oder</option>
-							</select>	
+							</select>
 						</td>
 					</tr>
 					<tr>
@@ -98,11 +98,11 @@ $content .= "
 			<hr style=\"width: 30%; text-align: center; margin-top: 15px;\"/>
 			<div id=\"log_display\">";
 
-require_once(dirname(__FILE__) . '/classes/log.php');
+require_once(dirname(__FILE__) . '/../classes/log.php');
 
 $log = new log($db_link, -1, -1, 20, 0);
 $content .= $log->getOutput();
-			
+
 $content .=	"</div>";
 
 ?>

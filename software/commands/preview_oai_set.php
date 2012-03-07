@@ -11,7 +11,7 @@
 set_time_limit(120);
 
 // Template laden
-$file = fopen(dirname(__FILE__) . '/templates/html_template.html', "r");
+$file = fopen(dirname(__FILE__) . '/../templates/html_template.html', "r");
 
 $output = "";
 
