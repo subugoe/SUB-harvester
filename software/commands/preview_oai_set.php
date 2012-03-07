@@ -196,7 +196,7 @@ if ($http_response && curl_getinfo($oai_listrecords_ch, CURLINFO_HTTP_CODE) == 2
 
 					// XSL importieren
 					$oai2index_xml = new DOMDocument();
-					$oai2index_xml->load(dirname(__FILE__) . "/xsl/oai2index.xsl");
+					$oai2index_xml->load(dirname(__FILE__) . "/../xsl/oai2index.xsl");
 
 					$oai2index_xsl = new XSLTProcessor();
 					$oai2index_xsl->importStylesheet($oai2index_xml);
