@@ -9,10 +9,10 @@ include(dirname(__FILE__) . '/db_connect.php');
 
 
 
-// ***** Allgmein *****
+// ***** Allgemein *****
 
 // Name des Dienstes; wird auf den Webseiten genutzt
-define("SERVICE_NAME", 		'Digizeitschriften');
+define("SERVICE_NAME", 		'DigiZeitschriften');
 
 // Adresse des Solr-Index
 define("SOLR",				'http://localhost:8080/solr/digizeitschriften');
