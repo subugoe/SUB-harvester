@@ -122,7 +122,7 @@ if ($_POST['edit_abort']) {
 			// was das Problem löst, wenn auch dabei "zu viel" harvested.
 			$new_last_harvest = $_POST['from'];
 
-		} else if (strlen($_POST['from']) == 0 && strlen($_POST['current_from_db']) == 10) {
+		} else if (strlen($_POST['from']) == 0 && array_key_exists('current_from_db', $_POST) && strlen($_POST['current_from_db']) == 10) {
 			// Es gibt ein altes from-Datum. Dies wurde beim Editieren gelöscht
 			// Der Nutzer wurde darauf hingewiesen, dass durch diese Konstellation die Quelle
 			// komplett neu geharvested wird und hat dies bestätigt.
@@ -256,7 +256,7 @@ if ($_POST['edit_abort']) {
 				$date = date_create($_POST['from']);
 				$content .= "			<p><em>$delete_count</em> Einträge wurden aus dem Index entfernt. Es befinden sich jetzt nur noch Einträge ab dem ".(date_format($date, 'j. ')).$german_months[(date_format($date, 'n'))-1].(date_format($date, ' Y'))." im Index. </p>";
 			}
-		} else if (strlen($_POST['from']) == 10 && strlen($_POST['current_from_db']) == 10 && $_POST['from'] < $_POST['current_from_db']) {
+		} else if (strlen($_POST['from']) == 10 && array_key_exists('current_from_db', $_POST) &&  strlen($_POST['current_from_db']) == 10 && $_POST['from'] < $_POST['current_from_db']) {
 			// Ist ein altes und eine neues from-Datum gesetzt und
 			// Liegt das neue "from" Datum vor dem alten, müssen Daten nachgeharvested werden
 			// siehe auch oben...
@@ -264,7 +264,7 @@ if ($_POST['edit_abort']) {
 			$content .= "			<p>Das neue 'Harvesten ab'-Datum liegt vor dem alten, daher wird die Quelle ab dem ".(date_format($date, 'j. ')).$german_months[(date_format($date, 'n'))-1].(date_format($date, ' Y'))." neu geharvested.</p>";
 		}
 
-		if (strlen($_POST['from']) == 0 && strlen($_POST['current_from_db']) == 10) {
+		if (strlen($_POST['from']) == 0 && array_key_exists('current_from_db', $_POST) && strlen($_POST['current_from_db']) == 10) {
 			// Es gibt ein altes from-Datum. Dies wurde beim Editieren gelöscht
 			// Der Nutzer wurde darauf hingewiesen, dass durch diese Konstellation die Quelle
 			// komplett neu geharvested wird und hat dies bestätigt.
