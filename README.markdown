@@ -48,6 +48,13 @@ Zur Konfiguration einer Harvester-Instanz mit einer gegebenen <ID> folgende Schr
 3. Anlegen des MySQL-Datenbankschemas: Die Datei *configuration/harvester_schema.sql* enthält das benötigte Schema für die MySQL Datenbank. Es muß vor der ersten Nutzung dort eingespielt werden.
 4. Anlegen des Solr-Schemas: Die Datei *configuration/schema.xml* enthält ein Solr Indexschema, das mit den ausgegebenen Feldern klarkommt. Es muß an der entsprechenden Stelle der Solr Konfiguration abgelegt werden.
 
+### Anmerkung
+Da zur Auswahl der Sets ein Formular mit sehr vielen Eingabeelementen abgeschickt wird, muß sichergestellt sein, daß die Konfiguration des Webservers diese Parameter nicht abschneidet, wenn sehr viele Sets vorhanden sind. Mit den Standardeinstellungen werden 1000 POST Parameter zugelassen, so daß die Bearbeitung von knapp 500 Sets funktioniert. Einige OAI Server enhalten wesentlich mehr Sets (z.B. über 2000 auf http://hal.archives-ouvertes.fr/oai/oai.php), so daß hier die Konfiguration angepaßt werden muß:
+
+* Ab PHP 5.3.9 begrenzt die Einstellung `max_input_vars` die Anzahl der Parameter (Voreinstellung vermutlich in /etc/php5/apache2/php.ini)
+* Ist Suhosin installiert, müssen die Werte `suhosin.request.max_vars` und `suhosin.post.max_vars` hochgesetzt werden (Voreinstellung vermutlich in /etc/php5/conf.d/suhosin.ini)
+* Die Anzahl der benötigten Parameter sollte mindestens 3 * Anzahl der Sets + 20 sein
+
 
 ## Verwaltung der OAI Quellen
 Der Harvester bietet über den Webserver eine Oberfläche zur Verwaltung der geharvesteten OAI Quellen an. Sie zeigt die auf den OAI-Servern verfügbaren Sets and und ermöglicht eine Auswahl.
