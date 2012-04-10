@@ -18,43 +18,43 @@ function readConfiguration () {
 }
 
 
-// Prüft, ob die Datenbankverbindung noch besteht, 
+// Prüft, ob die Datenbankverbindung noch besteht,
 // versucht im Fehlerfall eine Wiederherstellung
 // Gibt den DB-Link zurück
 function mysql_connection_check($db_link) {
-	
+
 	if (!mysql_ping($db_link)) {
 		// Versuchen, die Verbindung wiederherzustellen
 		readConfiguration();
 		$db_link = mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, TRUE);
-		
+
 		// DB-Einstellungen
 		mysql_select_db(DB_NAME);
 		mysql_query("SET NAMES 'utf8'");
 		mysql_query("SET CHARACTER SET 'utf8'");
 	}
-	
+
 	return $db_link;
 }
 
 
 // Erstellt Logeinträge
 function insert_log($set_id, $status, $message, $db_link, $add, $delete, $type) {
-	
-	$sql = "INSERT INTO oai_logs 
+
+	$sql = "INSERT INTO oai_logs
 		(
-			id, 
-			time, 
-			oai_set, 
-			status, 
-			type, 
+			id,
+			time,
+			oai_set,
+			status,
+			type,
 			message,
-			added, 
-			deleted 
+			added,
+			deleted
 		)
 		VALUES (
-			NULL, 
-			NOW(), 
+			NULL,
+			NOW(),
 			" . intval($set_id) . ",
 			" . intval($status) . ",
 			" . intval($type) . ",
@@ -62,14 +62,14 @@ function insert_log($set_id, $status, $message, $db_link, $add, $delete, $type) 
 			" . intval($add) . ",
 			" . intval($delete) . "
 		)";
-	
+
 	// Besteht die Verbindung noch?
 	$db_link = mysql_connection_check($db_link);
-	
+
 	// Fehler wird nicht abgefangen, falls mit der Datenbank was nicht ok ist,
 	// ist das schon vorher aufgefallen.
 	$result = mysql_query($sql, $db_link);
-	
+
 	if(!$result) {
 		// Fehler wird einfach ausgegeben
 		echo "\n\n".substr(date('c', time()), 0, 19)."\n\n";
@@ -83,19 +83,19 @@ function insert_log($set_id, $status, $message, $db_link, $add, $delete, $type) 
 // Diese Funktion fügt das $source_folder dem Archiv $archive unter dem Verzeichnis $archive_dest hinzu
 // Man könnte hier noch viel Fehlerbehandlung einfügen... TODO
 function add_to_archive($archive, $archive_dest, $source_folder) {
-	
+
 	// Zur Sicherheit, bei großen Verzeichnissen könnte das Limit erreicht werden
 	set_time_limit(600);
-	
+
 	// Verzeichnis einlesen
 	$source_elements = scandir($source_folder);
-	
+
 	// Alle Elemente durchgehen
 	foreach ($source_elements as $source_element) {
-		
-		// Übergehen der übergeordneten Ebene 
+
+		// Übergehen der übergeordneten Ebene
 		if ($source_element != ".." && $source_element != ".") {
-			
+
 			// Ist Element ein Verzeichnis?
 			if (is_dir($source_folder."/".$source_element)) {
 				// Es ist ein Verzeichnis
@@ -103,7 +103,7 @@ function add_to_archive($archive, $archive_dest, $source_folder) {
 				$archive->addEmptyDir($archive_dest."/".$source_element);
 				// Und das Verzeichnis ins Archive kopieren
 				add_to_archive($archive, $archive_dest."/".$source_element, $source_folder."/".$source_element);
-				
+
 			} else {
 				// Das Element ist eine Datei
 				// Datei dem Archiv hinzufügen
@@ -118,12 +118,12 @@ function add_to_archive($archive, $archive_dest, $source_folder) {
 function remove_folder($folder) {
 	// Zur Sicherheit, bei großen Verzeichnissen könnte das Limit erreicht werden
 	set_time_limit(600);
-	
+
 	// Verzeichnis einelsen
 	$folder_elements = scandir($folder);
 	// Alle Elemente durchgehen
 	foreach ($folder_elements as $folder_element) {
-		// Übergehen der übergeordneten Ebene 
+		// Übergehen der übergeordneten Ebene
 		if ($folder_element != ".." && $folder_element != ".") {
 			// Ist Element ein Verzeichnis?
 			if (is_dir($folder."/".$folder_element)) {
@@ -142,21 +142,21 @@ function remove_folder($folder) {
 // Diese Funktion verschiebt das Verzeichnis $source inklusive aller Unterverzeichnisse nach $target
 // Man könnte hier noch viel Fehlerbehandlung einfügen... TODO
 function move_folder($source, $target) {
-	
+
 	// Zur Sicherheit, bei großen Verzeichnissen könnte das Limit erreicht werden
 	set_time_limit(600);
-	
+
 	// Zielverzeichnis erstellen, falls noch nicht vorhanden
 	if (!file_exists($target)) {
 		// Zielverzeichnis erstellen
 		@mkdir($target."/".$source_folder_element, CHMOD, true);
 	}
-	
+
 	// Verzeichnis einelsen
 	$source_folder_elements = scandir($source);
 	// Alle Elemente durchgehen
 	foreach ($source_folder_elements as $source_folder_element) {
-		// Übergehen der übergeordneten Ebene 
+		// Übergehen der übergeordneten Ebene
 		if ($source_folder_element != ".." && $source_folder_element != ".") {
 			// Ist Element ein Verzeichnis?
 			if (is_dir($source."/".$source_folder_element)) {

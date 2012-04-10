@@ -182,7 +182,7 @@ class oai_listsets_parser {
 			$rows .= "
 				<tr>
 					<td class='column1'>
-						<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview()'></input>
+						<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview(null, null, validate_new)'></input>
 						<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc' onclick='window.open(this.href, '_blank'); return false;' class='OAILink'>OAI-XML anzeigen</a>
 					</td>
 					<td class='column2'>
@@ -201,7 +201,7 @@ class oai_listsets_parser {
 			$rows .= "
 					<tr>
 						<td class='column1'>
-							<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview()'></input>
+							<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview(null, null, validate_new)'></input>
 							<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc' onclick='window.open(this.href, '_blank'); return false;' class='OAILink'>OAI-XML anzeigen</a></td>
 						<td class='column2'>
 							<input id='set".$i."' name='sets[".$i."][harvest]' type='checkbox' onclick='validateSets()'></input>
@@ -220,7 +220,7 @@ class oai_listsets_parser {
 				$rows .= "
 					<tr>
 						<td class='column1'>
-							<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview('". str_replace("'", "\'", $set['setSpec']) ."', '". str_replace("'", "\'", $set['setName']) ."')'></input>
+							<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview('". str_replace("'", "\'", $set['setSpec']) ."', '". str_replace("'", "\'", $set['setName']) .", validate_new')'></input>
 							<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc&amp;set=".$set['setSpec']."' onclick='window.open(this.href, '_blank'); return false;' class='OAILink'>OAI-XML anzeigen</a>
 						</td>
 						<td class='column2'>

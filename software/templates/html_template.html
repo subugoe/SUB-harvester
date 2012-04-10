@@ -1,18 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="de-DE">
+<!DOCTYPE html>
+<html lang='de'>
 	<head>
+		<meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
 		<title>%name% OAI-Harvester</title>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-		<link rel="stylesheet" type="text/css" href="resources/css/oai_harvester.css" media="screen"/>
-		%javascript%
+		<link href='resources/css/oai_harvester.css' rel='stylesheet' type='text/css'/>
+		<link href='resources/css/jquery-ui-1.8.18.custom.css' rel='stylesheet' type='text/css'/>
+		<script src='resources/javascript/jquery-1.7.1.min.js' type='text/javascript'></script>
+		<script src='resources/javascript/jquery-ui-1.8.18.custom.min.js' type='text/javascript'></script>
+		<script src='resources/javascript/jquery.uitablefilter.js' type='text/javascript'></script>
+		<script src='resources/javascript/jquery.tablesorter.min.js' type='text/javascript'></script>
+		<script src='resources/javascript/common.js' type='text/javascript'></script>
+		<script src='resources/javascript/add_oai_source.js' type='text/javascript'></script>
+		<script src='resources/javascript/edit_oai_source.js' type='text/javascript'></script>
+		<script src='resources/javascript/list_oai_sources.js' type='text/javascript'></script>
+		<script src='resources/javascript/preview_oai_set.js' type='text/javascript'></script>
 	</head>
 
 	<body>
-		<div id="main">
-			<div style="background-color:#b8b8b8;">
-				<h1>%name% OAI-Harvester</h1>
+		<div id='main'>
+			<h1>%name% OAI-Harvester</h1>
+			<div id='content'>
+				%content%
 			</div>
-			%content%
 		</div>
 	</body>
 </html>

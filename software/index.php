@@ -14,23 +14,11 @@
 $mysq_error_message = "Ein Fehler in der Datenbankabfrage";
 $output = "";
 $content = "";
-$javascript = "";
-$jquery = "resources/javascript/jquery-1.6.2.min.js";
 
 // Funktionen einbinden
 require_once(dirname(__FILE__) . '/scripts/scripts_funcs.php');
 // Einstellungen laden
 readConfiguration();
-
-// Template laden
-$file = fopen(dirname(__FILE__) . '/templates/html_template.html', "r");
-
-while (!feof($file)) {
-    $output .= fgets($file);
-}
-fclose($file);
-$output = str_replace("%name%", SERVICE_NAME, $output);
-
 
 // Datenbankverbindung herstellen
 $db_link = @mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
@@ -38,9 +26,7 @@ $db_link = @mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
 if (!$db_link) {
 	// Konfiguration ist nicht möglich
 	$content .= "<p class=\"errormsg\">Keine Verbindung zur Datenbank - Konfiguration zurzeit nicht möglich.</p>\n";
-	$output = str_replace("%javascript%", "", $output);
 } else {
-
 	// Konfiguration ist möglich
 
 	// Sprache für PHP-Funktionen
@@ -54,7 +40,9 @@ if (!$db_link) {
 	// Sprache setzen
 	$sql = "SET lc_time_names = 'de_DE'";
 	$result = mysql_query($sql, $db_link);
-	if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+	if (!$result) {
+		die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+	}
 
 
 	// Welche Funktion wird aufgerufen?
@@ -63,7 +51,20 @@ if (!$db_link) {
 	$parameters = $_POST;
 	$parameters = array_merge($parameters, $_GET);
 
-	switch(isset($parameters['do']) ? $parameters['do'] : "" ) {
+	require_once(dirname(__FILE__) . "/commands/commands.php");
+
+	$commandName = 'start';
+	if (array_key_exists('do', $parameters)) {
+		$commandName = $parameters['do'];
+	}
+
+	$command = command::subclassForCommand($commandName);
+	if ($command) {
+		$output = $command->getTemplate();
+		$content .= $command->run();
+	}
+
+/*	switch(isset($parameters['do']) ? $parameters['do'] : "" ) {
 
 		case "":
 			$output = str_replace("%javascript%", "<script src=\"$jquery\" type=\"text/javascript\" charset=\"utf-8\"></script>\n<script src=\"resources/javascript/start.js\" type=\"text/javascript\" charset=\"utf-8\"></script>", $output);
@@ -121,7 +122,7 @@ if (!$db_link) {
 
 
 	}
-
+*/
 
 
 

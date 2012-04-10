@@ -110,7 +110,7 @@ class oai_set_compare {
 				<table class='sets'>
 					<tr>
 						<td class='column1'>
-							<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview()'></input>
+							<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview(null, null, validate_edit)'></input>
 							<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc' onclick='window.open(this.href, \"_blank\"); return false;' class='OAILink'>OAI-XML anzeigen</a>
 						</td>
 						<td class='column2'>
@@ -164,7 +164,7 @@ class oai_set_compare {
 				$tables .= "
 						<tr>
 							<td class='column1'>
-								<input type='button' name='set_".$i."_preview' value='Vorschau' onclick=\"preview('". htmlentities(str_replace("'", "\'", $set['setSpec']), ENT_QUOTES, 'UTF-8') ."', '". htmlentities(str_replace("'", "\'", $set['setName']), ENT_QUOTES, 'UTF-8') ."')\"></input>
+								<input type='button' name='set_".$i."_preview' value='Vorschau' onclick=\"preview('". htmlentities(str_replace("'", "\'", $set['setSpec']), ENT_QUOTES, 'UTF-8') ."', '". htmlentities(str_replace("'", "\'", $set['setName']), ENT_QUOTES, 'UTF-8') ."', validate_edit)\"></input>
 								<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc&amp;set=".$set['setSpec']."' onclick='window.open(this.href, \'_blank\'); return false;' class='OAILink'>OAI-XML anzeigen</a>
 							</td>
 							<td class='column2'>
@@ -210,7 +210,7 @@ class oai_set_compare {
 				$tables .= "
 						<tr>
 							<td class='column1'>
-								<input type='button' name='set_".$i."_preview' value='Vorschau' onclick=\"preview('". htmlentities(str_replace("'", "\'", $set['setSpec']), ENT_QUOTES, 'UTF-8') ."', '". htmlentities(str_replace("'", "\'", $set['setName']), ENT_QUOTES, 'UTF-8') ."')\"></input>
+								<input type='button' name='set_".$i."_preview' value='Vorschau' onclick=\"preview('". htmlentities(str_replace("'", "\'", $set['setSpec']), ENT_QUOTES, 'UTF-8') ."', '". htmlentities(str_replace("'", "\'", $set['setName']), ENT_QUOTES, 'UTF-8') ."', validate_edit)\"></input>
 								<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc&amp;set=".$set['setSpec']."' onclick='window.open(this.href, \'_blank\'); return false;' class='OAILink'>OAI-XML anzeigen</a>
 							</td>
 							<td class='column2'>
@@ -255,7 +255,7 @@ class oai_set_compare {
 			$tables .= "
 						<tr>
 							<td class='column1'>
-								<input type='button' name='set_".$i."_preview' value='Vorschau' onclick=\"preview('". htmlentities(str_replace("'", "\'", $set['setSpec']), ENT_QUOTES, 'UTF-8') ."', '". htmlentities(str_replace("'", "\'", $set['setName']), ENT_QUOTES, 'UTF-8') ."')\"></input>
+								<input type='button' name='set_".$i."_preview' value='Vorschau' onclick=\"preview('". htmlentities(str_replace("'", "\'", $set['setSpec']), ENT_QUOTES, 'UTF-8') ."', '". htmlentities(str_replace("'", "\'", $set['setName']), ENT_QUOTES, 'UTF-8') ."', validate_edit)\"></input>
 									<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc&amp;set=".$set['setSpec']."' onclick='window.open(this.href, \'_blank\'); return false;' class='OAILink'>OAI-XML anzeigen</a>
 							</td>
 							<td class='column2'>
