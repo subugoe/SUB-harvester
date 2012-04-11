@@ -8,28 +8,22 @@ require_once(dirname(__FILE__) . '/commands.php');
  */
 class command_displayLog extends command {
 
-	public function getContent () {
-		global $db_link;
-		$content = '';
+	public function appendContent () {
+		// Erstellt die Logtabelle mit Hilfe der Klasse log.
+		require_once(dirname(__FILE__) . '/../classes/log.php');
+		$log = new log($this);
 
-		/*
-		 * Erstellt die Logtabelle mit hilfe der Klasse log
-		 */
-		require_once(dirname(__FILE__) . "/../classes/log.php");
-
-		if (isset($_POST['id'])) {
-			$log = new log($db_link, $_POST['status'], $_POST['type'], $_POST['limit'], $_POST['start'], $_POST['id']);
+		if (array_key_exists('id', $this->parameters)) {
+			$this->contentElement->appendChild($log->getLogMessages($this->parameters['status'], $this->parameters['type'], $this->parameters['limit'], $this->parameters['start'], $this->parameters['id']));
 		} else {
-			$log = new log($db_link, $_POST['status'], $_POST['type'], $_POST['limit'], $_POST['start']);
+			$this->contentElement->appendChild($log->getLogMessages($this->parameters['status'], $this->parameters['type'], $this->parameters['limit'], $this->parameters['start']));
 		}
-
-		return $log->getOutput();
 	}
 
 
-
-	public function getTemplate () {
-		return '%content%';
+	public function setupTemplate () {
+		$this->document = new DOMDocument();
+		$this->contentElement = $this->document;
 	}
 
 

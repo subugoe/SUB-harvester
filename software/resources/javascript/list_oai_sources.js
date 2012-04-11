@@ -4,17 +4,15 @@
 document.onkeyup = checkFilter;
 
 // Überträgt einfach das Formular mit allen Daten
-
 function refresh() {
 	setHiddenValues();
 	document.forms[0].action = 'index.php#filter';
 	document.forms[0].submit();
 }
 
+
 // Überträgt das Formular und ändert die Sortierung
-
 function changeSort(sortby, sorthow) {
-
 	document.forms[0].sortby.value = sortby;
 	document.forms[0].sorthow.value = sorthow;
 
@@ -23,51 +21,52 @@ function changeSort(sortby, sorthow) {
 	document.forms[0].submit();
 }
 
-// Auf die erste Seite blättern (mit den Optionen)
 
+// Auf die erste Seite blättern (mit den Optionen)
 function gotoFirstPage() {
 	document.forms[0].start.value = 0;
+
 	setHiddenValues();
 	document.forms[0].submit();
 }
 
 
 // Filterung nach Name und / oder URL
-
 function filter() {
-	document.forms[0].filter_name.value = document.forms[0].filter_name_input.value;
-	document.forms[0].filter_url.value = document.forms[0].filter_url_input.value;
-	document.forms[0].filter_bool.value = document.forms[0].filter_bool_select.options[document.forms[0].filter_bool_select.selectedIndex].value;
+	var form = event.target.form;
+	document.forms[0].filter_name.value = form.filter_name_input.value;
+	document.forms[0].filter_url.value = form.filter_url_input.value;
+	document.forms[0].filter_bool.value = form.filter_bool_select.options[document.forms[0].filter_bool_select.selectedIndex].value;
+
 	setHiddenValues();
 	document.forms[0].submit();
 }
 
 
 // Auf die nächste Seite blättern
-
 function next() {
+	document.forms[0].start.value = new Number(event.target.form.start.value) + new Number(event.target.form.limit.value);
 
-	document.forms[0].start.value = new Number(document.forms[0].start.value) + new Number(document.forms[0].limit.value);
 	setHiddenValues();
 	document.forms[0].submit();
 }
 
 // Auf die voherige Seite blättern
-
 function previous() {
+	document.forms[0].start.value = new Number(event.target.form.start.value) - new Number(event.target.form.limit.value);
 
-	document.forms[0].start.value = new Number(document.forms[0].start.value) - new Number(document.forms[0].limit.value);
 	setHiddenValues();
 	document.forms[0].submit();
 }
 
 
 // Setzt die Werte in den versteckten Input-Feldern "limit", "show_active", "show_status"
-
-function setHiddenValues() {
-	document.forms[0].limit.value = document.forms[0].limit_select.options[document.forms[0].limit_select.selectedIndex].value;
-	document.forms[0].show_active.value = document.forms[0].show_active_select.options[document.forms[0].show_active_select.selectedIndex].value;
-	document.forms[0].show_status.value = document.forms[0].show_status_select.options[document.forms[0].show_status_select.selectedIndex].value;
+function setHiddenValues(form) {
+	var invisibleForm = document.getElementById('limit_select');
+	var form = event.target.form;
+	invisibleForm.limit.value = form.limit_select.options[form.limit_select.selectedIndex].value;
+	invisibleForm.show_active.value = form.show_active_select.options[form.show_active_select.selectedIndex].value;
+	invisibleForm.show_status.value = form.show_status_select.options[form.show_status_select.selectedIndex].value;
 }
 
 // Prüft ob ein Filter bereits gesetzt ist oder nicht und macht es farblich kenntlich.

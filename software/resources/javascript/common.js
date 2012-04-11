@@ -107,22 +107,22 @@ function validateSets() {
 // TODO: Check id parameter i
 function navigate(start) {
 
-	$('#limit').val($('#max_hit_display').val());
-	$('#status').val($('#show_status_select').val());
-	$('#type').val($('#show_type_select').val());
+	var limit = $('#max_hit_display').val();
+	var status = $('#show_status_select').val();
+	var type =  $('#show_type_select').val();
 
 	$('#log_display').empty();
 
 	var AJAXData = {
 		'do': 'display_log',
 		'start': start,
-		'limit': $('#limit').val(),
-		'status': $('#status').val(),
-		'type': $('#type').val()
+		'limit': limit,
+		'status': status,
+		'type': type
 	};
 
 	if (document.getElementById('id')) {
-		AJAXData['id'] = $('#id').val();
+		AJAXData['id'] = document.getElementById('id').value;
 	}
 
 	$.ajax({
@@ -130,18 +130,18 @@ function navigate(start) {
 		type: "POST",
 		data: AJAXData,
 	  	success: function(html){
-			$('#log_display').append(jQuery(html).slice(0,5));
+			$('.log').replaceWith($(html));
 	  	}
 	});
 
-	if (start == $('#limit').val()) {
+	if (start === limit) {
 		$('#max_hit_display').attr('disabled', 'disabled');
 		$('#show_status_select').attr('disabled', 'disabled');
 		$('#show_type_select').attr('disabled', 'disabled');
 		$('#goto_first_page').removeAttr('disabled');
 	}
 
-	if (start == 0) {
+	if (start === 0) {
 		$('#max_hit_display').removeAttr('disabled');
 		$('#show_status_select').removeAttr('disabled');
 		$('#show_type_select').removeAttr('disabled');

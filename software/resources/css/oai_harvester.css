@@ -465,11 +465,11 @@ label span.setSpec {
 	font-size: 80%;
 }
 
-table.sets tr:nth-child(2n) {
+table tr:nth-child(2n) {
 	background: #f5f5f5;
 }
 
-table.sets tr:nth-child(2n+1) {
+table tr:nth-child(2n+1) {
 	background: #eee;
 }
 

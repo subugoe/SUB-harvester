@@ -2,271 +2,16 @@
 
 require_once(dirname(__FILE__) . '/commands.php');
 
-
 /**
  * Befehl zum Anzeigen der Liste bekannter OAI Quellen.
  */
 class command_listOAISources extends command {
 
-	public function getContent () {
-		global $db_link;
-		$content = '';
+	protected function appendContent () {
+		$this->clearEditLock();
 
-		// Wird diese Seite von einer Editierseite aufgerufen, muss der entsprechende Datensatz wieder freigegeben werden.
-
-		if (isset($_POST['edit_id'])) {
-			$sql = "DELETE FROM oai_source_edit_sessions
-					WHERE oai_source = " . intval($_POST['edit_id']) . "
-					AND MD5(timestamp) = '" . mysql_real_escape_string($_POST['edit_token']) . "'";
-			$result = mysql_query($sql, $db_link);
-			if (!$result) {
-				die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
-			}
-		}
-
-		$content .= "<p style=\"text-align: right; margin-top: -20px;\"><input type=\"button\" value=\" Zur Startseite\" onclick=\"gotoStart()\"></input></p>\n";
-		$content .= "<h2>OAI-Quellen</h2>\n";
-		$content .= "<p style=\"text-align:center; margin-top: 30px;\">";
-
-		// Abfrage der Anzahl der OAI-Quellen
-		$sql = "SELECT COUNT('id') FROM oai_sources";
-		$result = mysql_query($sql, $db_link);
-		if (!$result) {
-			die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
-		}
-		$count_oai_sources = mysql_result($result, 0);
-
-		// Abfrage der Anzahl der Sets, die Pseudosets "allSets" und "noSetSupport" werden ignoriert)
-		$sql = "SELECT COUNT('id') AS count_oai_sets FROM oai_sets WHERE NOT setspec LIKE '%allSets%'";
-		$result = mysql_query($sql, $db_link);
-		if (!$result) {
-			die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
-		}
-		$count_oai_sets = mysql_result($result, 0);
-
-		// Kein Mechanismus zur Unterscheidung von Plural und Singular - da sollten immer mehr als 1 Quelle, bzw. mehr als 1 Set drin sein...
-		$content .= "Zurzeit befinden sich insgesamt <em>".$count_oai_sources." OAI-Quellen</em> mit <em>".$count_oai_sets." Sets</em> in der Datenbank.<br />\n";
-
-
-
-		// Abfrage der Anzahl der aktiven OAI-Quellen
-		$sql = "SELECT COUNT('id') AS count_active_oai_sources FROM oai_sources WHERE active = 1";
-		$result = mysql_query($sql, $db_link);
-		if (!$result) {
-			die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
-		}
-		$count_active_oai_sources = mysql_result($result, 0);
-
-		// Abfrage der Anzahl der geharvesteten Sets
-		$sql = "SELECT COUNT('id') AS count_oai_sets FROM oai_sets WHERE harvest = 1 AND NOT (setspec LIKE '%allSets%' OR setspec LIKE '%noSetSupport%')";
-		$result = mysql_query($sql, $db_link);
-		if (!$result) {
-			die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
-		}
-		$count_harvested_oai_sets = mysql_result($result, 0);
-
-		$content .= "Aus den <em>".$count_active_oai_sources." aktiven OAI-Quellen</em> werden <em>".$count_harvested_oai_sets." Sets</em> geharvestet.\n</p>\n";
-
-
-		// Optionen für die Listenanzeige
-		$content .= "			<form method=\"post\" action=\"index.php\" id=\"show_oai_sources\" accept-charset=\"UTF-8\">\n";
-		$content .= "				<div>\n";
-		$content .= "					<input type=\"hidden\" name=\"do\" value=\"list_oai_sources\"></input>\n";
-
-		// filter_name
-		$content .= "					<input type=\"hidden\" name=\"filter_name\" value=\"";
-		$current_filter_name = isset($_POST['filter_name']) ? mysql_real_escape_string($_POST['filter_name']) : "";
-		$content .= $current_filter_name."\"></input>\n";
-
-		// filter_url
-		$content .= "					<input type=\"hidden\" name=\"filter_url\" value=\"";
-		$current_filter_url = isset($_POST['filter_url']) ? mysql_real_escape_string($_POST['filter_url']) : "";
-		$content .= $current_filter_url."\"></input>\n";
-
-		// filter_bool
-		$content .= "					<input type=\"hidden\" name=\"filter_bool\" value=\"";
-		$current_filter_bool = isset($_POST['filter_bool']) ? mysql_real_escape_string($_POST['filter_bool']) : "AND";
-		$content .= $current_filter_bool."\"></input>\n";
-
-		// sortby
-		$content .= "					<input type=\"hidden\" name=\"sortby\" value=\"";
-		$current_sortby = isset($_POST['sortby']) ? mysql_real_escape_string($_POST['sortby']) : "name";
-		$content .= $current_sortby."\"></input>\n";
-
-		// sorthow
-		$content .= "					<input type=\"hidden\" name=\"sorthow\" value=\"";
-		$current_sorthow = isset($_POST['sorthow']) ? mysql_real_escape_string($_POST['sorthow']) : "ASC";
-		$content .= $current_sorthow."\"></input>\n";
-
-		// id
-		$content .= "					<input type=\"hidden\" name=\"id\" value=\"";
-		$content .= isset($_POST['id']) ? mysql_real_escape_string($_POST['id']) : "none";
-		$content .= "\"></input>\n";
-
-		// start
-		$content .= "					<input type=\"hidden\" name=\"start\" value=\"";
-		$current_start = isset($_POST['start']) ? intval($_POST['start']) : 0;
-		$content .= $current_start;
-		$content .= "\"></input>\n";
-
-		// limit
-		$content .= "					<input type=\"hidden\" name=\"limit\" value=\"";
-		$current_limit = isset($_POST['limit']) ? intval($_POST['limit']) : 50;
-		$content .= $current_limit;
-		$content .= "\"></input>\n";
-
-		// show_active
-		$content .= "					<input type=\"hidden\" name=\"show_active\" value=\"";
-		$current_show_active = isset($_POST['show_active']) ? intval($_POST['show_active']) : 0;
-		$content .= $current_show_active;
-		$content .= "\"></input>\n";
-
-		// show_status
-		$content .= "					<input type=\"hidden\" name=\"show_status\" value=\"";
-		$current_show_status = isset($_POST['show_status']) ? intval($_POST['show_status']) : 0;
-		$content .= $current_show_status;
-		$content .= "\"></input>\n";
-
-
-		// Die Optionen sind nur auf der ersten Seite aktive
-		$options_disabled = $current_start == 0 ? "" : " disabled=\"disabled\"";
-
-		$content .= "				</div>\n";
-		$content .= "				<h3 id=\"list_oai_sources_drilldown\" style=\"margin-top: 25px;\"><a name=\"filter\">Filter:</a></h3>\n";
-		$content .= "					<table id=\"filter_table\" border=\"0\" width=\"45%\" style=\"margin-left: auto; margin-right: auto; background-color: #B1D0B9; padding: 3px;\">\n";
-		$content .= "						<colgroup>\n";
-		$content .= "						    <col width=\"10%\" />\n";
-		$content .= "						    <col width=\"85%\" />\n";
-		$content .= "						    <col width=\"5%\" />\n";
-		$content .= "						 </colgroup>\n";
-		$content .= "						<tr>\n";
-		$content .= "							<td align=\"right\"><em>Name:</em></td>\n";
-
-		$content .= "							<td align=\"left\"><input name=\"filter_name_input\" type=\"text\" size=\"60\"".$options_disabled." value=\"".$current_filter_name."\"></input></td>\n";
-
-		$content .= "							<td align=\"left\">\n";
-		$content .= "								<select name=\"filter_bool_select\" size=\"1\"".$options_disabled.">\n";
-
-
-		// filter bool : select Dynamisierung
-		// mögliche Wertepaare - Für Änderungen hier im Array eintragen.
-		$filter_bool_options =
-			array(
-				0 => array('value' => "AND", 'label' => "und"),
-				1 => array('value' => "OR", 'label' => "oder")
-			);
-
-		// Select-elemente erstellen
-		foreach($filter_bool_options as $option) {
-			$content .= "						<option value=\"".$option['value']."\" ";
-			if($option['value'] == $current_filter_bool) {
-				$content .= "selected=\"selected\"";
-			}
-			$content .= ">".$option['label']."</option>\n";
-		}
-
-
-		$content .= "								</select>\n";
-		$content .= "							</td>\n";
-		$content .= "						</tr>\n";
-		$content .= "						<tr>\n";
-		$content .= "							<td align=\"right\"><em>URL:</em></td>\n";
-
-		$content .= "							<td align=\"left\"><input name=\"filter_url_input\" type=\"text\" size=\"60\"".$options_disabled." value=\"".$current_filter_url."\"></input></td>\n";
-
-		$content .= "							<td align=\"left\"></td>\n";
-		$content .= "						</tr>\n";
-		$content .= "						<tr>\n";
-		$content .= "							<td align=\"center\" colspan=\"3\"><input type=\"button\" value=\" Filter\" onclick=\"filter()\"".$options_disabled."></input></td>\n";
-		$content .= "						</tr>\n";
-		$content .= "					</table>\n";
-		$content .= "				<p style=\"text-align: center; margin-top: 20px; margin-left: auto; margin-right: auto; color: #424242; background-color: #D8E6B6; width: 45%; padding: 3px;\">\n";
-		$content .= "					<em>Anzahl der Treffer:</em>\n";
-
-		$content .= "					<select id=\"max_hit_display\" name=\"limit_select\" size=\"1\" onchange=\"refresh()\"".$options_disabled.">\n";
-
-
-		// limit : select Dynamisierung
-		// mögliche Werte - Für Änderungen hier im Array eintragen.
-		$limit_options = array(5, 20, 50, 100, 150, 200);
-
-		// ausgewählten Wert ermitteln, ggf. Standardwert setzen
-		$current_limit = isset($_POST['limit']) ? intval($_POST['limit']) : 50;
-
-		// Select-elemente erstellen
-		foreach($limit_options as $option) {
-			$content .= "						<option value=\"".$option."\" ";
-			if($option == $current_limit) {
-				$content .= "selected=\"selected\"";
-			}
-			$content .= ">".$option."</option>\n";
-		}
-
-
-		$content .= "					</select>\n";
-		$content .= "					&nbsp;&nbsp;\n";
-		$content .= "					<em>Aktiv:</em>";
-		$content .= "					<select name=\"show_active_select\" size=\"1\" onchange=\"refresh()\"".$options_disabled.">\n";
-
-
-		// show_active : select Dynamisierung
-		// mögliche Wertepaare - Für Änderungen hier im Array eintragen.
-		$show_active_options =
-			array(
-				0 => array('value' => 0, 'label' => "egal"),
-				1 => array('value' => 1, 'label' => "aktiv"),
-				2 => array('value' => 2, 'label' => "inaktiv")
-			);
-
-		// ausgewählten Wert ermitteln, ggf. Standardwert setzen
-		$current_show_active = isset($_POST['show_active']) ? intval($_POST['show_active']) : 0;
-
-		// Select-elemente erstellen
-		foreach($show_active_options as $option) {
-			$content .= "						<option value=\"".$option['value']."\" ";
-			if($option['value'] == $current_show_active) {
-				$content .= "selected=\"selected\"";
-			}
-			$content .= ">".$option['label']."</option>\n";
-		}
-
-
-		$content .= "					</select>\n";
-		$content .= "					&nbsp;&nbsp;\n";
-		$content .= "					<em>Status:</em>\n";
-		$content .= "					<select name=\"show_status_select\" size=\"1\" onchange=\"refresh()\"".$options_disabled.">\n";
-
-
-
-		// show_status : select Dynamisierung
-		// mögliche Wertepaare - Für Änderungen hier im Array eintragen.
-		$show_status_options =
-			array(
-				0 => array('value' => 0, 'label' => "egal"),
-				1 => array('value' => 1, 'label' => "OK"),
-				2 => array('value' => 2, 'label' => "Fehler")
-			);
-
-		// ausgewählten Wert ermitteln, ggf. Standardwert setzen
-		$current_show_status = isset($_POST['show_status']) ? intval($_POST['show_status']) : 0;
-
-		// Select-elemente erstellen
-		foreach($show_status_options as $option) {
-			$content .= "						<option value=\"".$option['value']."\" ";
-			if($option['value'] == $current_show_status) {
-				$content .= "selected=\"selected\"";
-			}
-			$content .= ">".$option['label']."</option>\n";
-		}
-
-
-		$content .= "					</select>\n";
-		$content .= "				</p>\n";
-
-		$goto_first_page_disabled = $current_start != 0 ? "" : " disabled=\"disabled\"";
-		$content .= "				<p style=\"text-align: center;\"><input type=\"button\" value=\"Zur 1. Seite\" onclick=\"gotoFirstPage()\"".$goto_first_page_disabled."></input></p>\n";
-
-		$content .= "				<hr style=\"width: 30%; text-align: center; margin-top: 15px;\"/>";
+		$this->contentElement->appendChild($this->harvestingOverview());
+		$this->contentElement->appendChild($this->filterSection());
 
 
 		// Template für Abfrage der ausgewählten OAI-Quellen erstellen (wird zum Zählen und für die Daten benötigt).
@@ -274,20 +19,22 @@ class command_listOAISources extends command {
 		$where_set = false;
 
 		// Wird nach "aktiv" selektiert?
-		if($current_show_active > 0) {
+		if(array_key_exists('show_active', $this->parameters) && $this->parameters['show_active'] > 0) {
 			$sql_query_select_oai_sources_where .= " WHERE";
 			$where_set = true;
 
-			$condition = $current_show_active == 1 ? "TRUE" : "FALSE";
+			$condition = (intval($this->parameters['show_active']) === 1) ? "TRUE" : "FALSE";
 			$sql_query_select_oai_sources_where .= " oai_sources.active = ".$condition;
+
 			unset($condition); // zur Sicherheit
 		}
 
 		// Wird nach "status" selektiert?
-		if ($current_show_status > 0) {
-			$condition = $current_show_status == 1 ? "NOT IN" : "IN";
+		if (array_key_exists('show_status', $this->parameters) && $this->parameters['show_status'] > 0) {
 			$sql_query_select_oai_sources_where .= $where_set ? " AND" : " WHERE";
 			$where_set = true;
+
+			$condition = (intval($this->parameters['show_status']) === 1) ? "NOT IN" : "IN";
 			$sql_query_select_oai_sources_where .= " oai_sources.id " . $condition . "
 							(SELECT DISTINCT oai_source
 							FROM oai_sets
@@ -298,12 +45,14 @@ class command_listOAISources extends command {
 		}
 
 		// Gibt es Textfilter?
-
 		// Filter: Name
+		$current_filter_name = '';
+		if (array_key_exists('filter_name', $this->parameters)) {
+			$current_filter_name = mysql_real_escape_string($this->parameters['filter_name']);
+		}
+		$current_filter_name_parsed = "";
 		if (strlen($current_filter_name) >= 3) {
-
 			$current_filter_name_single = explode(" ", $current_filter_name);
-			$current_filter_name_parsed = "";
 
 			foreach ($current_filter_name_single as $filter_name) {
 				if (strlen($filter_name) >= 3) {
@@ -314,10 +63,13 @@ class command_listOAISources extends command {
 		}
 
 		// Filter: URL
+		$current_filter_url = '';
+		if (array_key_exists('filter_url', $this->parameters)) {
+			$current_filter_url = mysql_real_escape_string($this->parameters['filter_url']);
+		}
+		$current_filter_url_parsed = '';
 		if (strlen($current_filter_url) >= 3) {
-
 			$current_filter_url_single = explode(" ", $current_filter_url);
-			$current_filter_url_parsed = "";
 
 			foreach ($current_filter_url_single as $filter_url) {
 				if (strlen($filter_url) >= 3) {
@@ -327,23 +79,30 @@ class command_listOAISources extends command {
 			}
 		}
 
+		$current_filter_bool = 'AND';
+		if (array_key_exists('filter_bool', $this->parameters) && $this->parameters['filter_bool'] === 'OR') {
+			$current_filter_bool = 'OR';
+		}
+
 		// WHERE Bedingung aufbauen
-
-		if ((isset($current_filter_name_parsed) ? strlen($current_filter_name_parsed) >= 3 : false) || (isset($current_filter_url_parsed) ? strlen($current_filter_url_parsed) >= 3 : false)) {
-
+		if (strlen($current_filter_name_parsed) >= 3 || strlen($current_filter_url_parsed) >= 3) {
 			$sql_query_select_oai_sources_where .= $where_set ? " AND (" : " WHERE (";
 
 			// Zum "where" string hinzufügen
-			$sql_query_select_oai_sources_where .= (isset($current_filter_name_parsed) ? strlen($current_filter_name_parsed) > 0 : false) ?
-				"MATCH (name) AGAINST ('" . $current_filter_name_parsed . "' IN BOOLEAN MODE)" : "";
-			$sql_query_select_oai_sources_where .= (isset($current_filter_name_parsed) && isset($current_filter_url_parsed) ? strlen($current_filter_name_parsed) > 0 && strlen($current_filter_url_parsed) > 0 : false) ? " " . $current_filter_bool . " " : "";
-			$sql_query_select_oai_sources_where .= (isset($current_filter_url_parsed) ? strlen($current_filter_url_parsed) > 0 : false) ? $current_filter_url_parsed : "";
+			if (strlen($current_filter_name_parsed) > 0) {
+				$sql_query_select_oai_sources_where .= "MATCH (name) AGAINST ('" . $current_filter_name_parsed . "' IN BOOLEAN MODE)";
+			}
+			if (strlen($current_filter_name_parsed) > 0 && strlen($current_filter_url_parsed) > 0) {
+				$sql_query_select_oai_sources_where .=  " " . $current_filter_bool . " ";
+			}
+			if (strlen($current_filter_url_parsed) > 0) {
+				$sql_query_select_oai_sources_where .= $current_filter_url_parsed;
+			}
 			$sql_query_select_oai_sources_where .= ")";
 		}
 
-
 		// Abfrage der Anzahl der ausgewählten OAI-Quellen, JOIN wird wenn möglich übergangen
-		if($current_show_status > 0) {
+		if(array_key_exists('show_status', $this->parameters) && intval($this->parameters['show_status']) > 0) {
 			$sql = "SELECT COUNT( DISTINCT oai_sources.id )
 					FROM oai_sources INNER JOIN oai_sets ON oai_sources.id = oai_sets.oai_source" .
 					$sql_query_select_oai_sources_where;
@@ -352,73 +111,49 @@ class command_listOAISources extends command {
 					FROM oai_sources" .
 					$sql_query_select_oai_sources_where;
 		}
-		$result = mysql_query($sql, $db_link);
-		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+
+
+		$result = mysql_query($sql, $this->db_link);
+		if (!$result) {
+			$error = new error($this->document);
+			$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+			return;
+		}
 		$count_selected_oai_sources = mysql_result($result, 0);
-
 		if($count_selected_oai_sources > 0) {
-			// Anzeige der Position
-			$start = isset($_POST['start']) ? intval($_POST['start']) : 0;
-			$content .= "				<p style=\"text-align: center; color: #8f0006; font-size: 14px;\"><em>".($start+1)."</em> bis <em>";
-			if ($count_selected_oai_sources >= $start + $current_limit) {
-				$content .= ($current_limit+$start);
-			} else {
-				$content .= $count_selected_oai_sources;
+
+			$current_limit = 50;
+			if (array_key_exists('limit', $this->parameters)) {
+				$current_limit = intval($this->parameters['limit']);
 			}
 
-			$content .= "</em> von <em>".$count_selected_oai_sources."</em></p>\n";
-
-			// Beginn der Listentabelle
-			$content .= "				<table id=\"oai_sources_list\" border=\"1\" cellpadding=\"3px\" width=\"100%\" rules=\"cols\" style=\"border-color: #b8b8b8; margin-top: 10px;\">\n";
-			$content .= "					<colgroup>\n";
-			$content .= "				    <col width=\"375px\" />\n";
-			$content .= "				    <col width=\"370px\" />\n";
-			$content .= "					    <col width=\"135px\" />\n";
-			$content .= "					    <col width=\"90px\" />\n";
-			$content .= "					    <col width=\"40px\" />\n";
-			$content .= "					    <col width=\"40px\" />\n";
-			$content .= "						<col width=\"50px\" />\n";
-			$content .= "					 </colgroup>\n";
-
-
-			// Tabellekopf mit den dynamischen Sortierungen
-			$content .= "					<tr style=\"background-color: #b8b8b8; border-top: solid 1px; border-bottom: solid 1px;\">";
-
-
-			$table_head_sortfield_color = "#ff9242";
-			$set_sort = $current_sorthow == "DESC" ? "ASC" : "DESC";
-
-			// name
-			if($current_sortby == "name") {
-				$content .= "						<th style=\"background-color: ".$table_head_sortfield_color.";\"><a class=\"sort_link\" href=\"javascript:void(0)\" onclick=\"changeSort('name', '".$set_sort."')\">Name</a></th>\n";
-			} else {
-				$content .= "						<th><a class=\"sort_link\" href=\"javascript:void(0)\" onclick=\"changeSort('name', 'ASC')\">Name</a></th>\n";
+			$current_start = 0;
+			if (array_key_exists('start', $this->parameters)) {
+				$current_start = intval($this->parameters['start']);
 			}
 
-			// url
-			if($current_sortby == "url") {
-				$content .= "						<th style=\"background-color: ".$table_head_sortfield_color."\"><a class=\"sort_link\" href=\"javascript:void(0)\" onclick=\"changeSort('url', '".$set_sort."')\">URL</a></th>\n";
-			} else {
-				$content .= "						<th><a class=\"sort_link\" href=\"javascript:void(0)\" onclick=\"changeSort('url', 'ASC')\">URL</a></th>\n";
+			$current_sortby = 'name';
+			if (array_key_exists('sortby', $this->parameters)
+				&& in_array($this->parameters['sortby'], Array('name', 'url', 'date')) ) {
+				$current_sortby = $this->parameters['sortby'];
 			}
 
-			// Hinzugefügt
-			if($current_sortby == "added") {
-				$content .= "						<th style=\"background-color: ".$table_head_sortfield_color."\"><a class=\"sort_link\" href=\"javascript:void(0)\" onclick=\"changeSort('added', '".$set_sort."')\">Hinzg.</a></th>\n";
-			} else {
-				$content .= "						<th><a class=\"sort_link\" href=\"javascript:void(0)\" onclick=\"changeSort('added', 'DESC')\">Hinzg.</a></th>\n";
+			$current_sorthow = 'ASC';
+			if (array_key_exists('sorthow', $this->parameters)
+				&& $this->parameters['sorthow'] === 'DESC') {
+				$current_sorthow = 'DESC';
 			}
 
-			$content .= "						<th>Sets</th>\n";
-			$content .= "						<th>Akt.</th>\n";
-			$content .= "						<th>Sta.</th>\n";
-			$content .= "						<th>Edit.</th>\n";
-			$content .= "					</tr>\n";
 
+			$listDiv = $this->document->createElement('div');
+			$this->contentElement->appendChild($listDiv);
+
+			$listDiv->appendChild($this->makePager($current_limit, $current_start, $count_selected_oai_sources));
+
+			$table = $this->makeTableStart($current_sortby);
+			$listDiv->appendChild($table);
 
 			// Erstellung der einzelnen Tabellenzeilen
-			$sql = "";
-
 			$sql = "SELECT
 						oai_sources.id AS id,
 						oai_sources.url AS url,
@@ -437,81 +172,315 @@ class command_listOAISources extends command {
 
 			// echo $sql;
 
-			$result = mysql_query($sql, $db_link);
-			if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+			$result = mysql_query($sql, $this->db_link);
+			if (!$result) {
+				$error = new error($this->document);
+				$listDiv->appendChild($error->SQLError($sql, mysql_error()));
+				return;
+			}
 
-			$even = TRUE;
+			$tbody = $this->document->createElement('tbody');
+			$table->appendChild($tbody);
+
 			while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-
 				// Prüfen, die Quelle komplett geharvestet wird.
-				$allsets = false;
 				// Ist nur nötig, wenn es nur ein "aktives" set gibt.
 				if ($row['active_sets'] == 1) {
-
 					$sql = "SELECT setSpec FROM oai_sets WHERE oai_source = " . $row['id'] . " AND harvest = 1";
-					$result_allsets = mysql_query($sql, $db_link);
-					if (!$result_allsets) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
-
+					$result_allsets = mysql_query($sql, $this->db_link);
+					if (!$result_allsets) {
+						$error = new error($this->document);
+						$listDiv->appendChild($error->SQLError($sql, mysql_error()));
+						return;
+					}
 					$setSpec = mysql_fetch_array($result_allsets, MYSQL_ASSOC);
 
 					if ($setSpec['setSpec']== 'allSets') {
-						$allsets = true;
+						$row['allSets'] = TRUE;
 					}
 				}
 
-				// Zeilenfarbwechsel
-				if ($even) {
-					$content .= "					<tr>\n";
-					$even = FALSE;
-				} else {
-					$content .= "					<tr style=\"background-color: #b9c8fe;\">\n";
-					$even = TRUE;
-				}
-
-				$content .= "						<td style=\"text-align: left;\"><a class=\"oai_source_link\" href=\"javascript:void(0)\" onclick=\"show(".$row['id'].")\">".htmlspecialchars($row['name'])."</a></td>\n";
-				$content .= "						<td style=\"text-align: left;\">".htmlspecialchars($row['url'])."</td>\n";
-				$content .= "						<td style=\"text-align: center;\">".$row['added_view']."</td>\n";
-				$content .= "						<td style=\"text-align: center;\">".($allsets ? "<span style=\"font-weight: bold\">∞</span>" : $row['active_sets'])." (".(($row['total_sets'])-1).")</td>\n";
-
-				if($row['active']) {
-					$content .= "						<td style=\"text-align: center;\"><img src=\"resources/images/ok.png\" alt=\"OAI-Quelle wird geharvested\" title=\"OAI-Quelle wird geharvested\" /></td>\n";
-				} else {
-					$content .= "						<td style=\"text-align: center;\"><img src=\"resources/images/not_ok.png\" alt=\"OAI-Quelle wird nicht geharvested\" title=\"OAI-Quelle wird nicht geharvested\" /></td>\n";
-				}
-
-				if($row['status'] > 0 ) {
-					$content .= "						<td style=\"text-align: center;\"><img src=\"resources/images/error.png\" alt=\"Fehler!\" title=\"Fehler!\" /></td>\n";
-				} else {
-					$content .= "						<td></td>\n";
-				}
-
-				$content .= "						<td style=\"text-align: center;\"><input type=\"button\" value=\"Edit\" onclick=\"edit(".$row['id'].")\"></input></td>\n";
-				$content .= "					</tr>\n";
+				$tbody->appendChild($this->makeTRForServer($row));
 			}
 
-			$content .= "				</table>";
-			$content .= "			</form>";
-			$content .= "			<div style=\"margin-top: 20px; margin-bottom: 75px; margin-left: auto; margin-right: auto; width: 95%;\">\n";
-
-			if ($current_start != 0) {
-				$content .= "				<div style=\"text-align: left; float:left;\"><input type=\"button\" value=\"Zurück\" onclick=\"previous()\"></input></div>\n";
-			}
-
-			if ($current_start + $current_limit < $count_selected_oai_sources) {
-				$content .= "				<div style=\"text-align: right; float: right;\"><input type=\"button\" value=\"Weiter\" onclick=\"next()\"></input></div>\n";
-			}
-
-			$content .= "			</div>\n";
-
-		} else {
-			$content .= "				<p style=\"text-align: center; color: #8f0006; font-size: 14px;\">Keine OAI-Quellen gefunden.</p>\n";
-			$content .= "			</form>";
+			$listDiv->appendChild($this->makePager($current_limit, $current_start, $count_selected_oai_sources));
 		}
-
-
-		return $content;
+		else {
+			$this->contentElement->appendChild($this->makeElementWithText('p', 'Keine OAI-Quellen gefunden.', 'no-results'));
+		}
 	}
 
+
+
+	protected function harvestingOverview () {
+		$container = $this->document->createElement('div');
+		$h2 = $this->document->createElement('h2');
+		$container->appendChild($h2);
+		$h2->appendChild($this->document->createTextNode('OAI-Quellen'));
+
+		$p = $this->document->createElement('p');
+		$container->appendChild($p);
+
+		// Abfrage der Anzahl der OAI-Quellen
+		$sql = "SELECT COUNT('id') FROM oai_sources";
+		$result = mysql_query($sql, $this->db_link);
+		if (!$result) {
+			$error = new error($this->document);
+			$container->appendChild($error->SQLError($sql, mysql_error()));
+			return $container;
+		}
+		$count_oai_sources = mysql_result($result, 0);
+
+		// Abfrage der Anzahl der Sets, die Pseudosets "allSets" und "noSetSupport" werden ignoriert)
+		$sql = "SELECT COUNT('id') AS count_oai_sets FROM oai_sets WHERE NOT setspec LIKE '%allSets%'";
+		$result = mysql_query($sql, $this->db_link);
+		if (!$result) {
+			$error = new error($this->document);
+			$container->appendChild($error->SQLError($sql, mysql_error()));
+			return $container;
+		}
+		$count_oai_sets = mysql_result($result, 0);
+
+		// Kein Mechanismus zur Unterscheidung von Plural und Singular.
+		$p->appendChild($this->document->createTextNode('Zurzeit sind insgesamt '));
+		$em = $this->document->createElement('em');
+		$p->appendChild($em);
+		$em->appendChild($this->document->createTextNode($count_oai_sources . ' OAI-Quellen'));
+		$p->appendChild($this->document->createTextNode(' mit '));
+		$em = $this->document->createElement('em');
+		$p->appendChild($em);
+		$em->appendChild($this->document->createTextNode($count_oai_sets . ' Sets'));
+		$p->appendChild($this->document->createTextNode(' bekannt.'));
+		$p->appendChild($this->document->createElement('br'));
+
+
+		// Abfrage der Anzahl der aktiven OAI-Quellen
+		$sql = "SELECT COUNT('id') AS count_active_oai_sources FROM oai_sources WHERE active = 1";
+		$result = mysql_query($sql, $this->db_link);
+		if (!$result) {
+			$error = new error($this->document);
+			$container->appendChild($error->SQLError($sql, mysql_error()));
+			return $container;
+		}
+		$count_active_oai_sources = mysql_result($result, 0);
+
+		// Abfrage der Anzahl der geharvesteten Sets
+		$sql = "SELECT COUNT('id') AS count_oai_sets FROM oai_sets WHERE harvest = 1 AND NOT (setspec LIKE '%allSets%' OR setspec LIKE '%noSetSupport%')";
+		$result = mysql_query($sql, $this->db_link);
+		if (!$result) {
+			$error = new error($this->document);
+			$container->appendChild($error->SQLError($sql, mysql_error()));
+			return $container;
+		}
+		$count_harvested_oai_sets = mysql_result($result, 0);
+
+		$p->appendChild($this->document->createTextNode('Aus den '));
+		$em = $this->document->createElement('em');
+		$p->appendChild($em);
+		$em->appendChild($this->document->createTextNode($count_active_oai_sources . ' aktiven OAI-Quellen'));
+		$p->appendChild($this->document->createTextNode(' werden '));
+		$em = $this->document->createElement('em');
+		$p->appendChild($em);
+		$em->appendChild($this->document->createTextNode($count_harvested_oai_sets . ' Sets'));
+		$p->appendChild($this->document->createTextNode(' geharvestet.'));
+
+		return $container;
+	}
+
+
+
+	private function filterSection () {
+		$container = $this->document->createElement('div');
+		$h3 = $this->document->createElement('h3');
+		$container->appendChild($h3);
+
+		$container->appendChild($this->filterForm());
+
+		$form = $this->makeForm();
+		$container->appendChild($form);
+
+		$form->appendChild($this->makeLabel('limit_select', 'Anzahl der Treffer:'));
+		$select = $this->makeSelectWithOptions('limit_select', Array(
+			Array('value' => 5),
+			Array('value' => 10, 'defaultSelection' => TRUE),
+			Array('value' => 50),
+			Array('value' => 100),
+			Array('value' => 200)
+		));
+		$form->appendChild($select);
+		$select->setAttribute('onchange', 'refresh()');
+		$select->setAttribute('id', 'limit_select');
+
+		$form->appendChild($this->makeLabel('show_active_select', 'Aktiv:'));
+		$select = $this->makeSelectWithOptions('show_active_select', Array(
+			Array('value' => 0, 'label' => 'egal', 'defaultSelection' => TRUE),
+			Array('value' => 1, 'label' => 'aktiv'),
+			Array('value' => 2, 'label' => 'inaktiv')
+		));
+		$form->appendChild($select);
+		$select->setAttribute('onchange', 'refresh()');
+		$select->setAttribute('id', 'show_active_select');
+
+		$form->appendChild($this->makeLabel('show_status_select', 'Status:'));
+		$select = $this->makeSelectWithOptions('show_status_select', Array(
+			Array('value' => 0, 'label' => 'egal', 'defaultSelection' => TRUE),
+			Array('value' => 1, 'label' => 'OK'),
+			Array('value' => 2, 'label' => 'Fehler')
+		));
+		$form->appendChild($select);
+		$select->setAttribute('onchange', 'refresh()');
+		$select->setAttribute('id', 'show_status_select');
+
+		return $container;
+	}
+
+
+
+
+	private function makeTRForServer ($row) {
+		$tr = $this->document->createElement('tr');
+
+		$a = $this->makeElementWithText('a', $row['name'], 'oai_source_link');
+		$a->setAttribute('href', '#');
+		$a->setAttribute('onclick', 'show(' . $row['id'] . ')');
+		$tr->appendChild($this->makeElementWithContent('td', $a, 'column-name'));
+
+		$tr->appendChild($this->makeElementWithText('td', $row['url'], 'column-url'));
+
+		$tr->appendChild($this->makeElementWithText('td', $row['added_view'], 'column-added'));
+		$setInfo = $row['active_sets'] . ' (' . (intval($row['total_sets']) - 1) . ')';
+		if (array_key_exists('allSets', $row) && $row['allSets'] === TRUE) {
+			$setInfo = '∞';
+		}
+		$tr->appendChild($this->makeElementWithText('td', $setInfo, 'column-sets'));
+
+
+		$img = $this->document->createElement('img');
+		if ($row['active']) {
+			$img->setAttribute('src', 'resources/images/ok.png');
+			$img->setAttribute('alt', 'OAI-Quelle wird geharvestet.');
+		}
+		else {
+			$img->setAttribute('src', 'resources/images/not_ok.png');
+			$img->setAttribute('alt', 'OAI-Quelle wird nicht geharvestet.');
+		}
+		$tr->appendChild($this->makeElementWithContent('td', $img, 'column-active'));
+
+		if ($row['status'] > 0) {
+			$img = $this->document->createElement('img');
+			$img->setAttribute('src', 'resources/images/error.png');
+			$img->setAttribute('alt', 'Fehler!');
+			$td = $this->makeElementWithContent('td', $img, 'column-status');
+		}
+		else {
+			$td = $this->document->createElement('td');
+		}
+		$tr->appendChild($td);
+
+		$form = $this->makeForm();
+		$button = $this->makeInput('button', NULL, 'Edit');
+		$button->setAttribute('onclick', 'edit(' . $row['id'] . ')');
+		$form->appendChild($button);
+		$tr->appendChild($this->makeElementWithContent('td', $form, 'column-edit'));
+
+		return $tr;
+	}
+
+
+	private function makeTableStart ($sortby) {
+		$table = $this->document->createElement('table');
+		$table->setAttribute('id', 'oai_sources_list');
+		$table->setAttribute('class', 'sort-' . $sortby);
+
+		// Tabellekopf mit den dynamischen Sortierungen
+		$thead = $this->document->createElement('thead');
+		$table->appendChild($thead);
+		$tr = $this->document->createElement('tr');
+		$thead->appendChild($tr);
+
+		$tr->appendChild($this->makeSortableTH('name', 'Name'));
+		$tr->appendChild($this->makeSortableTH('url', 'URL'));
+		$tr->appendChild($this->makeSortableTH('added', 'Hinzugefügt'));
+		$tr->appendChild($this->makeElementWithText('th', 'Sets'));
+		$tr->appendChild($this->makeElementWithText('th', 'Akt'));
+		$tr->appendChild($this->makeElementWithText('th', 'Status'));
+		$tr->appendChild($this->makeElementWithText('th', ''));
+
+		return $table;
+	}
+
+
+	private function makeSortableTH ($name, $label) {
+		// Default sort direction.
+		$sortdirection = 'ASC';
+		if ($name === 'added') {
+			$sortdirection = 'DESC';
+		}
+
+		// If we currently sort by this column, invert the current direction.
+		if (array_key_exists('sorthow', $this->parameters)
+			&& (array_key_exists('sortby', $this->parameters) && $this->parameters['sortby'] === $name) ) {
+			if ($name === 'added') {
+				if ($this->parameters['sorthow'] === 'DESC') {
+					$sortdirection = 'ASC';
+				}
+			}
+			else {
+				if ($this->parameters['sorthow'] === 'ASC') {
+					$sortdirection = 'DESC';
+				}
+			}
+		}
+
+		$a = $this->makeElementWithText('a', $label);
+		$a->setAttribute('href', '#');
+		$a->setAttribute('onclick', 'changeSort("' . $name . '", ' . $sortdirection . ')');
+
+		$th = $this->makeElementWithContent('th', $a, 'column-' . $name);
+
+		return $th;
+	}
+
+
+	private function makePager ($limit, $start, $total) {
+		$pagerDiv = $this->document->createElement('div');
+		$pagerDiv->setAttribute('class', 'pager');
+
+		$firstButton = $this->makeInput('button', NULL, 'Zur 1. Seite');
+		$pagerDiv->appendChild($firstButton);
+		$firstButton->setAttribute('onclick', 'gotoFirstPage()');
+		$firstButton->setAttribute('class', 'pagingButton first');
+		if ($start === 0) {
+			$firstButton->setAttribute('disabled', 'disabled');
+		}
+
+		$prevButton = $this->makeInput('button', NULL, 'Zurück');
+		$pagerDiv->appendChild($prevButton);
+		$prevButton->setAttribute('onclick', 'previous()');
+		$prevButton->setAttribute('class', 'pagingButton previous');
+		if ($start === 0) {
+			$prevButton->setAttribute('disabled', 'disabled');
+		}
+
+		$nextButton = $this->makeInput('button', NULL, 'Weiter');
+		$pagerDiv->appendChild($nextButton);
+		$nextButton->setAttribute('onclick', 'next()');
+		$nextButton->setAttribute('class', 'pagingButton next');
+		if ($start + $limit > $total) {
+			$nextButton->setAttribute('disabled', 'disabled');
+		}
+
+		$pageInfo = $this->document->createElement('p');
+		$pagerDiv->appendChild($pageInfo);
+		$pageInfo->setAttribute('class', 'pageInfo');
+		$pageInfo->appendChild($this->makeElementWithText('em', $start + 1));
+		$pageInfo->appendChild($this->document->createTextNode(' bis '));
+		$pageInfo->appendChild($this->makeElementWithText('em', min($limit + $start, $total)));
+		$pageInfo->appendChild($this->document->createTextNode(' von '));
+		$pageInfo->appendChild($this->makeElementWithText('em', $total));
+
+		return $pagerDiv;
+	}
 
 }
 

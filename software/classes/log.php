@@ -1,62 +1,69 @@
 <?php
 
-/*
+require_once(dirname(__FILE__) . '/error.php');
+
+/**
  * Diese Klasse stellt Logmeldungen aus der Datenbank dar.
  */
-
-
 class log {
 
-	private $output = "";
-
+	private $owner;
 
 	// Erzeugt Pager mit Knöpfen zum Vor- und Zurücknavigieren und
 	// Anzeige der aktuellen Position.
 	private function pager ($limit, $start, $total_log_entries) {
-		$result = "
-			<div class='pager'>";
+		$pagerDiv = $this->owner->document->createElement('div');
+		$pagerDiv->setAttribute('class', 'pager');
 
 		if ($start != 0) {
-			$result .= "
-				<div class='navigationButton first'>
-					<input type='button' value='Neueste' id='goto_first_page' onclick='navigate(0)' " . ($start === 0 ? "disabled='disabled'" : "") . "></input>
-				</div>
-				<div class='navigationButton previous'>
-					<input type='button' value='Neuere' onclick='navigate(" . ($start - $limit) . ")'></input>
-				</div>";
+			$firstButton = $this->owner->document->createElement('input');
+			$firstButton->setAttribute('type', 'button');
+			$firstButton->setAttribute('value', 'Neueste');
+			$firstButton->setAttribute('onclick', 'navigate(0)');
+			if ($start === 0) {
+				$firstButton->setAttribute('disabled', 'disabled');
+			}
+			$firstButton->setAttribute('class', 'navigationButton first');
+			$pagerDiv->appendChild($firstButton);
+
+			$prevButton = $this->owner->document->createElement('input');
+			$prevButton->setAttribute('type', 'button');
+			$prevButton->setAttribute('value', 'Neuere');
+			$prevButton->setAttribute('onclick', 'navigate(' . ($start - $limit) . ')');
+			$prevButton->setAttribute('class', 'navigationButton previous');
+			$pagerDiv->appendChild($prevButton);
 		}
 		if ($start + $limit < $total_log_entries) {
-			$result .= "
-				<div class='navigationButton next'>
-					<input type='button' value='Ältere' onclick='navigate(" . ($start + $limit) . ")'></input>
-				</div>";
+			$nextButton = $this->owner->document->createElement('input');
+			$nextButton->setAttribute('type', 'button');
+			$nextButton->setAttribute('value', 'Ältere');
+			$nextButton->setAttribute('onclick', 'navigate(' . ($start + $limit) . ')');
+			$nextButton->setAttribute('class', 'navigationButton next');
+			$pagerDiv->appendChild($nextButton);
 		}
 
-		$result .= "
-				<p class='pageInfo'>
-					" . ($start+1) . " bis ";
+		$pageInfo = $this->owner->document->createElement('p');
+		$pageInfo->setAttribute('class', 'pageInfo');
+		$infoString = ($start+1) . ' bis ' . min($limit + $start, $total_log_entries) . ' von ' . $total_log_entries;
+		$pageInfo->appendChild($this->owner->document->createTextNode($infoString));
+		$pagerDiv->appendChild($pageInfo);
 
-		if ($total_log_entries >= $start + $limit) {
-			$result .= ($limit + $start);
-		} else {
-			$result .= $total_log_entries;
-		}
-
-		$result .= " von " . $total_log_entries . "
-				</p>";
-
-		$result .= "
-			</div>";
-
-		return $result;
+		return $pagerDiv;
 	}
 
 
-	// Der Konstruktor generiert gemäß der Parameter den Output, der aus einer
+	public function __construct($owner) {
+		$this->owner = $owner;
+	}
+
+
+	// Erzeugt gemäß der Parameter den Output, der aus einer
 	// Tabelle besteht. Diese wird in die aufrufende Webseite eingebunden.
 	// Ist eine Quellen-ID angegeben werden nur die Logmeldungen dieser Quelle
 	// dargestellt und die Spalte Quelle entfällt.
-	public function __construct($db_link, $status, $type, $limit, $start, $oai_source_id = NULL) {
+	public function getLogMessages($status, $type, $limit, $start, $oai_source_id = NULL) {
+		$logDiv = $this->owner->document->createElement('div');
+		$logDiv->setAttribute('class', 'log');
 
 		// Logmeldungen abfragen
 		// SQL-Abfrage aufbauen
@@ -99,83 +106,99 @@ class log {
 		$sql .= "ORDER BY oai_logs.time DESC ";
 		$sql .=	"LIMIT " . intval($start) . ", " . intval($limit);
 
-		$result = mysql_query($sql, $db_link);
+		$result = mysql_query($sql, $this->owner->db_link);
 		if (!$result) {
-			$this->output = "<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error()."</em>";
+			$error = new error($this->owner->document);
+			$logDiv->appendChild($error->SQLError($sql, mysql_error()));
+			return $logDiv;
 		}
 
-
 		$sql = "SELECT FOUND_ROWS()";
-		$count = mysql_query($sql, $db_link);
+		$count = mysql_query($sql, $this->owner->db_link);
 		if (!$count) {
-			$this->output = "<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error()."</em>";
+			$error = new error($this->owner->document);
+			$logDiv->appendChild($error->SQLError($sql, mysql_error()));
+			return $logDiv;
 		}
 		$total_log_entries = mysql_result($count, 0);
 
+
 		// Anzahl und Position ausgeben
-
 		if ($total_log_entries == 0) {
-			$this->output .= "<p style=\"text-align: center; color: #8F0006; font-size: 14px; font-weight: bold;\">Keine Logs gefunden.</p>\n";
+			$logP = $this->makeElementWithText('p', 'Keine Lognachrichten vorhanden.', 'log-no-messages');
+			$logDiv->appendChild($logP);
+		}
+		else {
+			$logDiv->appendChild($this->pager($limit, $start, $total_log_entries));
 
-		} else {
+			$logTable = $this->owner->document->createElement('table');
+			if (is_null($oai_source_id)) {
+				$logTable->setAttribute('class', 'with-source-column');
+			}
+			$logDiv->appendChild($logTable);
 
-			$this->output .= $this->pager($limit, $start, $total_log_entries);
+			$thead = $this->owner->document->createElement('thead');
+			$logTable->appendChild($thead);
+			$tr = $this->owner->document->createElement('tr');
+			$thead->appendChild($tr);
 
-			// Tabelle bauen
-			$this->output .= "			<table id=\"oai_log_list\" border=\"1\" cellpadding=\"3px\" width=\"100%\" rules=\"cols\" style=\"border-color: #b8b8b8; margin-top: 10px;\">\n";
-			$this->output .= "				<colgroup>\n";
-			$this->output .= "			    	<col width=\"3%\" />\n";
-			$this->output .= "				    <col width=\"14%\" />\n";
+			$tr->appendChild($this->owner->document->createElement('th'));
 
-			$this->output .= is_null($oai_source_id) ? "<col width=\"24%\" />\n" : "";
+			$tr->appendChild($this->owner->makeElementWithText('th', 'Zeit', 'column-time'));
 
-			$this->output .= "				    <col width=\"24%\" />\n";
-
-			$this->output .= is_null($oai_source_id) ? "<col width=\"35%\" />\n" : "<col width=\"60%\" />\n";
-
-			$this->output .= "				</colgroup>\n";
-			// Tabellenkopf
-			$this->output .= "				<tr style=\"background-color: #b8b8b8; border-bottom: 1px solid; border-top: 1px solid;\">\n";
-			$this->output .= "				 	<th></th>\n";
-			$this->output .= "				 	<th>Zeit</th>\n";
-			$this->output .= is_null($oai_source_id) ? "<th>Quelle</th>\n" : "";
-			$this->output .= "				 	<th>Set</th>\n";
-			$this->output .= "				 	<th>Meldung</th>\n";
-			$this->output .= "				</tr>\n";
-
-
-			// Zeilen
-			$even = TRUE;
-
-			while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-
-				// Zeilenfarbwechsel & Status
-				if ($even) {
-					$this->output .= "<tr ".( $row['status'] == 1 ? "style=\"color: red;\"" : "" ).">\n";
-					$even = FALSE;
-				} else {
-					$this->output .= "<tr style=\"background-color: #b9c8fe;".( $row['status'] == 1 ? " color: red;" : "" )."\">\n";
-					$even = TRUE;
-				}
-
-				$this->output .= "					<td style=\"text-align: center;\"><img ".( $row['type'] == 0 ? "src=\"resources/images/harvester.png\" title=\"Harvester\" alt=\"Harvester\"" : "src=\"resources/images/indexer.png\" title=\"Indexer\" alt=\"Indexer\"" )."/></td>\n";
-				$this->output .= "					<td style=\"text-align: center;\">".$row['time']."</td>\n";
-				$this->output .= is_null($oai_source_id) ? "<td><a class=\"".( $row['status'] == 1 ? "oai_source_link_log_error" : "oai_source_link_log" )."\"href=\"javascript:void(0)\" onclick=\"show(".$row['source_id'].")\">".htmlspecialchars(($row['source_name']))."</td>\n" : "";
-				$this->output .= "					<td style=\"text-align: center;\">".( $row['set_spec'] == 'allSets' ? "<span style=\"font-weight: bold\">∞</span>" : htmlspecialchars($row['set_name']) )."</td>\n";
-				$this->output .= "					<td>".htmlspecialchars($row['message'])."</td>\n";
-				$this->output .= "				</tr>\n";
-
+			if (is_null($oai_source_id)) {
+				$tr->appendChild($this->owner->makeElementWithText('th', 'Quelle', 'column-source'));
 			}
 
-			$this->output .= "			</table>\n";
+			$tr->appendChild($this->owner->makeElementWithText('th', 'Set', 'column-set'));
 
-			$this->output .= $this->pager($limit, $start, $total_log_entries);
+			$tr->appendChild($this->owner->makeElementWithText('th', 'Meldung', 'column-message'));
+
+			$tbody = $this->owner->document->createElement('tbody');
+			$logTable->appendChild($tbody);
+
+			while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+				$tr = $this->owner->document->createElement('tr');
+				$tbody->appendChild($tr);
+				if ($row['status'] == 1) {
+					$tr->setAttribute('class', 'log-error');
+				}
+
+				$img = $this->owner->document->createElement('img');
+				if ($row['type'] == 0) {
+					$img->setAttribute('src', 'resources/images/harvester.png');
+					$img->setAttribute('alt', 'Harvester');
+				}
+				else {
+					$img->setAttribute('src', 'resources/images/indexer.png');
+					$img->setAttribute('alt', 'Indexer');
+				}
+				$tr->appendChild($this->owner->makeElementWithContent('td', $img, 'column-icon'));
+
+				$tr->appendChild($this->owner->makeElementWithText('td', $row['time'], 'column-time'));
+
+				if (is_null($oai_source_id)) {
+					$link = $this->owner->makeElementWithText('a', $row['source_name']);
+					$link->setAttribute('href', '#');
+					$link->setAttribute('onclick', 'show(' . $row['source_id'] . ')');
+					$tr->appendChild($this->owner->makeElementWithContent('td', $link, 'column-source'));
+				}
+
+				$setName = $row['set_name'];
+				if ($setName === 'allSets') {
+					$setName = '∞';
+				}
+				$tr->appendChild($this->owner->makeElementWithText('td', $setName, 'column-set'));
+
+				$tr->appendChild($this->owner->makeElementWithText('td', $row['message'], 'column-message'));
+			}
+
+			$logDiv->appendChild($this->pager($limit, $start, $total_log_entries));
 		}
+
+		return $logDiv;
 	}
 
-	// Liefert den Output zurück, die Verarbeitung geschieht bereits im Konstruktor
-	public function getOutput() {
-		return $this->output;
-	}
 }
+
 ?>
