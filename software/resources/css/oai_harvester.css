@@ -1,94 +1,190 @@
 @charset "UTF-8";
 
-body {
-	margin-top:50px;
-	margin-bottom: 50px;
-	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-	font-size: 13px;
-	color: #424242;
+* {
+	margin: 0;
+	padding: 0;
 }
 
-div#main {
+body {
+	font-family: "Trebuchet MS", Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	line-height: 160%;
+	color: #000;
+	background: #eee;
+}
+
+a {
+	color: #009;
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:visited {
+	color: #606;
+}
+
+a:active {
+	color: #b00;
+}
+
+.clear {
+	clear: both;
+}
+
+#main {
 	width: 1100px;
-	margin-left: auto;
-	margin-right: auto;
-	z-index: 1;
+	margin: auto;
 }
 
 h1 {
-	font-size: 25px;
-	font-weight:bold;
-	text-decoration:none;
-	color: #8f0006;
-	font-variant:small-caps;
-	margin-bottom:30px;
+	padding: 1em 0;
+	border-bottom: 2px solid #ddd;
 	text-align:center;
+	font-size: 1.66em;
 }
 
 h2 {
-	font-size: 20px;
-	font-weight: bold;
-	text-decoration: none;
-	margin-top: 15px;
-	text-align: center;
+	font-size: 1.33em;
+	margin: 2em 0 1em 0;
 }
 
 h3 {
-	font-size: 17px;
-	font-weight:bold;
-	margin-top: 25px;
-	margin-bottom: 7px;
-	color: #8f0006;
-	text-indent: 2em;
+	font-size: 1.14em;
+	margin: 2em 0 1em 0;
 }
 
-h3#list_oai_sources_drilldown {
-	font-weight:bold;
-	margin-bottom: 10px;
-	color: #8f0006;
+label {
+	font-weight: bold;
+	margin: 0 0.25em 0 0;
+}
+
+
+/*  OAI-Source filter UI  */
+
+.show-all {
+	margin: 0.5em 0;	
+}
+
+.show-all,
+.list-oai-sources,
+.list-oai-sources label,
+.list-oai-sources input,
+.list-oai-sources select {
+	display:inline;
+}
+
+.show-all {
+	margin-right: 0.5em;
+}
+
+form.list-configuration {
+	margin-top: 1em;
 	text-align: center;
-	text-indent: 0;
 }
 
-h4 {
-	font-size: 14px;
+.list-oai-sources label {
+	margin-left: 0.5em;
+}
+
+.logs label {
+	margin-left: 1em;
+}
+
+thead {
 	font-weight: bold;
-	color: #8f0006;
-	text-indent: 2em;
+	
 }
 
-hr {
-	margin-top: -15px;
-	margin-bottom: -10px;
-
-}
-
-p.errormsg {
+p.error {
+	color: #900;
 	font-weight:bold;
 }
 
 
-td.table_heading {
+/*  Log Table  */
+
+table {
+	width: 100%;
+	font-size: 90%;
+}
+
+table th {
+	text-align: left;
+}
+
+table td {
+	padding: 2px 0;
+}
+
+table.log .column-icon {
+	width: 40px;
+}
+
+table.log .column-time {
+	width: 130px;
+}
+
+table.log .column-source {
+	width: 250px;
+}
+
+table.log .column-set {
+	width: 460px;
+}
+
+table.log .column-message {
+	width: 200px;
+}
+
+table.log tr.log-error .column-message {
+	color: #900;
+}
+
+
+/*  OAI Source Details  */
+
+dt, dd,
+.edit .inputContainer>* {
+	float: left;
+}
+
+dt,
+.edit .inputContainer label {
+	margin-right: 1em;
 	font-weight: bold;
-	font-size:15px;
-	margin-bottom: 10px;
+	text-align: right;
+	color: #666;
+	width: 270px;
+	clear: left;
 }
 
-td.table_field_description {
-	font-weight:bold;
-	font-size: 14px;
-	font-family: Arial;
+.edit .inputContainer input,
+.edit .inputContainer textarea {
+	width: 450px;
 }
 
-td.table_field_data {
-	color: black;
-	text-indent: 2px;
-	color: #272ec6;
+.edit input#harvest_period {
+	width: 50px;
 }
+
+.edit input#harvest_period::after {
+	content: ' (Tage)';
+}
+
+.edit input#active {
+	width: auto;
+}
+
+.edit thead {
+	display: none;
+}
+
 
 table#oai_sources_list th {
 	font-size: 17px;
-	text-align: center;
 	vertical-align: middle;
 }
 
@@ -97,14 +193,15 @@ table#oai_sources_list td {
 }
 
 table#oai_log_list th {
-	font-size: 17px;
-	text-align: center;
 	vertical-align: middle;
 }
 
 table#oai_log_list td {
 	vertical-align: middle;
 }
+
+
+
 
 p.search_count {
 	font-size:11px;
@@ -402,45 +499,13 @@ ul.result_links {
 	list-style-image: url(resources/images/internet.png);
 }
 
-a.oai_source_link_log,
-a.oai_source_link_log_error {
-	color: black;
-	font-weight: bold;
-	text-decoration: none;
+input[type='submit'],
+input[type='button'] {
+	margin: 0 0.5em;
+	padding: 0 0.25em;
 }
 
-a.oai_source_link_log_error {
-	color: red;
-}
-
-a:visited.oai_source_link_log,
-a:visited.oai_source_link_log_error {
-	color: black;
-	vertical-align: middle;
-	text-decoration: none;
-}
-
-a:visited.oai_source_link_log_error {
-	color: red;
-}
-
-a:hover.oai_source_link_log,
-a:hover.oai_source_link_log_error {
-	color: #8f0006;
-	text-decoration: none;
-}
-
-td.table_field_data textarea[disabled='disabled'] {
-	margin: 0;
-	padding: 2px;
-	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-	font-size: 13px;
-	color: black;
-	border: 1px solid #272EC6;
-	background-color: #efefef;
-}
-
-form input.default {
+input.default {
 	font-weight: bold;
 }
 
@@ -462,9 +527,9 @@ table.sets td.column3 {
 
 label span.setSpec {
 	font-weight: normal;
-	font-size: 80%;
 }
 
+/*
 table tr:nth-child(2n) {
 	background: #f5f5f5;
 }
@@ -472,6 +537,7 @@ table tr:nth-child(2n) {
 table tr:nth-child(2n+1) {
 	background: #eee;
 }
+*/
 
 p.filterField {
 	margin-top: 1em;
@@ -484,6 +550,8 @@ input.filterField {
 
 div.pager {
 	margin: 1em 0;
+	font-size: 80%;
+	color: #666;
 }
 
 p.pageInfo {
@@ -492,10 +560,12 @@ p.pageInfo {
 	text-align: center;
 }
 
-div.navigationButton.next, div.navigationButton.last {
+.navigationButton.next,
+.navigationButton.last {
 	float: right;
 }
 
-div.navigationButton.previous, div.navigationButton.first {
+.navigationButton.previous,
+.navigationButton.first {
 	float: left;
 }

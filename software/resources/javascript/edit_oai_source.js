@@ -1,7 +1,11 @@
 // Datepicker
 
-$(function() {
-	$( "#config_from" ).datepicker();
+jQuery(function() {
+	var jFrom = jQuery('#from');
+	if (jFrom.length > 0) {
+		jFrom.datepicker();
+	}
+
 });
 
 $(function($){
@@ -48,7 +52,7 @@ function validate_edit(mode){
 		var valid_set = false;
 
 		// Name
-		if (document.getElementById("config_name").value.length > 0) {
+		if (document.getElementById("name").value.length > 0) {
 			valid_config++;
 			document.getElementById("label_name").style.color = "";
 		} else {
@@ -56,7 +60,7 @@ function validate_edit(mode){
 		}
 
 		// Land
-		if (document.getElementById("config_country").selectedIndex > 0) {
+		if (document.getElementById("country").selectedIndex > 0) {
 			valid_config++;
 			document.getElementById("label_country").style.color = "";
 		} else {
@@ -68,58 +72,54 @@ function validate_edit(mode){
 			valid_config++;
 		} else {
 			// Harvest-Rhythmus
-			if (document.getElementById("config_harvest").value >= 0 && document.getElementById("config_harvest").value != "") {
+			if (document.getElementById("harvest_period").value >= 0
+				&& document.getElementById("harvest_period").value != "") {
 				valid_config++;
-				document.getElementById("label_harvest").style.color = "";
+				document.getElementById("label_harvest_period").style.color = "";
 			} else {
-				document.getElementById("label_harvest").style.color = "red";
+				document.getElementById("label_harvest_period").style.color = "red";
 			}
 		}
 
 		// Alternativer Link
-		if (document.getElementById("config_alternative").value != "") {
+		if (document.getElementById("identifier_alternative").value != "") {
 			valid_config++;
-			document.getElementById("label_alternative").style.color = "";
+			document.getElementById("label_identifier_alternative").style.color = "";
 		} else {
-			document.getElementById("label_alternative").style.color = "red";
+			document.getElementById("label_identifier_alternative").style.color = "red";
 		}
 
 		// Identifier-Filter
-		if (document.getElementById("config_filter").value != "") {
+		if (document.getElementById("identifier_filter").value != "") {
 			valid_config++;
-			document.getElementById("label_filter").style.color = "";
+			document.getElementById("label_identifier_filter").style.color = "";
 		} else {
-			document.getElementById("label_filter").style.color = "red";
+			document.getElementById("label_identifier_filter").style.color = "red";
 		}
 
 
-		// Soweit mögilch mindestens ein Set selektiert?
+		// Soweit möglich mindestens ein Set selektiert?
 		if (document.getElementById("noSetHierarchy")) {
 			// Die Quelle unterstützt keine Sets.
 			valid_set = true;
 		} else {
-			for(i = 1 ; document.getElementById("set"+i); i++) {
-				if (document.getElementById("set"+i).checked) {
-					valid_set = true;
-					break;
-				}
+			if (jQuery('.sets :checked').length > 0) {
+				valid_set = true;
 			}
 		}
 
 		// Ausgabe
 		if (valid_config == 5) {
-
-			if (mode == "preview") {
+			if (mode === 'preview') {
 				return true;
 			}
-
 			if (valid_set) {
 				return checkFromDate();
 			}
-			alert("Bitte mindestens ein Set zum Harvesten selektieren");
+			alert('Bitte mindestens ein Set zum Harvesten auswählen.');
 			return false;
 		} else {
-			alert("Bitte alle rot markierten Felder ausfüllen (Allgemeine Einstellungen)!");
+			alert('Bitte alle rot markierten Felder ausfüllen (Allgemeine Einstellungen)!');
 			return false;
 		}
 	}
@@ -132,8 +132,8 @@ function checkFromDate() {
 	$("#label_from").css('color', '');
 
 	// Datumsangaben einlesen
-	var new_from_string = $("#config_from").val();
-	var current_from_string = $("#current_from").val();
+	var new_from_string = $('#from').val();
+	var current_from_string = $('#current_from_db').val();
 
 	// Für die Anzeige
 	var monate = new Array("Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember");
@@ -186,14 +186,14 @@ function checkFromDate() {
 
 
 		// Für PHP Script speichern
-		$("#new_from_day_before_id").val(delete_date_string);
+		$("#new_from_day_before").val(delete_date_string);
 
 		// Anzahl der zu löschenden Datensätze ermitteln
 		var solr_xml_reply = $.ajax({
 			url: "http://www.eromm.org/solr/select",
 			async: false,
 			type: "GET",
-			data: "version=2.2&rows=0&q=oai_repository_id:"+ $("#oai_repository_id").val() +" +oai_datestamp:[* TO "+ delete_date_string +"T23:59:59Z]",
+			data: 'version=2.2&rows=0&q=oai_repository_id:' + $('#id').val() + ' +oai_datestamp:[* TO ' + delete_date_string + 'T23:59:59Z]',
 			dataType: "xml"
 			}).responseText;
 
@@ -234,13 +234,13 @@ function checkFromDate() {
 		// Markieren
 		$("#label_from").css('color', 'red');
 		// Wert zurücksetzen
-		$("#config_from").val(current_from_string);
+		$("#from").val(current_from_string);
 		alert("Ungültige Eingabe bei 'Harvsten ab'. Voheriger Zeitpunkt wurde wieder eingetragen.");
 
 		return false;
 
 	} else {
-		// Kein "from" eingengeben, kein "from" bisher in den Datenbank, ohne Bestätigung speichern
+		// Kein "from" eingengeben, kein "from" bisher in der Datenbank, ohne Bestätigung speichern
 		return true;
 	}
 }

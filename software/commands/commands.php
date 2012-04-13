@@ -100,6 +100,14 @@ abstract class command {
 	}
 
 
+
+	public function run () {
+		$this->setupTemplate();
+		$this->appendContent();
+	}
+
+
+
 	protected function setupTemplate () {
 		$this->document = new DOMDocument();
 
@@ -143,7 +151,7 @@ abstract class command {
 		$mainDivElement->appendChild($h1Element);
 		$h1LinkElement = $this->document->createElement('a');
 		$h1Element->appendChild($h1LinkElement);
-		$h1LinkElement->setAttribute('href', 'index.php');
+		$h1LinkElement->setAttribute('href', 'index.php?edit_abort=1');
 		$h1LinkElement->appendChild($this->document->createTextNode(SERVICE_NAME . ' OAI-Harvester'));
 
 		$this->contentElement = $this->document->createElement('div');
@@ -173,11 +181,6 @@ abstract class command {
 	}
 
 
-	public function run () {
-		$this->setupTemplate();
-		$this->appendContent();
-	}
-
 
 	protected function clearEditLock () {
 		if (isset($_POST['edit_id'])) {
@@ -195,6 +198,7 @@ abstract class command {
 	}
 
 
+
 	public function makeForm ($action='index.php', $method='POST') {
 		$form = $this->document->createElement('form');
 		$form->setAttribute('method', $method);
@@ -205,9 +209,11 @@ abstract class command {
 	}
 
 
+
 	public function makeInput ($type, $name=NULL, $value='') {
 		$input = $this->document->createElement('input');
 		$input->setAttribute('type', $type);
+		$input->setAttribute('id', $name);
 		$input->setAttribute('value', $value);
 		if ($name !== NULL) {
 			$input->setAttribute('name', $name);
@@ -215,6 +221,7 @@ abstract class command {
 
 		return $input;
 	}
+
 
 
 	public function makeInputForParameter ($type, $name, $defaultValue = '') {
@@ -228,13 +235,27 @@ abstract class command {
 	}
 
 
+
 	public function makeLabel ($for, $labelText) {
 		$label = $this->document->createElement('label');
 		$label->setAttribute('for', $for);
+		$label->setAttribute('id', 'label_' . $for);
 		$label->appendChild($this->document->createTextNode($labelText));
 
 		return $label;
 	}
+
+
+
+	public function makeInputWithLabel ($type, $name, $labelText, $defaultValue = '') {
+		$container = $this->document->createElement('span');
+		$container->setAttribute('class', 'inputContainer ' . $type);
+		$container->appendChild($this->makeLabel($name, $labelText));
+		$container->appendChild($this->makeInput($type, $name, $defaultValue));
+
+		return $container;
+	}
+
 
 
 	public function makeSelectWithOptions ($name, $options) {
@@ -247,21 +268,50 @@ abstract class command {
 	}
 
 
-	public function makeElementWithContent ($elementName, $content, $class=NULL) {
+
+	public function makeElementWithContent ($elementName, $content, $class = '') {
 		$element = $this->document->createElement($elementName);
 		$element->appendChild($content);
-		if($class !== NULL) {
+		if($class !== '') {
 			$element->setAttribute('class', $class);
 		}
 		return $element;
 	}
 
 
-	public function makeElementWithText ($elementName, $text, $class=NULL) {
+
+	public function makeElementWithText ($elementName, $text, $class = '') {
 		$content = $this->document->createTextNode($text);
 		$element = $this->makeElementWithContent($elementName, $content, $class);
 		return $element;
 	}
+
+
+
+	public function appendDTDDWithContentTo ($DTContent, $DDContent, $container, $class = '') {
+		$dt = $this->document->createElement('dt');
+		$container->appendChild($dt);
+		$dt->appendChild($DTContent);
+		if ($class !== '') {
+			$dt->setAttribute('class', $class);
+		}
+
+		$dd = $this->document->createElement('dd');
+		$container->appendChild($dd);#
+		$dd->appendChild($DDContent);
+		if ($class !== '') {
+			$dd->setAttribute('class', $class);
+		}
+	}
+
+
+
+	public function appendDTDDWithTextTo ($DTText, $DDText, $container, $class = '') {
+		$DTContent = $this->document->createTextNode($DTText);
+		$DDContent = $this->document->createTextNode($DDText);
+		$this->appendDTDDWithContentTo($DTContent, $DDContent, $container, $class);
+	}
+
 
 
 	public function makeOption ($name, $configuration) {
@@ -292,6 +342,24 @@ abstract class command {
 	}
 
 
+
+	public function makeRedirect ($destination = '0; URL=./index.php') {
+		$meta = $this->document->createElement('meta');
+		$meta->setAttribute('http-equiv', 'refresh');
+		$meta->setAttribute('content', $destination);
+		return $meta;
+	}
+
+
+
+	public function makeClear () {
+		$div = $this->document->createElement('div');
+		$div->setAttribute('class', 'clear');
+		return $div;
+	}
+
+
+
 	public function filterForm () {
 		$filterForm = $this->makeForm();
 		$filterForm->setAttribute('class', 'list-oai-sources');
@@ -310,23 +378,76 @@ abstract class command {
 		$filterForm->appendChild($this->makeInputForParameter('hidden', 'show_active', 0));
 		$filterForm->appendChild($this->makeInputForParameter('hidden', 'show_status', 0));
 
-		$filterForm->appendChild($this->makeLabel('filter_namet', 'Name:'));
-		$filterForm->appendChild($this->makeInput('text', 'filter_name'));
+		$filterForm->appendChild($this->makeLabel('filter_name', 'Name:'));
+		$filterForm->appendChild($this->makeInputForParameter('text', 'filter_name'));
 
 		$select = $this->makeSelectWithOptions('filter_bool', Array(
 			Array('value' => 'AND', 'label' => 'und', 'defaulSelection' => TRUE),
-			Array('value' => 'OR', 'label' => 'or')
+			Array('value' => 'OR', 'label' => 'oder')
 		));
 		$filterForm->appendchild($select);
 
 		$filterForm->appendChild($this->makeLabel('filter_url', 'URL:'));
-		$filterForm->appendChild($this->makeInput('text', 'filter_url'));
+		$filterForm->appendChild($this->makeInputForParameter('text', 'filter_url'));
 
 		$filterForm->appendChild($this->makeInput('submit', NULL, 'Suchen'));
 
 		return $filterForm;
 	}
 
+
+
+	public function logSection ($oai_source_id = NULL) {
+		$container = $this->document->createElement('div');
+		$container->setAttribute('class', 'logs');
+
+		$h2 = $this->document->createElement('h2');
+		$container->appendChild($h2);
+		$h2->appendChild($this->document->createTextNode('Logs'));
+
+		$form = $this->makeForm();
+		$container->appendChild($form);
+		$form->setAttribute('class', 'list-configuration');
+
+		$form->appendChild($this->makeLabel('max_hit_display', 'Anzahl der Meldungen:'));
+		$select = $this->makeSelectWithOptions('limit_select', Array(
+			Array('value' => 5),
+			Array('value' => 10, 'defaultSelection' => TRUE),
+			Array('value' => 50),
+			Array('value' => 100),
+			Array('value' => 200)
+		));
+		$form->appendChild($select);
+		$select->setAttribute('onchange', 'navigate(0)');
+		$select->setAttribute('id', 'max_hit_display');
+
+		$form->appendChild($this->makeLabel('show_status_select', 'Status:'));
+		$select = $this->makeSelectWithOptions('show_status_select', Array(
+			Array('value' => -1, 'label' => 'egal', 'defaultSelection' => TRUE),
+			Array('value' => 0, 'label' => 'OK'),
+			Array('value' => 1, 'label' => 'Fehler')
+		));
+		$form->appendChild($select);
+		$select->setAttribute('onchange', 'navigate(0)');
+		$select->setAttribute('id', 'show_status_select');
+
+		$form->appendChild($this->makeLabel('show_type_select', 'Typ:'));
+		$select = $this->makeSelectWithOptions('show_type_select', Array(
+			Array('value' => -1, 'label' => 'egal', 'defaultSelection' => TRUE),
+			Array('value' => 0, 'label' => 'Harvester'),
+			Array('value' => 1, 'label' => 'Indexer')
+		));
+		$form->appendChild($select);
+		$select->setAttribute('onchange', 'navigate(0)');
+		$select->setAttribute('id', 'show_type_select');
+
+		$log = new log($this);
+		$container->appendChild($log->getLogMessages(-1, -1, 10, 0, $oai_source_id));
+
+		$container->appendChild($this->makeClear());
+
+		return $container;
+	}
 
 }
 

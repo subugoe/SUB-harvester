@@ -6,36 +6,40 @@
 
 class country_parser {
 
-	private $db_link;
-	
-	public function __construct($db_link) {
-		$this->db_link = $db_link;
+	private $owner;
+
+	public function __construct($owner) {
+		$this->owner = $owner;
 	}
 
-	
-	// Gibt den HTML-Code für eine Auswahlliste zurück - die erste Option ist leer.
-	public function getSelect($selected = "") {
+
+	// Gibt Markup für eine Auswahlliste mit Ländern zurück - die erste Option ist leer.
+	public function makeCountriesSelect($selected = "") {
 		$sql = "SELECT name_german, code FROM countries ORDER BY name_german ASC";
-		$results = mysql_query($sql, $this->db_link);
-		
+		$results = mysql_query($sql, $this->owner->db_link);
+
 		$hasSelectedItem = false;
-		$options = "";
+		$options = Array();
 
 		while ($row = mysql_fetch_array($results, MYSQL_ASSOC)) {
-			$selectedText = '';
+			$option = Array('value' => $row['code'], 'label' => $row['name_german']);
 			if (strtoupper($selected) == $row['code']) {
-				$selectedText = 'selected="selected" ';
+				$option['defaultSelection'] = TRUE;
 				$hasSelectedItem = true;
 			}
-			$options .= "<option ". $selectedText . "value=\"" . $row['code'] . "\">" . $row['name_german'] . "</option>\n";
+			$options[] = $option;
 		}
-	
-		$select = "<select name=\"country\" id=\"config_country\" size=\"1\">\n";
+
 		if (!$hasSelectedItem) {
-			$select .= "<option value=\"\" disabled=\"disabled\" selected=\"selected\">Bitte auswählen</option>\n";
+			$options = array_splice($options, 0, 0, Array(Array('value' => '', 'label' => 'Bitte auswählen', 'defaultSelection' => TRUE)));
 		}
-		$select .= $options . "</select>\n";
-		
+
+		$select = $this->owner->makeSelectWithOptions('country', $options);
+
+		if (!$hasSelectedItem) {
+			$select->firstChild->setAttribute('disabled', 'disabled');
+		}
+
 		return $select;
 	}
 }

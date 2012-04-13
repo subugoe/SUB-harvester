@@ -8,29 +8,31 @@ require_once(dirname(__FILE__) . '/commands.php');
  */
 class command_editOAISource extends command {
 
-	public function getContent () {
-		global $db_link;
+	public function appendContent () {
+		if ($this->parameters['id'] != "") {
+			$id = intval($this->parameters['id']);
 
-		if ($_POST['id'] != "") {
 			/*
 			 * Prüfung ob der Datensatz nicht gesperrt ist.
 			 * Dazu dient die Datenbanktabelle oai_source_edit_sessions
 			 */
-
 			// Wurde das Formular bereits mit einem Token aufgerufen (z. B. Zurück bei Löschen)
 			// diesen Token übernehmen.
-			if(array_key_exists('edit_id', $_POST)) {
+			$token;
+			if(array_key_exists('edit_id', $this->parameters)) {
 				// Es gibt einen Token
-				$token = $_POST['edit_id'];
+				$token = $this->parameters['edit_id'];
 			} else {
 				// Es gibt keinen Token, Datenbank prüfen
 				// Abfrage der Tabelle
 				$sql = "SELECT CAST((NOW() - timestamp) AS SIGNED) AS seconds_alive, MD5(timestamp) as token
 						FROM oai_source_edit_sessions
-						WHERE oai_source = " . intval($_POST['id']);
-				$result = mysql_query($sql, $db_link);
+						WHERE oai_source = " . $id;
+				$result = mysql_query($sql, $this->db_link);
 				if (!$result) {
-					die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+					$error = new error($this->document);
+					$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+					return;
 				}
 
 				if (mysql_num_rows($result) == 0) {
@@ -40,20 +42,24 @@ class command_editOAISource extends command {
 								oai_source , timestamp
 							)
 							VALUES (
-								" . intval($_POST['id']) . ", NOW()
+								" . $id . ", NOW()
 							)";
-					$result = mysql_query($sql, $db_link);
+					$result = mysql_query($sql, $this->db_link);
 					if (!$result) {
-						die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+						$error = new error($this->document);
+						$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+						return;
 					}
 
 					// Token abfragen
 					$sql = "SELECT MD5(timestamp) as token
 							FROM oai_source_edit_sessions
-							WHERE oai_source = " . intval($_POST['id']);
-					$result = mysql_query($sql, $db_link);
+							WHERE oai_source = " . $id;
+					$result = mysql_query($sql, $this->db_link);
 					if (!$result) {
-						die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+						$error = new error($this->document);
+						$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+						return;
 					}
 					$session_data = mysql_fetch_array($result, MYSQL_ASSOC);
 
@@ -70,19 +76,23 @@ class command_editOAISource extends command {
 						// Den Timestamp der Session aktualiseren
 						$sql = "UPDATE oai_source_edit_sessions
 								SET timestamp = NOW()
-								WHERE oai_source = " . intval($_POST['id']);
-						$result = mysql_query($sql, $db_link);
+								WHERE oai_source = " . $id;
+						$result = mysql_query($sql, $this->db_link);
 						if (!$result) {
-							die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+							$error = new error($this->document);
+							$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+							return;
 						}
 
 						// Token abfragen
 						$sql = "SELECT MD5(timestamp) as token
 								FROM oai_source_edit_sessions
-								WHERE oai_source = " . intval($_POST['id']);
-						$result = mysql_query($sql, $db_link);
+								WHERE oai_source = " . $id;
+						$result = mysql_query($sql, $this->db_link);
 						if (!$result) {
-							die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+							$error = new error($this->document);
+							$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+							return;
 						}
 						$session_data = mysql_fetch_array($result, MYSQL_ASSOC);
 
@@ -95,92 +105,88 @@ class command_editOAISource extends command {
 				}
 			}
 
-			$content = '';
+			$this->contentElement->appendChild($this->makeElementWithText('h2', 'OAI-Quelle bearbeiten'));
 
-			// Header
-			$content .= "<form method=\"post\" action=\"index.php\" onsubmit=\"return validate_edit()\" accept-charset=\"UTF-8\">\n";
-			$content .= "	<div>";
+			$form = $this->makeForm();
+			$this->contentElement->appendChild($form);
+			$form->setAttribute('class', 'edit');
+			$form->setAttribute('onsubmit', 'return validate_edit()');
+
+			$form->appendChild($this->makeInput('hidden', 'do', 'update_oai_source'));
+			$form->appendChild($this->makeInput('hidden', 'edit_id', $this->parameters['id']));
+			$form->appendChild($this->makeInput('hidden', 'edit_token', $token));
+			$form->appendChild($this->makeInput('hidden', 'edit_abort', 0));
 
 
-			// do
-			$content .= "		<input type=\"hidden\" name=\"do\" value=\"update_oai_source\"></input>\n";
-			// edit_id
-			$content .= "		<input type=\"hidden\" name=\"edit_id\" value=\"".$_POST['id']."\"></input>\n";
-			// edit_token
-			$content .= "		<input type=\"hidden\" name=\"edit_token\" value=\"".$token."\"></input>\n";
-			// edito_abort
-			$content .= "		<input type=\"hidden\" name=\"edit_abort\" value=\"0\"></input>\n";
-			$content .= "	</div>";
-
-			$content .= "	<p style=\"text-align: right; margin-top: -20px;\"><input type=\"submit\" value=\" Zur Startseite\" onclick=\"document.forms[0].elements['edit_abort'].value = 1;\"></input></p>\n";
-			$content .= "	<h2>OAI-Quelle bearbeiten</h2>";
-
-			// Ausgabe generieren
-			// Kann der Datensatz editiert werden?
-
+			// Kann der Datensatz bearbeitet werden?
 			if ($token) {
 				// Datensatz ist nicht gesperrt.
 				// Abfrage der Informationen zur Quelle aus der Datenbank (es werden fast alle Felder gebraucht => "*")
 				$sql = "SELECT *
 						FROM oai_sources
-						WHERE id = " . intval($_POST['id']);
-				$result = mysql_query($sql, $db_link);
-				if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+						WHERE id = " . $id;
+				$result = mysql_query($sql, $this->db_link);
+				if (!$result) {
+					$error = new error($this->document);
+					$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+					return;
+				}
 				$oai_source_data = mysql_fetch_array($result, MYSQL_ASSOC);
 
-				$content .= "<p style=\"text-align: center;\">";
+
 				// Hinweis, bzw. Anzeigen einer vollständigen Neuindexierung
+				$note;
 				if($oai_source_data['reindex']) {
-					$content .= "<span style=\"color: red;\">Diese Quelle wird augrund von Änderungen an den Einstellungen beim nächsten Harvesten komplett neu indexiert</span>";
+					$note = $this->makeElementWithText('p', 'Diese Quelle wird augrund von Änderungen an den Einstellungen beim nächsten Harvesten komplett neu indexiert.', 'red');
 				} else {
-					$content .= "Achtung: Änderungen an der Indexierung (auch Land) führen zu einer kompletten Neuindexierung der OAI-Quelle.";
+					$note = $this->makeElementWithText('p', 'Achtung: Änderungen an der Indexierung (auch Land) führen zu einer kompletten Neuindexierung der OAI-Quelle.');
 				}
-				$content .= "</p>";
+				$form->appendChild($note);
 
-				// Allgemeine Einstellungen
+				$form->appendChild($this->makeElementWithText('h3', 'Allgemeine Einstellungen'));
 
-				$content .= "				<h3>Allgemeine Einstellungen</h3>\n";
-				$content .= "				<table border=\"0\" width=\"100%\">\n";
-				$content .= "					<colgroup>\n";
-				$content .= "					    <col width=\"15%\" />\n";
-				$content .= "					    <col width=\"85%\" />\n";
-				$content .= "					 </colgroup>";
-				$content .= "					<tr>\n";
-				$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_name\" >Name:</td>\n";
-				$content .= "						<td align=\"left\"><input name=\"name\" type=\"text\" id=\"config_name\" size=\"100\" maxlength=\"250\" value=\"".( htmlentities($oai_source_data['name'], ENT_QUOTES, 'UTF-8') )."\" /></td>\n";
-				$content .= "					</tr>\n";
-				$content .= "					<tr>\n";
-				$content .= "						<td align=\"right\" class=\"table_field_description\" >URL:</td>\n";
-				$content .= "						<td align=\"left\"><input name=\"url\" type=\"text\" size=\"100\" maxlength=\"250\" readonly=\"readonly\" value=\"".( htmlentities($oai_source_data['url'], ENT_QUOTES, 'UTF-8') )."\"/></td>\n";
-				$content .= "					</tr>\n";
-				$content .= "					<tr>\n";
-				$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_country\">Land:</td>\n";
-				$content .= "						<td align=\"left\">\n";
+				$form->appendChild($this->makeInputWithLabel('text', 'name', 'Name:', $oai_source_data['name']));
 
-				require_once(dirname(__FILE__) . "/../classes/country_parser.php");
-				$countries = new country_parser($db_link);
-				$content .= $countries->getSelect($oai_source_data['country_code']);
+				$form->appendChild($this->makeInputWithLabel('text', 'url', 'URL:', $oai_source_data['url']));
 
-				$content .= "						</td>\n";
-				$content .= "					</tr>\n";
-				$content .= "					<tr>\n";
-				$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_from\">Harvesten ab:</td>\n";
-				$content .= "						<td align=\"left\"><input name=\"from\" id=\"config_from\" type=\"text\" size=\"10\" maxlength=\"10\" value=\"".( $oai_source_data['from'] == "0000-00-00" ? "" : $oai_source_data['from'] )."\"/></td>\n";
-				$content .= "					</tr>\n";
-				$content .= "					<tr>\n";
-				$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_harvest\">Harvest-Rhythmus:</td>\n";
-				$content .= "						<td align=\"left\"><input name=\"harvest_period\" id=\"config_harvest\" type=\"text\" size=\"3\" maxlength=\"3\" value=\"".$oai_source_data['harvest_period']."\"/> (Tage)</td>\n";
-				$content .= "					</tr>\n";
-				$content .= "					<tr>";
-				$content .= "						<td align=\"right\" valign=\"middle\" class=\"table_field_description\"><label for=\"harvest\">Aktiv:</label></td>\n";
-				$content .= "						<td align=\"left\" valign=\"middle\"><input id=\"harvest\" name=\"active\" type=\"checkbox\" ".($oai_source_data['active'] ? "checked=\"checked\" " : "" )."/></td>\n";
-				$content .= "					</tr>";
-				$content .= "					<tr>";
-				$content .= "						<td align=\"right\" valign=\"middle\" class=\"table_field_description\"><label for=\"harvest\">Kommentar:</label></td>\n";
-				$content .= "						<td align=\"left\" valign=\"middle\"><textarea name=\"comment\" cols=\"75\" rows=\"10\">".( htmlentities($oai_source_data['comment'], ENT_QUOTES, 'UTF-8') )."</textarea></td>\n";
-				$content .= "					</tr>";
-				$content .= "				</table>\n";
+				$countrySpan = $this->document->createElement('span');
+				$form->appendChild($countrySpan);
+				$countrySpan->setAttribute('class', 'inputContainer');
+				$label = $this->makeLabel('country', 'Land:');
+				$countrySpan->appendChild($label);
+				require_once(dirname(__FILE__) . '/../classes/country_parser.php');
+				$countries = new country_parser($this);
+				$countrySelect = $countries->makeCountriesSelect($oai_source_data['country_code']);
+				$countrySpan->appendChild($countrySelect);
+				$countrySelect->setAttribute('id', 'country');
 
+				$fromValue = '';
+				if ($oai_source_data['from'] === '0000-00-00') {
+					$fromValue = $oai_source_data['from'];
+				}
+				$form->appendChild($this->makeInputWithLabel('text', 'from', 'Harvesten ab:', $fromValue));
+
+				$rhythmus = $this->makeInputWithLabel('text', 'harvest_period', 'Harvest-Rhythmus:', $oai_source_data['harvest_period']);
+				$form->appendChild($rhythmus);
+
+				$checkboxAndLabel = $this->makeInputWithLabel('checkbox', 'active', 'Aktiv:');
+				$form->appendChild($checkboxAndLabel);
+				$checkbox = $checkboxAndLabel->lastChild;
+				if ($oai_source_data['active']) {
+					$checkbox->setAttribute('checked', 'checked');
+				}
+
+				$commentSpan = $this->document->createElement('span');
+				$form->appendChild($commentSpan);
+				$commentSpan->setAttribute('class', 'inputContainer');
+				$commentSpan->appendChild($this->makeLabel('comment', 'Kommentare:'));
+				$textarea = $this->makeElementWithText('textarea', $oai_source_data['comment']);
+				$textarea->setAttribute('name', 'comment');
+				$commentSpan->appendChild($textarea);
+
+				$form->appendChild($this->makeClear());
+
+/*
 
 				// Nachbearbeitung
 				$content .= "				<h3>Nachbearbeitung</h3>\n";
@@ -287,159 +293,81 @@ class command_editOAISource extends command {
 				$content .= "					</tr>\n";
 				$content .= "				</table>\n";
 
+*/
 
 
-				// Einstellungen zur Verlinkung
+				$form->appendChild($this->makeElementWithText('h3', 'Verlinkungseinstellungen'));
 
-				$content .= "				<h3>Verlinkungseinstellungen</h3>\n";
-				$content .= "				<table border=\"0\" width=\"100%\">\n";
-				$content .= "					<colgroup>\n";
-				$content .= "					    <col width=\"20%\" />\n";
-				$content .= "					    <col width=\"80%\" />\n";
-				$content .= "					 </colgroup>\n";
-				$content .= "					<tr>\n";
-				$content .= "						<td id=\"label_alternative\" align=\"right\" class=\"table_field_description\">Alternativer Link:</td>\n";
-				$content .= "						<td align=\"left\"><input name=\"identifier_alternative\" id=\"config_alternative\" type=\"text\" size=\"100\" maxlength=\"150\" ".($oai_source_data['identifier_alternative'] != "" ? "value=\"".$oai_source_data['identifier_alternative']."\" " : "" )."></input></td>\n";
-				$content .= "					</tr>\n";
-				$content .= "					<tr>\n";
-				$content .= "						<td id=\"label_filter\" align=\"right\" class=\"table_field_description\">Identifier-Filter:</td>\n";
-				$content .= "						<td align=\"left\"><input name=\"identifier_filter\" id=\"config_filter\" type=\"text\" size=\"100\" maxlength=\"100\" ".($oai_source_data['identifier_filter'] != "" ? "value=\"".$oai_source_data['identifier_filter']."\" " : "" )."></input></td>\n";
-				$content .= "					</tr>\n";
-				$content .= "					<tr>\n";
-				$content .= "						<td align=\"right\" class=\"table_field_description\">Identifier-Resolver:</td>\n";
-				$content .= "						<td align=\"left\"><input name=\"identifier_resolver\" id=\"config_resolver\" type=\"text\" size=\"100\" maxlength=\"100\" ".($oai_source_data['identifier_resolver'] != "" ? "value=\"".$oai_source_data['identifier_resolver']."\" " : "" )."></input></td>\n";
-				$content .= "					</tr>\n";
-				$content .= "					<tr>\n";
-				$content .= "						<td align=\"right\" class=\"table_field_description\">Identifier-Resolver-Filter:</td>\n";
-				$content .= "						<td align=\"left\"><input name=\"identifier_resolver_filter\" id=\"config_identifier_resolver\" type=\"text\" size=\"100\" maxlength=\"100\" ".($oai_source_data['identifier_resolver_filter'] != "" ? "value=\"".$oai_source_data['identifier_resolver_filter']."\" " : "" )."></input></td>\n";
-				$content .= "					</tr>\n";
-				$content .= "				</table>\n";
+				$form->appendChild($this->makeInputWithLabel('text', 'identifier_alternative', 'Alternativer Link:', $oai_source_data['identifier_alternative']));
+				$form->appendChild($this->makeInputWithLabel('text', 'identifier_filter', 'Identifier-Filter:', $oai_source_data['identifier_filter']));
+				$form->appendChild($this->makeInputWithLabel('text', 'identifier_resolver', 'Identifier-Resolver:', $oai_source_data['identifier_resolver']));
+				$form->appendChild($this->makeInputWithLabel('text', 'identifier_resolver_filter', 'Identifier-Resolver-Filter:', $oai_source_data['identifier_resolver_filter']));
+				$form->appendChild($this->makeClear());
 
+				$form->appendChild($this->makeElementWithText('h3', 'Zu harvestende Sets'));
 
-				// Geharvestete Sets
+				require_once(dirname(__FILE__) . "/../classes/oai_set_list_compare.php");
+				$OAISetList = new oai_set_list_compare($this, $oai_source_data['url']);
 
-				$content .= "				<h3>Zu harvestende Sets</h3>\n";
-
-				require_once(dirname(__FILE__) . "/../classes/oai_listsets_parser.php");
-				$sets = new oai_listsets_parser($oai_source_data['url']);
-
-				if ($sets->listSetsSuccessful()) {
-					$current_sets = $sets->getSets();
-					require_once(dirname(__FILE__) . "/../classes/oai_set_compare.php");
-					$set_compare = new oai_set_compare($current_sets, $_POST['id'], $db_link);
-					$content .= $set_compare->getTables();
+				$OAISetList->listSets();
+				if ($OAISetList->listSetsSuccessful()) {
+					$form->appendChild($OAISetList->getTablesForID($id));
 				} else {
-					$content .= "<p ".( $sets->getErrorCode() == 'noSetHierarchy' ? " id=\"noSetHierarchy\" " : "" )."style=\"color: red;\">".$sets->getErrorMessage()." Es sind keine Änderungen an den Set-Einstellungen möglich.</p>";
-					$content .= $sets->getSetTableRows();
+					$p = $this->makeElementWithText('p', $OAISetList->getErrorMessage() . ' Es sind keine Änderungen an den Set-Einstellungen möglich.', 'error');
+					if ($OAISetList->getErrorCode() === 'noSetHierarchy') {
+						$p->setAttribute('id', 'noSetHierarchy');
+					}
+					$form->appendChild($p);
+					$form->appendChild($OAISetList->makeInactiveTables());
 				}
 
-
-				// Speichern- & Abbrechen-Button
-
-				$content .= "
-					<p class='buttons'>
-						<input type='submit' value='Löschen' onclick='remove(" . $oai_source_data['id'] . ")'></input>
-						<input type='submit' value='Abbrechen' onclick='document.forms[0].elements[\"edit_abort\"].value = 1;'></input>
-						<input " . ($sets->listSetsSuccessful() | $sets->getErrorCode() == 'noSetHierarchy' ? "" : "disabled='disabled'"). " type='submit' value='Speichern' class='default'></input>
-					</p>";
-				//$content .= "		</form>\n";
+				$p = $this->document->createElement('p');
+				$p->setAttribute('class', 'buttons');
+				$button = $this->makeInput('submit', NULL, 'Löschen');
+				$button->setAttribute('onclick', 'remove(' . $oai_source_data['id'] . ')');
+				$p->appendChild($button);
+				$button = $this->makeInput('submit', NULL, 'Abbrechen');
+				$button->setAttribute('onclick', 'document.forms[0].elements["edit_abort"].value = 1');
+				$p->appendChild($button);
+				$button = $this->makeInput('submit', NULL, 'Speichern');
+				$button->setAttribute('class', 'default');
+				if (!$OAISetList->listSetsSuccessful() && $OAISetList->getErrorCode() !== 'noSetHierarchy') {
+					$button->setAttribute('disabled', 'disabled');
+				}
+				$p->appendChild($button);
 
 			} else {
 				// Datensatz ist gesperrt.
-
-				$content .= "			<p>Der Datensatz wird gerade von einem anderen Benutzer bearbeitet und ist deshalb gesperrt.</p>";
+				$form->appendChild($this->makeElementWithText('p', 'Der Datensatz wird gerade bearbeitet und ist deshalb gesperrt.'));
 			}
 
-			// Zurück zur Trefferliste
-			//$content .= "			<form method=\"post\" action=\"index.php\" accept-charset=\"UTF-8\">\n";
-			$content .= "				<div>\n";
-			//$content .= "					<input type=\"hidden\" name=\"do\" value=\"list_oai_sources\"></input>\n";
-
-			// from
-			if ($token) {
-				$content .= "				<input type=\"hidden\" id=\"current_from\" name=\"current_from_db\" value=\"".$oai_source_data['from']."\" />";
-			}
-
-			// new_from_day_before
-			$content .= "				<input type=\"hidden\" id=\"new_from_day_before_id\" name=\"new_from_day_before\" value=\"\" />";
-
-			// filter_name
-			$content .= "				<input type=\"hidden\" name=\"filter_name\" value=\"";
-			$current_filter_name = isset($_POST['filter_name']) ? $_POST['filter_name'] : "";
-			$content .= $current_filter_name."\"></input>\n";
-
-			// filter_url
-			$content .= "				<input type=\"hidden\" name=\"filter_url\" value=\"";
-			$current_filter_url = isset($_POST['filter_url']) ? $_POST['filter_url'] : "";
-			$content .= $current_filter_url."\"></input>\n";
-
-			// filter_bool
-			$content .= "				<input type=\"hidden\" name=\"filter_bool\" value=\"";
-			$current_filter_bool = isset($_POST['filter_bool']) ? $_POST['filter_bool'] : "AND";
-			$content .= $current_filter_bool."\"></input>\n";
-
-			// sortby
-			$content .= "				<input type=\"hidden\" name=\"sortby\" value=\"";
-			$current_sortby = isset($_POST['sortby']) ? $_POST['sortby'] : "name";
-			$content .= $current_sortby."\"></input>\n";
-
-			// sorthow
-			$content .= "				<input type=\"hidden\" name=\"sorthow\" value=\"";
-			$current_sorthow = isset($_POST['sorthow']) ? $_POST['sorthow'] : "ASC";
-			$content .= $current_sorthow."\"></input>\n";
-
-			// id
-			$content .= "				<input type=\"hidden\" id=\"oai_repository_id\" name=\"id\" value=\"";
-			$content .= isset($_POST['id']) ? $_POST['id'] : "none";
-			$content .= "\"></input>\n";
-
-			// start
-			$content .= "				<input type=\"hidden\" name=\"start\" value=\"";
-			$current_start = isset($_POST['start']) ? $_POST['start'] : "0";
-			$content .= $current_start;
-			$content .= "\"></input>\n";
-
-			// limit
-			$content .= "				<input type=\"hidden\" name=\"limit\" value=\"";
-			$current_limit = isset($_POST['limit']) ? $_POST['limit'] : 20;
-			$content .= $current_limit;
-			$content .= "\"></input>\n";
-
-			// show_active
-			$content .= "				<input type=\"hidden\" name=\"show_active\" value=\"";
-			$current_show_active = isset($_POST['show_active']) ? $_POST['show_active'] : 0;
-			$content .= $current_show_active;
-			$content .= "\"></input>\n";
-
-			// show_status
-			$content .= "				<input type=\"hidden\" name=\"show_status\" value=\"";
-			$current_show_status = isset($_POST['show_status']) ? $_POST['show_status'] : 0;
-			$content .= $current_show_status;
-			$content .= "\"></input>\n";
+			$form->appendChild($this->makeInput('hidden', 'new_from_day_before'));
+			$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+			$form->appendChild($this->makeInputForParameter('hidden', 'filter_url'));
+			$form->appendChild($this->makeInputForParameter('hidden', 'filter_bool', 'AND'));
+			$form->appendChild($this->makeInputForParameter('hidden', 'sortby', 'name'));
+			$form->appendChild($this->makeInputForParameter('hidden', 'sorthow', 'ASC'));
+			$form->appendChild($this->makeInputForParameter('hidden', 'id'));
+			$form->appendChild($this->makeInputForParameter('hidden', 'start', 0));
+			$form->appendChild($this->makeInputForParameter('hidden', 'limit', 20));
+			$form->appendChild($this->makeInputForParameter('hidden', 'show_active', 0));
+			$form->appendChild($this->makeInputForParameter('hidden', 'show_status', 0));
 
 			if ($token) {
-				// edit_id
-				$content .= "				<input type=\"hidden\" name=\"edit_id\" value=\"".$_POST['id']."\"></input>\n";
-				// token
-				$content .= "				<input type=\"hidden\" name=\"edit_token\" value=\"".$token."\"></input>\n";
+				$form->appendChild($this->makeInput('hidden', 'current_from_db', $oai_source_data['from']));
+				$form->appendChild($this->makeInput('hidden', 'edit_id', $id));
+				$form->appendChild($this->makeInput('hidden', 'edit_token', $token));
 			}
 
-			$content .= "			</div>\n";
-			$content .= "				<p style=\"text-align: center; margin-top: 5px;\">\n";
-			$content .= "					<input type=\"submit\" value=\" Zur Trefferliste\" onclick=\"document.forms[0].action = 'index.php#filter';document.forms[0].elements['do'].value = 'list_oai_sources'\"></input>&nbsp;\n";
-			$content .= "				</p>\n";
-			$content .= "			</form>\n";
-
-
+			$p = $this->document->createElement('p');
+			$button = $this->makeInput('submit', NULL, 'Zurück zur Quellenliste');
+			$p->appendChild($button);
+			$button->setAttribute('onclick', 'document.forms[0].action = "index.php#filter"; document.forms[0].elements["do"].value = "list_oai_sources"');
 
 		} else {
-			$content .= "<meta http-equiv=\"refresh\" content=\"0; URL=./index.php\" />";
+			$this->headElement->appendChild($this->makeRedirect());
 		}
-
-
-		return $content;
 	}
-
 
 }
 

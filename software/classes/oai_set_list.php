@@ -4,20 +4,23 @@
  * Diese Klasse parsed die ListSets-Antwort einer OAI-Quelle.
  */
 
-class oai_listsets_parser {
+class oai_set_list {
+	protected $owner;
+	protected $url;
 
-	private $sets = array();
-	private $error = "";
-	private $error_code = "";
-	private $url = "";
+	protected $sets = array();
+	protected $error = "";
+	protected $error_code = "";
 
 
-	public function __construct ($url) {
-
+	public function __construct ($owner, $url) {
+		$this->owner = $owner;
 		$this->url = $url;
+	}
 
+
+	public function listSets () {
 		do {
-
 			$oai_listsets_parser_ch = curl_init();
 			curl_setopt($oai_listsets_parser_ch, CURLOPT_RETURNTRANSFER, 1);
 			// Ignoriere SSL-Zertifikate bei HTTPS
@@ -25,10 +28,10 @@ class oai_listsets_parser {
 
 			if (isset($resumptionToken)) {
 				// Abfrage mit resumptionToken (selten...)
-				curl_setopt($oai_listsets_parser_ch, CURLOPT_URL, $url."?verb=ListSets&resumptionToken=".$resumptionToken);
+				curl_setopt($oai_listsets_parser_ch, CURLOPT_URL, $this->url."?verb=ListSets&resumptionToken=".$resumptionToken);
 			} else {
 				// Abfrage ohne resumptionToken (die Regel...)
-				curl_setopt($oai_listsets_parser_ch, CURLOPT_URL, $url."?verb=ListSets");
+				curl_setopt($oai_listsets_parser_ch, CURLOPT_URL, $this->url."?verb=ListSets");
 			}
 
 			$http_response = curl_exec($oai_listsets_parser_ch);
@@ -57,6 +60,8 @@ class oai_listsets_parser {
 
 		} while (isset($resumptionToken));
 	}
+
+
 
 	// Extrahiert die Sets und speichert sie im Instanzarray $sets.
 	// Gibt true bei vorhandenen Sets zurück, sonst false (keine Sets, bzw. Fehler beim Lesen des XML).
@@ -148,6 +153,8 @@ class oai_listsets_parser {
 		}
 	}
 
+
+
 	// War die Setabfrage erfolgreich?
 	public function listSetsSuccessful() {
 		if ($this->error == "") {
@@ -157,95 +164,34 @@ class oai_listsets_parser {
 		}
 	}
 
+
+
 	// Gibt die Fehlermeldung zurück, leerer String, falls kein Fehler.
 	public function getErrorMessage() {
 		return $this->error;
 	}
+
+
 
 	// Gibt den Fehlercode zurück, leerer String, falls kein Fehler.
 	public function getErrorCode() {
 		return $this->error_code;
 	}
 
-	// Gibt die Sets als Tabellezeilen für das Konfigurationsformular aus.
-	public function getSetTableRows() {
 
-		$rows = "";
-		$i = 1;
 
-		// Pseudo-Set für komplettes Harvesten der Quelle
+	public function makeInactiveTables () {
+		$container = $this->owner->document->createElement('div');
 
-		if ($this->error_code == "noSetHierarchy" || count($this->sets) == 0) {
+		// Pseudo-Set
+		$container->appendChild($this->makeTableForSets(Array($this->pseudo_set), 'unchanged', NULL, FALSE));
 
-			$case = $this->error_code == "noSetHierarchy" ? "noSetHierarchy" : "noSets";
+		// Sets
+		$container->appendChild($this->makeTableForSets($this->sets, 'unchanged', NULL, FALSE));
 
-			$rows .= "
-				<tr>
-					<td class='column1'>
-						<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview(null, null, validate_new)'></input>
-						<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc' onclick='window.open(this.href, '_blank'); return false;' class='OAILink'>OAI-XML anzeigen</a>
-					</td>
-					<td class='column2'>
-						<input id='set1' name='set1' type='checkbox' checked='checked' disabled='disabled'></input>
-					</td>
-					<td class='column3 table_field_description'>
-						<label for='set".$i."'>Komplette OAI-Quelle harvesten</label>
-						<input style='visibility: hidden;' name='sets[".$i."][harvest]' type='checkbox' checked='checked'></input>
-						<input type='hidden' name='sets[".$i."][setName]' value='".$case."'></input>
-						<input type='hidden' name='sets[".$i."][setSpec]' value='allSets'></input>
-					</td>
-				</tr>";
-
-		} else {
-
-			$rows .= "
-					<tr>
-						<td class='column1'>
-							<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview(null, null, validate_new)'></input>
-							<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc' onclick='window.open(this.href, '_blank'); return false;' class='OAILink'>OAI-XML anzeigen</a></td>
-						<td class='column2'>
-							<input id='set".$i."' name='sets[".$i."][harvest]' type='checkbox' onclick='validateSets()'></input>
-						</td>
-						<td class='column3 table_field_description'>
-							<label for='set".$i."'>Komplette OAI-Quelle harvesten</label>
-							<input type='hidden' name='sets[".$i."][setName]' value='allSets'></input>
-							<input type='hidden' name='sets[".$i."][setSpec]' value='allSets'></input>
-						</td>
-					</tr>";
-
-			$i++;
-
-			foreach ($this->sets as $set) {
-
-				$rows .= "
-					<tr>
-						<td class='column1'>
-							<input type='button' name='set_".$i."_preview' value='Vorschau' onclick='preview('". str_replace("'", "\'", $set['setSpec']) ."', '". str_replace("'", "\'", $set['setName']) .", validate_new')'></input>
-							<a href='".$this->url."?verb=ListRecords&amp;metadataPrefix=oai_dc&amp;set=".$set['setSpec']."' onclick='window.open(this.href, '_blank'); return false;' class='OAILink'>OAI-XML anzeigen</a>
-						</td>
-						<td class='column2'>
-							<input id='set".$i."' name='sets[".$i."][harvest]' type='checkbox' onclick='validateSets()'></input>
-						</td>
-						<td class='column3 table_field_description'>
-							<label for='set".$i."'>".( htmlentities($set['setName'], ENT_QUOTES, 'UTF-8') )."
-								<span style='font-weight: normal;'>(".( htmlentities($set['setSpec'], ENT_QUOTES, 'UTF-8') ).")</span>
-							</label>
-							<input type='hidden' name='sets[".$i."][setName]' value='".( htmlentities($set['setName'], ENT_QUOTES, 'UTF-8') )."'></input>
-							<input type='hidden' name='sets[".$i."][setSpec]' value='".( htmlentities($set['setSpec'], ENT_QUOTES, 'UTF-8') )."'></input>
-						</td>
-					</tr>";
-
-				$i++;
-			}
-		}
-
-		return $rows;
+		return $container;
 	}
 
-	// Gibt das Array mit den Sets zurück
-	public function getSets() {
-		return $this->sets;
-	}
 }
 
 ?>

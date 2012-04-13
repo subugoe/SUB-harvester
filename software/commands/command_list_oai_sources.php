@@ -291,13 +291,12 @@ class command_listOAISources extends command {
 
 	private function filterSection () {
 		$container = $this->document->createElement('div');
-		$h3 = $this->document->createElement('h3');
-		$container->appendChild($h3);
 
 		$container->appendChild($this->filterForm());
 
 		$form = $this->makeForm();
 		$container->appendChild($form);
+		$form->setAttribute('class', 'list-configuration');
 
 		$form->appendChild($this->makeLabel('limit_select', 'Anzahl der Treffer:'));
 		$select = $this->makeSelectWithOptions('limit_select', Array(
@@ -449,7 +448,7 @@ class command_listOAISources extends command {
 		$firstButton = $this->makeInput('button', NULL, 'Zur 1. Seite');
 		$pagerDiv->appendChild($firstButton);
 		$firstButton->setAttribute('onclick', 'gotoFirstPage()');
-		$firstButton->setAttribute('class', 'pagingButton first');
+		$firstButton->setAttribute('class', 'navigationButton first');
 		if ($start === 0) {
 			$firstButton->setAttribute('disabled', 'disabled');
 		}
@@ -457,7 +456,7 @@ class command_listOAISources extends command {
 		$prevButton = $this->makeInput('button', NULL, 'Zurück');
 		$pagerDiv->appendChild($prevButton);
 		$prevButton->setAttribute('onclick', 'previous()');
-		$prevButton->setAttribute('class', 'pagingButton previous');
+		$prevButton->setAttribute('class', 'navigationButton previous');
 		if ($start === 0) {
 			$prevButton->setAttribute('disabled', 'disabled');
 		}
@@ -465,7 +464,7 @@ class command_listOAISources extends command {
 		$nextButton = $this->makeInput('button', NULL, 'Weiter');
 		$pagerDiv->appendChild($nextButton);
 		$nextButton->setAttribute('onclick', 'next()');
-		$nextButton->setAttribute('class', 'pagingButton next');
+		$nextButton->setAttribute('class', 'navigationButton next');
 		if ($start + $limit > $total) {
 			$nextButton->setAttribute('disabled', 'disabled');
 		}

@@ -8,31 +8,20 @@ require_once(dirname(__FILE__) . '/commands.php');
  */
 class command_showOAISource extends command {
 
-	public function getContent () {
-		global $db_link;
+	public function appendContent () {
+		$this->clearEditLock();
 
-		$output = "";
-
-		// Wird diese Seite von einer Editierseite aufgerufen, muss der entsprechende Datensatz wieder freigegeben werden.
-		if (isset($_POST['edit_id'])) {
-			$sql = "DELETE FROM oai_source_edit_sessions
-					WHERE oai_source = " . intval($_POST['edit_id']) . "
-					AND MD5(timestamp) = '" . mysql_real_escape_string($_POST['edit_token']) . "'";
-			$result = mysql_query($sql, $db_link);
-			if (!$result) {
-				die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
-			}
-		}
-
-
+		$id = intval($this->parameters['id']);
 		// MySQL-Abfragen
 		// Abfrage des Status
 		$sql = "SELECT MAX(harvest_status) + MAX(index_status) AS status
 				FROM oai_sets
-				WHERE oai_source = " . intval($_POST['id']) . " AND harvest = TRUE";
-		$result = mysql_query($sql, $db_link);
+				WHERE oai_source = " . $id . " AND harvest = TRUE";
+		$result = mysql_query($sql, $this->db_link);
 		if (!$result) {
-			die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));
+			$error = new error($this->document);
+			$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+			return;
 		}
 		$oai_source_status = mysql_result($result, 0);
 
@@ -71,14 +60,31 @@ class command_showOAISource extends command {
 						DATE_FORMAT(oai_sources.last_harvest + INTERVAL oai_sources.harvest_period DAY + INTERVAL 1 DAY, '%W, %e. %M %Y') AS next_harvest
 				FROM (oai_sources INNER JOIN countries ON oai_sources.country_code = countries.code)
 						INNER JOIN oai_sets ON oai_sources.id = oai_sets.oai_source
-				WHERE oai_sources.id = " . intval($_POST['id']) ."
+				WHERE oai_sources.id = " . $id ."
 				GROUP BY oai_sources.id";
-		$result = mysql_query($sql, $db_link);
-		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+		$result = mysql_query($sql, $this->db_link);
+		if (!$result) {
+			$error = new error($this->document);
+			$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+			return;
+		}
 		$oai_source_data = mysql_fetch_array($result, MYSQL_ASSOC);
 
+		$form = $this->makeForm();
+		$this->contentElement->appendChild($form);
+		$form->appendChild($this->makeInput('hidden', 'limit', '20'));
+		$form->appendChild($this->makeInput('hidden', 'status', -1));
+		$form->appendChild($this->makeInput('hidden', 'type', -1));
+		$form->appendChild($this->makeInput('hidden', 'id', $id));
 
-		// Aufbereitung der Daten (Indexierung und Anzeige wird extrahiert)
+		$this->contentElement->appendChild($this->makeElementWithText('h2', 'OAI-Quelle anzeigen'));
+
+		$this->contentElement->appendChild($this->makeGeneralInformation($oai_source_data, $oai_source_status));
+
+
+/*
+ *
+ * 		// Aufbereitung der Daten (Indexierung und Anzeige wird extrahiert)
 		// Dadurch kann die Erstellung der Listen flexibler gestaltet werden und ist erweiterbar
 		$indexed_elements = array('dc:title (fest)');
 		$displayed_elements = array('dc:title (fest)');
@@ -96,165 +102,6 @@ class command_showOAISource extends command {
 
 		sort($indexed_elements);
 		sort($displayed_elements);
-
-		$output .= "			<div style=\"display: none;\">\n";
-		$output .= "				<input type=\"hidden\" id=\"limit\" value=\"20\"/>\n";
-		$output .= "				<input type=\"hidden\" id=\"status\" value=\"-1\"/>\n";
-		$output .= "				<input type=\"hidden\" id=\"type\" value=\"-1\"/>\n";
-		$output .= "				<input type=\"hidden\" id=\"id\" value=\"" . intval($_POST['id']) . "\"/>\n";
-		$output .= "			</div>\n";
-		$output .= "			<p style=\"text-align: right; margin-top: -20px;\"><input type=\"button\" value=\" Zur Startseite\" onclick=\"gotoStart()\"></input></p>\n";
-		$output .= "			<h2>OAI-Quelle anzeigen</h2>\n";
-		$output .= "			<h3>Allgemeine Informationen</h3>\n";
-		$output .= "			<table border=\"0\" width=\"100%\" cellpadding=\"2px\">\n";
-		$output .= "				<colgroup>\n";
-		$output .= "				    <col width=\"23%\" />\n";
-		$output .= "				    <col width=\"45%\" />\n";
-		$output .= "				    <col width=\"32%\" />\n";
-		$output .= "			 	</colgroup>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Name:</td>\n";
-		// Name
-		$output .= "					<td align=\"left\" class=\"table_field_data\">".( htmlentities($oai_source_data['name'], ENT_QUOTES, 'UTF-8') )."</td>\n";
-		// Fehlerzeichen
-		$output .= "					<td rowspan=\"16\" align=\"left\" style=\"vertical-align: middle;\">";
-		if ($oai_source_status > 0) {
-			$output .= "<a href=\"#logs\"><img title=\"Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.\" alt=\"Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.\" src=\"resources/images/big_error.png\" /></a>";
-		}
-		$output .= "</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Request URL:</td>\n";
-		// URL
-		$output .= "					<td align=\"left\" class=\"table_field_data\"><a class=\"oai_set_link\" href=\"".$oai_source_data['url']."?verb=Identify\">".( htmlentities($oai_source_data['url'], ENT_QUOTES, 'UTF-8') )."</a></td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">ID:</td>\n";
-		// ID
-		$output .= "					<td align=\"left\" class=\"table_field_data\">".$oai_source_data['id']."</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Hinzugefügt:</td>\n";
-		// Added
-		$output .= "					<td align=\"left\" class=\"table_field_data\">".$oai_source_data['added']."</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Land:</td>\n";
-		// Land
-		$output .= "					<td align=\"left\" class=\"table_field_data\">".$oai_source_data['country_name']."</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td></td>\n";
-		$output .= "					<td></td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Aktiv:</td>\n";
-		// Harvest-Status
-		$output .= "					<td align=\"left\" class=\"table_field_data\">";
-		if ($oai_source_data['active']) {
-			$output .= "<img title=\"OAI-Quelle wird geharvested\" alt=\"OAI-Quelle wird geharvested\" src=\"resources/images/ok.png\" />";
-		} else {
-			$output .= "<img src=\"resources/images/not_ok.png\" alt=\"OAI-Quelle wird nicht geharvested\" title=\"OAI-Quelle wird nicht geharvested\" />";
-		}
-		$output .= "</td>\n";
-		$output .= "				</tr>\n";
-
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Neuindexierung:</td>\n";
-		// Neuindexierung
-		$output .= "					<td align=\"left\" class=\"table_field_data\">";
-		if ($oai_source_data['reindex']) {
-			$output .= "<img title=\"OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert\" alt=\"OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert\" src=\"resources/images/ok.png\" />";
-		} else {
-			$output .= "<img src=\"resources/images/not_ok.png\" alt=\"OAI-Quelle ist nicht zur Neuindexierung markiert\" title=\"OAI-Quelle ist nicht zur Neuindexierung markiert\" />";
-		}
-		$output .= "</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td></td>\n";
-		$output .= "					<td></td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Geharvestet ab:</td>\n";
-		// From
-		$output .= "					<td align=\"left\" class=\"table_field_data\">".( is_null($oai_source_data['from']) ? "Für diese Quelle ist kein Startzeitpunkt festgelegt." : $oai_source_data['from'] )."</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Harvest-Rhythmus:</td>\n";
-		// Harvest-Rhytmus
-		$output .= "					<td align=\"left\" class=\"table_field_data\">".( $oai_source_data['harvest_period'] > 1 ? "Alle ".$oai_source_data['harvest_period']." Tage" : "täglich")."</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Letztes erfolgreiches Harvesten:</td>\n";
-		// Letztes erfolgreiches Harvesten
-		$output .= "					<td align=\"left\" class=\"table_field_data\">";
-		if (!empty($oai_source_data['last_harvested'])) {
-			$output .= $oai_source_data['last_harvested'];
-		} else {
-			$output .= "Diese Quelle wurde noch nicht geharvested.";
-		}
-		$output .= "</td>\n";
-		$output .= "				</tr>\n";
-
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Letztes erfolgreiches Indexieren:</td>\n";
-		// Letztes erfolgreiches Indexieren
-		$output.= "					<td align=\"left\" class=\"table_field_data\">";
-		if (!empty($oai_source_data['last_indexed'])) {
-			$output .= $oai_source_data['last_indexed'];
-		} else {
-			$output .= "Diese Quelle wurde noch nicht indexiert.";
-		}
-		$output .= "</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Nächstes Harvesten:</td>\n";
-		// Nächstes Harvesten
-		$output .= "					<td align=\"left\" class=\"table_field_data\">".( $oai_source_data['next_harvest'] != NULL ? $oai_source_data['next_harvest'] : utf8_encode(strftime('%A, %d. %B %Y', time()+86400)) )."</td>\n";
-		$output .= "				</tr>\n";
-		$output .= "				<tr>\n";
-		$output .= "					<td></td>\n";
-		$output .= "					<td></td>\n";
-		$output .= "				</tr>\n";
-		$output .= "			<tr>\n";
-		$output .= "					<td align=\"right\" class=\"table_field_description\">Anzahl der Indexeinträge:</td>\n";
-
-		// Anzahl der Indexeinträge
-
-		$index_entry_count = 0;
-
-		// Index abfragen
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, SOLR."/select?version=2.2&rows=0&q=oai_repository_id%3A".$oai_source_data['id']);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-		$http_response = curl_exec($ch);
-
-		if ($http_response && curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200) {
-
-			$dom = new DOMDocument();
-			$dom->loadXML($http_response);
-
-			$XPath = new DOMXPath($dom);
-			$XPath_count_query = $XPath->query('/response/result/@numFound');
-
-			$index_entry_count = $XPath_count_query->item(0)->nodeValue;
-
-		} else {
-			// Der Server ist nicht erreichbar
-			$index_entry_count = -1;
-		}
-
-		$output .= "					<td align=\"left\" class=\"table_field_data\">".( $index_entry_count >= 0 ? $index_entry_count : "<span style=\"color: red;\">Der Index ist zurzeit nicht erreichbar.</span>" )."</td>\n";
-		$output .= "				</tr>\n";
-		// Kommentar
-		$output .= "				<tr>\n";
-		$output .= "					<td align=\"right\" style=\"vertical-align: top;\" class=\"table_field_description\">Kommentar:</td>\n";
-		$output .= "					<td align=\"left\" class=\"table_field_data\" colspan=\"2\">".( empty($oai_source_data['comment']) ? "Kein Kommentar vorhanden." : "<textarea name=\"comment\" cols=\"130\" rows=\"10\" disabled=\"disabled\">".( htmlentities($oai_source_data['comment'], ENT_QUOTES, 'UTF-8') )."</textarea>" )."</td>\n";
-		$output .= "				</tr>\n";
-
-
-		$output .= "			</table>\n";
 
 
 		// Nachbearbeitung
@@ -325,88 +172,41 @@ class command_showOAISource extends command {
 		$output .= "							</ul>\n";
 		$output .= "						</td>\n";
 		$output .= "						<td align=\"left\" style=\"vertical-align: top;\">\n";
+*/
 
-		// Identifier Einstellungen
-		$output .= "						<h3>Identifier Einstellungen</h3>\n";
-		$output .= "						<table border=\"0\" width=\"100%\" cellpadding=\"2px\" style=\"margin-left: 4em;\">\n";
-		$output .= "							<colgroup>\n";
-		$output .= "							    <col width=\"15%\" />\n";
-		$output .= "							    <col width=\"85%\" />\n";
-		$output .= "							 </colgroup>\n";
 
-		// Identfier Alternative
-		$output .= "							<tr>\n";
-		$output .= "								<td align=\"right\" class=\"table_field_description\">Alternative:</td>\n";
-		$output .= "								<td align=\"left\" class=\"table_field_data\">";
-		if ($oai_source_data['identifier_alternative'] == "") {
-			$output .= "-";
-		} else {
-			$output .= $oai_source_data['identifier_alternative'];
-		}
-		$output .= "</td>\n";
-		$output .= "							</tr>\n";
-
-		// Filter
-		$output .= "							<tr>\n";
-		$output .= "								<td align=\"right\" class=\"table_field_description\">Filter:</td>\n";
-		$output .= "								<td align=\"left\" class=\"table_field_data\">";
-		if ($oai_source_data['identifier_filter'] == "") {
-			$output .= "-";
-		} else {
-			$output .= $oai_source_data['identifier_filter'];
-		}
-		$output .= "</td>\n";
-		$output .= "							</tr>\n";
-		// Resolver
-		$output .= "							<tr>\n";
-		$output .= "								<td align=\"right\" class=\"table_field_description\">Resolver:</td>\n";
-		$output .= "								<td align=\"left\" class=\"table_field_data\">";
-		if ($oai_source_data['identifier_resolver'] == "") {
-			$output .= "-";
-		} else {
-			$output .= $oai_source_data['identifier_resolver'];
-		}
-		$output .= "</td>\n";
-		$output .= "							</tr>\n";
-
-		// Resolver-Filter
-		$output .= "							<tr>\n";
-		$output .= "								<td align=\"right\" class=\"table_field_description\">Resolver-Filter:</td>\n";
-		$output .= "								<td align=\"left\" class=\"table_field_data\">";
-		if ($oai_source_data['identifier_resolver_filter'] == "") {
-			$output .= "-";
-		} else {
-			$output .= $oai_source_data['identifier_resolver_filter'];
-		}
-		$output .= "</td>\n";
-		$output .= "							</tr>\n";
-
-		$output .= "						</table>\n";
-		$output .= "					</td>\n";
-
-		$output .= "				</tr>\n";
-		$output .= "			</table>\n";
-
+		$this->contentElement->appendChild($this->makeIdentifierInformation($oai_source_data));
 
 		// Sets
 
 		// Abfrage des Pseudo-Sets
 		$sql = "SELECT setname, harvest
 				FROM oai_sets
-				WHERE setspec LIKE '%allSets%' AND oai_source = " . intval($_POST['id']);
-		$result = mysql_query($sql, $db_link);
-		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+				WHERE setspec LIKE '%allSets%' AND oai_source = " . $id;
+		$result = mysql_query($sql, $this->db_link);
+		if (!$result) {
+			$error = new error($this->document);
+			$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+			return;
+		}
 		$oai_pseudoset_data = mysql_fetch_array($result, MYSQL_ASSOC);
 
 
 		// Abfrage Anzahl der Sets einer OAI-Quelle
 		$sql = "SELECT COUNT(id)
 				FROM oai_sets
-				WHERE setspec NOT LIKE '%allSets%' AND oai_source = " . intval($_POST['id']);
-		$result = mysql_query($sql, $db_link);
-		if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
+				WHERE setspec NOT LIKE '%allSets%' AND oai_source = " . $id;
+		$result = mysql_query($sql, $this->db_link);
+		if (!$result) {
+			$error = new error($this->document);
+			$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+			return;
+		}
 		$total_set_count = mysql_result($result, 0);
 
+		$headingText = 'Geharvestete Sets';
+		$setsUL = $this->document->createElement('ul');
+		$setsUL->setAttribute('class', 'show_source_lists');
 
 		if (!$oai_pseudoset_data['harvest']) {
 			// Es werden einzelne Sets, bzw. ein Set geharvested.
@@ -414,212 +214,249 @@ class command_showOAISource extends command {
 			// Abfrage der Sets
 			$sql = "SELECT setname, setspec
 					FROM oai_sets
-					WHERE setspec NOT LIKE '%allSets%' AND harvest = TRUE AND oai_source = " . intval($_POST['id']);
-			$result = mysql_query($sql, $db_link);
-			if (!$result) { die(str_replace("%content%", ($mysq_error_message."<br /><br /><tt>".$sql."</tt><br /><br />führte zu<br /><br /><em>".mysql_error())."</em>", $output));}
-
-			$harvested_set_count = mysql_num_rows($result);
-
-			$output .= "			<h3>Geharvestete Sets (".$harvested_set_count." von ".$total_set_count.")</h3>\n";
-
-			$output .= "			<table border=\"0\" width=\"100%\">\n";
-			$output .= "				<colgroup>\n";
-			$output .= "				    <col width=\"1\" />\n";
-			$output .= "				    <col width=\"1\" />\n";
-			$output .= "				 </colgroup>\n";
-			$output .= "				<tr>\n";
-			$output .= "					<td style=\"vertical-align: top;\">\n";
-			$output .= "						<ul class=\"show_source_lists\">\n";
-
-			$second_col = false;
-			$i = 0.5;
-			while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-
-				if ($i > $harvested_set_count / 2 && $i != 1 && !$second_col) {
-
-					$second_col = true;
-
-					$output .= "							</ul>\n";
-					$output .= "						</td>\n";
-					$output .= "						<td style=\"vertical-align: top;\">\n";
-					$output .= "							<ul class=\"show_source_lists\">\n";
-
-				}
-
-				$output .="							<li><span style=\"color: #272ec6;\">".htmlspecialchars($row['setname'])." (".htmlspecialchars($row['setspec']).")</span></li>\n";
-				$i++;
+					WHERE setspec NOT LIKE '%allSets%' AND harvest = TRUE AND oai_source = " . $id;
+			$result = mysql_query($sql, $this->db_link);
+			if (!$result) {
+				$error = new error($this->document);
+				$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+				return;
 			}
 
+			$harvested_set_count = mysql_num_rows($result);
+			$headingText .= ' (' . $harvested_set_count . ' von ' . $total_set_count . ')';
 
-			$output .= "						</ul>\n";
-			$output .= "					</td>\n";
-			$output .= "				</tr>\n";
-
-		} else {
-
+			while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+				$setDescription = $row['setname'] . ' (' . $row['setspec'] . ')';
+				$li = $this->makeElementWithText('li', $setDescription);
+				$setsUL->appendChild($li);
+			}
+		}
+		else {
 			switch ($oai_pseudoset_data['setname']) {
 
 				case "allSets":
-					$output .= "			<h3>Geharvestete Sets (<span style=\"font-weight: bold\">∞</span> von ".$total_set_count.")</h3>\n";
-					$output .= "			<table border=\"0\" width=\"100%\">\n";
-					$output .= "				<colgroup>\n";
-					$output .= "				    <col width=\"1\" />\n";
-					$output .= "				    <col width=\"1\" />\n";
-					$output .= "				 </colgroup>\n";
-					$output .= "				<tr>\n";
-					$output .= "					<td colspan=\"2\" style=\"vertical-align: top;\">\n";
-					$output .= "						<ul class=\"show_source_lists\">\n";
-					$output .="							<li><span style=\"color: #272ec6;\">Alle Sets werden geharvested. Zur Ansicht der Sets bitte Quelle zum Bearbeiten öffnen.</span></li>\n";
-					$output .= "						</ul>\n";
-					$output .= "					</td>\n";
+					$headingText .= '(∞ von ' . $total_set_count . ')';
+					$li = $this->makeElementWithText('li', 'Alle Sets werden geharvested. Zur Ansicht der Sets bitte Quelle zum Bearbeiten öffnen.');
+					$setsUL->appendChild($li);
 					break;
 
 				case "noSetHierarchy":
-					$output .= "			<h3>Geharvestete Sets</h3>\n";
-					$output .= "			<table border=\"0\" width=\"100%\">\n";
-					$output .= "				<colgroup>\n";
-					$output .= "				    <col width=\"1\" />\n";
-					$output .= "				    <col width=\"1\" />\n";
-					$output .= "				 </colgroup>\n";
-					$output .= "				<tr>\n";
-					$output .= "					<td colspan=\"2\" style=\"vertical-align: top;\">";
-					$output .= "						<ul class=\"show_source_lists\">\n";
-					$output .="							<li><span style=\"color: #272ec6;\">Diese OAI-Quelle unterstützt keine Sets und wird komplett geharvested.</span></li>\n";
-					$output .= "						</ul>\n";
-					$output .= "					</td>\n";
+					$li = $this->makeElementWithText('li', 'Diese OAI-Quelle unterstützt keine Sets und wird vollständig geharvestet.');
+					$setsUL->appendChild($li);
 					break;
 
 				case "noSets":
-					$output .= "			<h3>Geharvestete Sets</h3>\n";
-					$output .= "			<table border=\"0\" width=\"100%\">\n";
-					$output .= "				<colgroup>\n";
-					$output .= "				    <col width=\"1\" />\n";
-					$output .= "				    <col width=\"1\" />\n";
-					$output .= "				 </colgroup>\n";
-					$output .= "				<tr>\n";
-					$output .= "					<td colspan=\"2\" style=\"vertical-align: top;\">";
-					$output .= "						<ul class=\"show_source_lists\">\n";
-					$output .="							<li><span style=\"color: #272ec6;\">Diese OAI-Quelle bietet keine Sets an wird komplett geharvested.</span></li>\n";
-					$output .= "						</ul>\n";
-					$output .= "					</td>\n";
-
+					$li = $this->makeElementWithText('li', 'Diese OAI-Quelle bietet keine Sets an wird vollständig geharvestet.');
+					$setsUL->appendChild($li);
 					break;
-
-
-				default:
-
 			}
-
-			$output .= "				</tr>\n";
 		}
 
-		$output .= "			</table>\n";
+		$this->contentElement->appendChild($this->makeElementWithText('h3', $headingText));
+		$this->contentElement->appendChild($setsUL);
 
+		$this->contentElement->appendChild($this->makeButtons($oai_source_data));
 
-		// Formular mit den Daten einer evtl. vorgegangenen Suche um nach dort zurückzukehren
-		$output .= "			<form method=\"post\" action=\"index.php\" accept-charset=\"UTF-8\">\n";
-		$output .= "				<div>\n";
-		$output .= "					<input type=\"hidden\" name=\"do\" value=\"list_oai_sources\"></input>\n";
-
-		// filter_name
-		$output .= "					<input type=\"hidden\" name=\"filter_name\" value=\"";
-		$current_filter_name = isset($_POST['filter_name']) ?  $_POST['filter_name'] : "";
-		$output .= $current_filter_name."\"></input>\n";
-
-		// filter_url
-		$output .= "					<input type=\"hidden\" name=\"filter_url\" value=\"";
-		$current_filter_url = isset($_POST['filter_url']) ? $_POST['filter_url'] : "";
-		$output .= $current_filter_url."\"></input>\n";
-
-		// filter_bool
-		$output .= "					<input type=\"hidden\" name=\"filter_bool\" value=\"";
-		$current_filter_bool = isset($_POST['filter_bool']) ? $_POST['filter_bool'] : "AND";
-		$output .= $current_filter_bool."\"></input>\n";
-
-		// sortby
-		$output .= "					<input type=\"hidden\" name=\"sortby\" value=\"";
-		$current_sortby = isset($_POST['sortby']) ? $_POST['sortby'] : "name";
-		$output .= $current_sortby."\"></input>\n";
-
-		// sorthow
-		$output .= "					<input type=\"hidden\" name=\"sorthow\" value=\"";
-		$current_sorthow = isset($_POST['sorthow']) ? $_POST['sorthow'] : "ASC";
-		$output .= $current_sorthow."\"></input>\n";
-
-		// id
-		$output .= "					<input type=\"hidden\" name=\"id\" value=\"";
-		$output .= isset($_POST['id']) ? $_POST['id'] : "none";
-		$output .= "\"></input>\n";
-
-		// start
-		$output .= "					<input type=\"hidden\" name=\"start\" value=\"";
-		$current_start = isset($_POST['start']) ? $_POST['start'] : "0";
-		$output .= $current_start;
-		$output .= "\"></input>\n";
-
-		// limit
-		$output .= "					<input type=\"hidden\" name=\"limit\" value=\"";
-		$current_limit = isset($_POST['limit']) ? $_POST['limit'] : 20;
-		$output .= $current_limit;
-		$output .= "\"></input>\n";
-
-		// show_active
-		$output .= "					<input type=\"hidden\" name=\"show_active\" value=\"";
-		$current_show_active = isset($_POST['show_active']) ? $_POST['show_active'] : 0;
-		$output .= $current_show_active;
-		$output .= "\"></input>\n";
-
-		// show_status
-		$output .= "					<input type=\"hidden\" name=\"show_status\" value=\"";
-		$current_show_status = isset($_POST['show_status']) ? $_POST['show_status'] : 0;
-		$output .= $current_show_status;
-		$output .= "\"></input>\n";
-
-		$output .= "				</div>\n";
-		// Buttons
-		$output .= "				<p style=\"text-align: center; margin-top: 25px;\">\n";
-		$output .= "					<input type=\"submit\" value=\"Bearbeiten\" onclick=\"edit(".$oai_source_data['id'].")\"></input>&nbsp;\n";
-		$output .= "					<input type=\"submit\" value=\"Löschen\" onclick=\"remove(".$oai_source_data['id'].")\"></input>&nbsp;\n";
-		$output .= "					<input type=\"submit\" value=\"Zur Trefferliste\" onclick=\"document.forms[0].action = 'index.php#filter'\"></input>\n";
-		$output .= "				</p>\n";
-		$output .= "			</form>\n";
-		$output .= "			<hr style=\"margin-top:30px; color:#8F0006; width: 50%;\" />\n";
-		$output .= "			<h3 id=\"logs\" style=\"text-align: center; text-indent: 0;\">Logmeldungen der Quelle</h3>\n";
-		$output .= "			<p style=\"text-align: center; margin-top: 10px; margin-left: auto; margin-right: auto; color: #424242; background-color: #D8E6B6; width: 45%; padding: 3px;\">\n";
-		$output .= "				<em>Anzahl der Meldungen:</em>\n";
-		$output .= "				<select id=\"max_hit_display\" name=\"limit_select\" size=\"1\" onchange=\"navigate(0)\">\n";
-		$output .= "				<option value=\"5\" >5</option>\n";
-		$output .= "					<option value=\"20\" selected=\"selected\">20</option>\n";
-		$output .= "					<option value=\"50\" >50</option>\n";
-		$output .= "					<option value=\"100\" >100</option>\n";
-		$output .= "					<option value=\"150\" >150</option>\n";
-		$output .= "					<option value=\"200\" >200</option>\n";
-		$output .= "				</select>\n";
-		$output .= "				&nbsp;&nbsp;\n";
-		$output .= "				<em>Status:</em>\n";
-		$output .= "				<select id=\"show_status_select\" size=\"1\" onchange=\"navigate(0)\">\n";
-		$output .= "					<option value=\"-1\" selected=\"selected\">egal</option>\n";
-		$output .= "					<option value=\"0\" >OK</option>\n";
-		$output .= "					<option value=\"1\" >Fehler</option>\n";
-		$output .= "				</select>\n";
-		$output .= "				&nbsp;&nbsp;\n";
-		$output .= "				<em>Typ:</em>\n";
-		$output .= "				<select id=\"show_type_select\" size=\"1\" onchange=\"navigate(0)\">\n";
-		$output .= "					<option value=\"-1\" selected=\"selected\">egal</option>\n";
-		$output .= "					<option value=\"0\" >Harvester</option>\n";
-		$output .= "					<option value=\"1\" >Indexer</option>\n";
-		$output .= "				</select>\n";
-		$output .= "			</p>\n";
-		$output .= "			<div id=\"log_display\">";
-
-		require_once(dirname(__FILE__) . "/../classes/log.php");
-		$log = new log($db_link, -1, -1, 20, 0, $_POST['id']);
-		$output .= $log->getOutput();
-		$output .=	"</div>";
-
-		return $output;
+		$this->contentElement->appendChild($this->logSection($id));
 	}
 
+
+
+	private function makeGeneralInformation ($oai_source_data, $oai_source_status) {
+		$container = $this->document->createElement('div');
+		$container->appendChild($this->makeElementWithText('h3', 'Allgemeine Informationen'));
+
+		$dl = $this->document->createElement('dl');
+		$container->appendChild($dl);
+		$this->appendDTDDWithTextTo('Name:', $oai_source_data['name'], $dl);
+
+		if ($oai_source_status > 0) {
+			$lastDD = $dl->lastChild;
+			$a = $this->makeElementWithText('a', 'Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.', 'errorIcon');
+			$dl->lastChild->appendChild($a);
+			$a->setAttribute('href', '#logs');
+		}
+
+		$this->appendDTDDWithTextTo('Request URL:', $oai_source_data['url'], $dl);
+
+		$this->appendDTDDWithTextTo('Interne ID:', $oai_source_data['id'], $dl);
+
+		$this->appendDTDDWithTextTo('Hinzugefügt:', $oai_source_data['added'], $dl);
+
+		$this->appendDTDDWithTextTo('Land:', $oai_source_data['country_name'], $dl);
+
+		$img = $this->document->createElement('img');
+		if ($oai_source_data['active']) {
+			$img->setAttribute('src', 'resources/images/ok.png');
+			$img->setAttribute('alt', 'OAI-Quelle wird geharvestet.');
+		} else {
+			$img->setAttribute('src', 'resources/images/not_ok.png');
+			$img->setAttribute('alt', 'OAI-Quelle wird nicht geharvestet.');
+		}
+		$this->appendDTDDWithContentTo($this->document->createTextNode('Aktiv:'), $img, $dl);
+
+		$img = $this->document->createElement('img');
+		if ($oai_source_data['active']) {
+			$img->setAttribute('src', 'resources/images/ok.png');
+			$img->setAttribute('alt', 'OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert.');
+		} else {
+			$img->setAttribute('src', 'resources/images/not_ok.png');
+			$img->setAttribute('alt', 'OAI-Quelle ist nicht zur Neuindexierung markiert.');
+		}
+		$this->appendDTDDWithContentTo($this->document->createTextNode('Neuindexierung:'), $img, $dl);
+
+		$fromText = 'Für diese Quelle ist kein Startzeitpunkt festgelegt.';
+		if (!is_null($oai_source_data['from'])) {
+			$fromText = $oai_source_data['from'];
+		}
+		$this->appendDTDDWithTextTo('Request URL:', $fromText, $dl);
+
+		$intervalText = 'täglich';
+		if ($oai_source_data['harvest_period'] > 1) {
+			$intervalText = 'Alle ' . $oai_source_data['harvest_period'] . ' Tage';
+		}
+		$this->appendDTDDWithTextTo('Harvest-Rhythmus:', $intervalText, $dl);
+
+		$lastHarvestDate = 'Diese Quelle wurde noch nicht geharvested.';
+		if (!empty($oai_source_data['last_harvested'])) {
+			$lastHarvestDate = $oai_source_data['last_harvested'];
+		}
+		$this->appendDTDDWithTextTo('Letztes erfolgreiches Harvesten:', $lastHarvestDate, $dl);
+
+		$lastIndexDate = 'Diese Quelle wurde noch nicht indexiert.';
+		if (!empty($oai_source_data['last_indexed'])) {
+			$lastIndexDate = $oai_source_data['last_indexed'];
+		}
+		$this->appendDTDDWithTextTo('Letztes erfolgreiches Indizieren:', $lastIndexDate, $dl);
+
+		$nextHarvestDate = $oai_source_data['next_harvest'];
+		if ($nextHarvestDate === NULL) {
+			$nextHarvestDate = strftime('%A, %d. %B %Y', time() + 86400);
+		}
+		$this->appendDTDDWithTextTo('Nächstes Harvesten:', $nextHarvestDate, $dl);
+
+		$index_entry_count = $this->getIndexEntryCount($oai_source_data);
+		$class = '';
+		if ($index_entry_count === -1) {
+			$index_entry_count = 'Der Index ist zurzeit nicht erreichbar.';
+			$class = 'warning';
+		}
+		$this->appendDTDDWithTextTo('Anzahl der Indexeinträge:', $index_entry_count, $dl, $class);
+
+		$this->appendDTDDWithTextTo('Kommentar:', $oai_source_data['comment'], $dl);
+
+		$container->appendChild($this->makeClear());
+
+		return $container;
+	}
+
+
+
+	private function getIndexEntryCount ($oai_source_data) {
+		$index_entry_count = 0;
+
+		// Index abfragen
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, SOLR . '/select?version=2.2&rows=0&q=oai_repository_id%3A' . $oai_source_data['id']);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+		$http_response = curl_exec($ch);
+
+		if ($http_response && curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200) {
+			$dom = new DOMDocument();
+			$dom->loadXML($http_response);
+
+			$XPath = new DOMXPath($dom);
+			$XPath_count_query = $XPath->query('/response/result/@numFound');
+
+			$index_entry_count = $XPath_count_query->item(0)->nodeValue;
+		}
+		else {
+			// Der Server ist nicht erreichbar
+			$index_entry_count = -1;
+		}
+
+		return $index_entry_count;
+	}
+
+
+
+	private function makeIdentifierInformation ($oai_source_data) {
+		$container = $this->document->createElement('div');
+		$container->appendChild($this->makeElementWithText('h3', 'Allgemeine Informationen'));
+
+		$dl = $this->document->createElement('dl');
+		$container->appendChild($dl);
+
+		$text = $oai_source_data['identifier_alternative'];
+		if ($text === '') {
+			$text = '-';
+		}
+		$this->appendDTDDWithTextTo('Alternative:', $text, $dl);
+
+		$text = $oai_source_data['identifier_filter'];
+		if ($text === '') {
+			$text = '-';
+		}
+		$this->appendDTDDWithTextTo('Filter:', $text, $dl);
+
+		$text = $oai_source_data['identifier_resolver'];
+		if ($text === '') {
+			$text = '-';
+		}
+		$this->appendDTDDWithTextTo('Resolver:', $text, $dl);
+
+		$text = $oai_source_data['identifier_resolver_filter'];
+		if ($text === '') {
+			$text = '-';
+		}
+		$this->appendDTDDWithTextTo('Resolver-Filter:', $text, $dl);
+
+		$container->appendChild($this->makeClear());
+
+		return $container;
+	}
+
+
+
+	private function makeButtons ($oai_source_data) {
+		$form = $this->makeForm();
+		$form->setAttribute('id', 'command');
+
+		$form->appendChild($this->makeInput('hidden', 'do', 'list_oai_sources'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_url'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_bool', 'AND'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_sortby', 'name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_sorthow', 'ASC'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'id'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'start', 0));
+		$form->appendChild($this->makeInputForParameter('hidden', 'limit', 20));
+		$form->appendChild($this->makeInputForParameter('hidden', 'show_active', 0));
+		$form->appendChild($this->makeInputForParameter('hidden', 'show_status', 0));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+
+		$p = $this->document->createElement('p');
+		$form->appendChild($p);
+		$p->setAttribute('class', 'buttons');
+
+		$button = $this->makeInput('submit', NULL, 'Bearbeiten');
+		$p->appendChild($button);
+		$button->setAttribute('onclick', 'edit(' . $oai_source_data['id'] . ')');
+
+		$button = $this->makeInput('submit', NULL, 'Löschen');
+		$p->appendChild($button);
+		$button->setAttribute('onclick', 'remove(' . $oai_source_data['id'] . ')');
+
+		$button = $this->makeInput('submit', NULL, 'Zurück zur Quellenliste');
+		$p->appendChild($button);
+
+		return $form;
+	}
 
 }
 

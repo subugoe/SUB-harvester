@@ -13,7 +13,7 @@ class command_displayLog extends command {
 		require_once(dirname(__FILE__) . '/../classes/log.php');
 		$log = new log($this);
 
-		if (array_key_exists('id', $this->parameters)) {
+		if (array_key_exists('id', $this->parameters) && $this->parameters['id']) {
 			$this->contentElement->appendChild($log->getLogMessages($this->parameters['status'], $this->parameters['type'], $this->parameters['limit'], $this->parameters['start'], $this->parameters['id']));
 		} else {
 			$this->contentElement->appendChild($log->getLogMessages($this->parameters['status'], $this->parameters['type'], $this->parameters['limit'], $this->parameters['start']));

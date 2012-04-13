@@ -6,28 +6,28 @@ function gotoStart() {
 
 // Ruft einen Datensatz zum Bearbeiten auf.
 function edit(id) {
-	document.forms[0].do.value = 'edit_oai_source';
-	document.forms[0].id.value = id;
-
-	document.forms[0].submit();
+	var form = document.getElementById('command');
+	form.do.value = 'edit_oai_source';
+	form.id.value = id;
+	form.submit();
 }
 
 
 // Ruft einen Datensatz zur Ansicht auf.
 function show(id) {
-	document.forms[0].do.value = 'show_oai_source';
-	document.forms[0].id.value = id;
-
-	document.forms[0].submit();
+	var form = document.getElementById('command');
+	form.do.value = 'show_oai_source';
+	form.id.value = id;
+	form.submit();
 }
 
 
 // Ruft die Löschseite einer OAI-Quelle auf.
 function remove(id) {
-	document.forms[0].do.value = 'delete_oai_source';
-	document.forms[0].id.value = id;
-
-	document.forms[0].submit();
+	var form = document.getElementById('command');
+	form.do.value = 'delete_oai_source';
+	form.id.value = id;
+	form.submit();
 }
 
 
@@ -54,7 +54,7 @@ function preview(setSpec, setName, validationFunction) {
 
 		url += ( (setSpec == null) ? "" : "&setSpec=" + encodeURI(setSpec) );
 		url += ( (setName == null) ? "" : "&setName=" + encodeURI(setName) );
-
+/*
 		url += "&i_cre=" + checkbox_checker('index_creator');
 		url += "&i_con=" + checkbox_checker('index_contributor');
 		url += "&i_pub=" + checkbox_checker('index_publisher');
@@ -70,7 +70,7 @@ function preview(setSpec, setName, validationFunction) {
 		url += "&v_pub=" + checkbox_checker('view_publisher');
 		url += "&v_dat=" + checkbox_checker('view_date');
 		url += "&v_ide=" + checkbox_checker('view_identifier');
-
+*/
 		url += "&identifier_alternative=" + encodeURIComponent(document.forms[0].identifier_alternative.value);
 		url += "&identifier_filter=" + encodeURIComponent(document.forms[0].identifier_filter.value);
 		url += "&identifier_resolver=" + encodeURIComponent(document.forms[0].identifier_resolver.value);
@@ -106,12 +106,9 @@ function validateSets() {
 // Zur Navigation in den Logs
 // TODO: Check id parameter i
 function navigate(start) {
-
 	var limit = $('#max_hit_display').val();
 	var status = $('#show_status_select').val();
 	var type =  $('#show_type_select').val();
-
-	$('#log_display').empty();
 
 	var AJAXData = {
 		'do': 'display_log',
@@ -121,7 +118,7 @@ function navigate(start) {
 		'type': type
 	};
 
-	if (document.getElementById('id')) {
+	if (document.getElementById('id') && document.getElementById('id').value) {
 		AJAXData['id'] = document.getElementById('id').value;
 	}
 
@@ -130,7 +127,7 @@ function navigate(start) {
 		type: "POST",
 		data: AJAXData,
 	  	success: function(html){
-			$('.log').replaceWith($(html));
+			$('div.log').replaceWith($(html));
 	  	}
 	});
 

@@ -9,52 +9,12 @@ class log {
 
 	private $owner;
 
-	// Erzeugt Pager mit Knöpfen zum Vor- und Zurücknavigieren und
-	// Anzeige der aktuellen Position.
-	private function pager ($limit, $start, $total_log_entries) {
-		$pagerDiv = $this->owner->document->createElement('div');
-		$pagerDiv->setAttribute('class', 'pager');
-
-		if ($start != 0) {
-			$firstButton = $this->owner->document->createElement('input');
-			$firstButton->setAttribute('type', 'button');
-			$firstButton->setAttribute('value', 'Neueste');
-			$firstButton->setAttribute('onclick', 'navigate(0)');
-			if ($start === 0) {
-				$firstButton->setAttribute('disabled', 'disabled');
-			}
-			$firstButton->setAttribute('class', 'navigationButton first');
-			$pagerDiv->appendChild($firstButton);
-
-			$prevButton = $this->owner->document->createElement('input');
-			$prevButton->setAttribute('type', 'button');
-			$prevButton->setAttribute('value', 'Neuere');
-			$prevButton->setAttribute('onclick', 'navigate(' . ($start - $limit) . ')');
-			$prevButton->setAttribute('class', 'navigationButton previous');
-			$pagerDiv->appendChild($prevButton);
-		}
-		if ($start + $limit < $total_log_entries) {
-			$nextButton = $this->owner->document->createElement('input');
-			$nextButton->setAttribute('type', 'button');
-			$nextButton->setAttribute('value', 'Ältere');
-			$nextButton->setAttribute('onclick', 'navigate(' . ($start + $limit) . ')');
-			$nextButton->setAttribute('class', 'navigationButton next');
-			$pagerDiv->appendChild($nextButton);
-		}
-
-		$pageInfo = $this->owner->document->createElement('p');
-		$pageInfo->setAttribute('class', 'pageInfo');
-		$infoString = ($start+1) . ' bis ' . min($limit + $start, $total_log_entries) . ' von ' . $total_log_entries;
-		$pageInfo->appendChild($this->owner->document->createTextNode($infoString));
-		$pagerDiv->appendChild($pageInfo);
-
-		return $pagerDiv;
-	}
 
 
 	public function __construct($owner) {
 		$this->owner = $owner;
 	}
+
 
 
 	// Erzeugt gemäß der Parameter den Output, der aus einer
@@ -105,7 +65,6 @@ class log {
 
 		$sql .= "ORDER BY oai_logs.time DESC ";
 		$sql .=	"LIMIT " . intval($start) . ", " . intval($limit);
-
 		$result = mysql_query($sql, $this->owner->db_link);
 		if (!$result) {
 			$error = new error($this->owner->document);
@@ -124,17 +83,19 @@ class log {
 
 
 		// Anzahl und Position ausgeben
-		if ($total_log_entries == 0) {
-			$logP = $this->makeElementWithText('p', 'Keine Lognachrichten vorhanden.', 'log-no-messages');
+		if ($total_log_entries === 0) {
+			$logP = $this->owner->makeElementWithText('p', 'Keine Lognachrichten vorhanden.', 'log-no-messages');
 			$logDiv->appendChild($logP);
 		}
 		else {
 			$logDiv->appendChild($this->pager($limit, $start, $total_log_entries));
 
 			$logTable = $this->owner->document->createElement('table');
+			$class = 'log';
 			if (is_null($oai_source_id)) {
-				$logTable->setAttribute('class', 'with-source-column');
+				$class .= ' with-source-column';
 			}
+			$logTable->setAttribute('class', $class);
 			$logDiv->appendChild($logTable);
 
 			$thead = $this->owner->document->createElement('thead');
@@ -197,6 +158,50 @@ class log {
 		}
 
 		return $logDiv;
+	}
+
+
+
+	// Erzeugt Pager mit Knöpfen zum Vor- und Zurücknavigieren und
+	// Anzeige der aktuellen Position.
+	private function pager ($limit, $start, $total_log_entries) {
+		$pagerDiv = $this->owner->document->createElement('div');
+		$pagerDiv->setAttribute('class', 'pager');
+
+		if ($start != 0) {
+			$firstButton = $this->owner->document->createElement('input');
+			$firstButton->setAttribute('type', 'button');
+			$firstButton->setAttribute('value', 'Neueste');
+			$firstButton->setAttribute('onclick', 'navigate(0)');
+			if ($start === 0) {
+				$firstButton->setAttribute('disabled', 'disabled');
+			}
+			$firstButton->setAttribute('class', 'navigationButton first');
+			$pagerDiv->appendChild($firstButton);
+
+			$prevButton = $this->owner->document->createElement('input');
+			$prevButton->setAttribute('type', 'button');
+			$prevButton->setAttribute('value', 'Neuere');
+			$prevButton->setAttribute('onclick', 'navigate(' . ($start - $limit) . ')');
+			$prevButton->setAttribute('class', 'navigationButton previous');
+			$pagerDiv->appendChild($prevButton);
+		}
+		if ($start + $limit < $total_log_entries) {
+			$nextButton = $this->owner->document->createElement('input');
+			$nextButton->setAttribute('type', 'button');
+			$nextButton->setAttribute('value', 'Ältere');
+			$nextButton->setAttribute('onclick', 'navigate(' . ($start + $limit) . ')');
+			$nextButton->setAttribute('class', 'navigationButton next');
+			$pagerDiv->appendChild($nextButton);
+		}
+
+		$pageInfo = $this->owner->document->createElement('p');
+		$pageInfo->setAttribute('class', 'pageInfo');
+		$infoString = ($start+1) . ' bis ' . min($limit + $start, $total_log_entries) . ' von ' . $total_log_entries;
+		$pageInfo->appendChild($this->owner->document->createTextNode($infoString));
+		$pagerDiv->appendChild($pageInfo);
+
+		return $pagerDiv;
 	}
 
 }
