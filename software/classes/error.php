@@ -3,7 +3,7 @@
 /**
  * Diese Klasse error gibt Markup für Fehlermeldungen zurück.
  */
-class errors {
+class error {
 
 	private $document;
 
@@ -17,15 +17,9 @@ class errors {
 		$errorDiv = $this->document->createElement('div');
 		$errorDiv->setAttribute('class', 'error');
 
-		$errorPre = $this->document->createElement('pre');
-		$errorPre->appendChild($this->document->createTextNode($SQLQuery));
-		$errorDiv->appendChild($errorPre);
-
+		$errorDiv->appendChild($this->makeElementWithText('pre', $SQLQuery));
 		$errorDiv->appendChild($this->document->createTextNode('führte zu'));
-
-		$errorEm = $this->document->createElement('em');
-		$errorEm->appendChild($this->document->createTextNode($errorMessage));
-		$errorDiv->appendChild($errorEm);
+		$errorDiv->appendChild($this->makeElementWithText('em', $errorMessage));
 
 		return $errorDiv;
 	}

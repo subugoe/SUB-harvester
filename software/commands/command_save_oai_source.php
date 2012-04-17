@@ -9,12 +9,8 @@ require_once(dirname(__FILE__) . '/commands.php');
  */
 class command_saveOAISource extends command {
 
-	public function getContent () {
-		global $db_link;
-		$content = '';
-
+	public function appendContent () {
 		require_once(dirname(__FILE__) . "/../classes/oai_source_data.php");
-		require_once(dirname(__FILE__) . "/../classes/button_creator.php");
 
 		$oai_source = new oai_source_data("post", 0, 0);
 
@@ -79,11 +75,9 @@ class command_saveOAISource extends command {
 				0,
 				'" . mysql_real_escape_string($oai_source->getComment()) . "')";
 
-		$button_creator = new button_creator();
 
-		if (mysql_query($sql, $db_link)) {
-
-			$source_id = mysql_insert_id($db_link);
+		if (mysql_query($sql, $this->db_link)) {
+			$source_id = mysql_insert_id($this->db_link);
 
 			$sql = "INSERT INTO oai_sets (
 						id,
@@ -98,7 +92,7 @@ class command_saveOAISource extends command {
 						VALUES ";
 
 			$sets = $oai_source->getSets();
-
+print_r($sets);
 			foreach($sets as $set) {
 				$sql .= "(NULL,"
 						. intval($source_id) . ",
@@ -112,23 +106,22 @@ class command_saveOAISource extends command {
 
 			$sql = substr($sql, 0, -2);
 
-			if (mysql_query($sql, $db_link)) {
-				$content .= "<p>OAI-Quelle gespeichert.</p>\n";
-				$content .= $button_creator->createButton("Zur Startseite");
-
+			if (mysql_query($sql, $this->db_link)) {
+				$this->contentElement->appendChild($this->makeElementWithText('p', 'OAI-Quelle gespeichert.'));
+				$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zur Startseite'));
 			} else {
-				$content .= "<p>Die Sets konnten nicht gespeichert werden. Bitte OAI-Quelle (über phpMyAdmin) löschen und ggf. neu anlegen.</p>\n";
-				$content .= $button_creator->createButton("Zurück");
+				$p = $this->makeElementWithText('p', 'Die Sets konnten nicht gespeichert werden. Bitte OAI-Quelle (zum Beispiel über phpMyAdmin) löschen und ggf. neu anlegen.');
+				$this->contentElement->appendChild($p);
+				$p->setAttribute('class', 'error');
+
+				$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zurück'));
 			}
 		} else {
-			$content .= "			<p>Fehler beim Speichern: ".mysql_error()."</p>\n";
-			$content .= "<pre>$sql</pre>";
-			$content .= $button_creator->createButton("Zurück");
+			$error = new error($this->document);
+			$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
+			$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zurück'));
 		}
-
-		return $content;
 	}
-
 
 }
 

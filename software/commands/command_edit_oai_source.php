@@ -110,7 +110,8 @@ class command_editOAISource extends command {
 			$form = $this->makeForm();
 			$this->contentElement->appendChild($form);
 			$form->setAttribute('class', 'edit');
-			$form->setAttribute('onsubmit', 'return validate_edit()');
+			$form->setAttribute('id', 'command');
+			$form->setAttribute('onsubmit', 'return validate()');
 
 			$form->appendChild($this->makeInput('hidden', 'do', 'update_oai_source'));
 			$form->appendChild($this->makeInput('hidden', 'edit_id', $this->parameters['id']));
@@ -137,7 +138,7 @@ class command_editOAISource extends command {
 				// Hinweis, bzw. Anzeigen einer vollständigen Neuindexierung
 				$note;
 				if($oai_source_data['reindex']) {
-					$note = $this->makeElementWithText('p', 'Diese Quelle wird augrund von Änderungen an den Einstellungen beim nächsten Harvesten komplett neu indexiert.', 'red');
+					$note = $this->makeElementWithText('p', 'Diese Quelle wird aufgrund von Änderungen an den Einstellungen beim nächsten Harvesten komplett neu indexiert.', 'red');
 				} else {
 					$note = $this->makeElementWithText('p', 'Achtung: Änderungen an der Indexierung (auch Land) führen zu einer kompletten Neuindexierung der OAI-Quelle.');
 				}
@@ -311,17 +312,18 @@ class command_editOAISource extends command {
 
 				$OAISetList->listSets();
 				if ($OAISetList->listSetsSuccessful()) {
-					$form->appendChild($OAISetList->getTablesForID($id));
+					$form->appendChild($OAISetList->makeTablesForComparisonWithID($id));
 				} else {
 					$p = $this->makeElementWithText('p', $OAISetList->getErrorMessage() . ' Es sind keine Änderungen an den Set-Einstellungen möglich.', 'error');
 					if ($OAISetList->getErrorCode() === 'noSetHierarchy') {
 						$p->setAttribute('id', 'noSetHierarchy');
 					}
 					$form->appendChild($p);
-					$form->appendChild($OAISetList->makeInactiveTables());
+					$form->appendChild($OAISetList->makeTables());
 				}
 
 				$p = $this->document->createElement('p');
+				$form->appendChild($p);
 				$p->setAttribute('class', 'buttons');
 				$button = $this->makeInput('submit', NULL, 'Löschen');
 				$button->setAttribute('onclick', 'remove(' . $oai_source_data['id'] . ')');

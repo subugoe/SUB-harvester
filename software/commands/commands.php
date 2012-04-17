@@ -1,6 +1,7 @@
 <?php
 
 require_once(dirname(__FILE__) . '/../classes/log.php');
+require_once(dirname(__FILE__) . '/../classes/error.php');
 
 abstract class command {
 
@@ -135,7 +136,6 @@ abstract class command {
 		$this->addJSToHead('resources/javascript/jquery.uitablefilter.js');
 		$this->addJSToHead('resources/javascript/jquery.tablesorter.min.js');
 		$this->addJSToHead('resources/javascript/common.js');
-		$this->addJSToHead('resources/javascript/add_oai_source.js');
 		$this->addJSToHead('resources/javascript/edit_oai_source.js');
 		$this->addJSToHead('resources/javascript/list_oai_sources.js');
 		$this->addJSToHead('resources/javascript/preview_oai_set.js');
@@ -160,6 +160,7 @@ abstract class command {
 	}
 
 
+
 	protected function addCSSToHead ($URL) {
 		if ($this->headElement && $URL) {
 			$linkElement = $this->document->createElement('link');
@@ -169,6 +170,7 @@ abstract class command {
 			$this->headElement->appendChild($linkElement);
 		}
 	}
+
 
 
 	protected function addJSToHead ($URL) {
@@ -205,6 +207,19 @@ abstract class command {
 		$form->setAttribute('action', $action);
 		$form->setAttribute('accept-charset', 'UTF-8');
 
+		return $form;
+	}
+
+
+
+	public function makeFormWithSubmitButton ($buttonText, $onclick = '') {
+		$form = $this->makeForm();
+		$button = $this->makeInput('submit', NULL, $buttonText);
+		$p = $this->makeElementWithContent('p', $button);
+		$form->appendChild($p);
+		if ($onclick !== '') {
+			$button->setAttribute('onclick', $onclick);
+		}
 		return $form;
 	}
 

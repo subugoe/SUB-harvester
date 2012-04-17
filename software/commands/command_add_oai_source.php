@@ -8,31 +8,18 @@ require_once(dirname(__FILE__) . '/commands.php');
  */
 class command_addOAISource extends command {
 
-	public function getContent () {
-		global $db_link;
-		$content = '';
+	public function appendContent () {
+		if ($this->parameters['add_oai_source'] != "") {
 
-		if ($_POST['add_oai_source'] != "") {
-
-			$url = trim($_POST['add_oai_source']);
+			$url = trim($this->parameters['add_oai_source']);
 
 			// Ist die OAI URL bereits vorhanden?
 			$sql = "SELECT id FROM oai_sources WHERE url = '" . mysql_real_escape_string($url) . "'";
-			$results = mysql_query($sql, $db_link);
+			$results = mysql_query($sql, $this->db_link);
 			if ($results && mysql_num_rows($results) > 0) {
 				$match = mysql_fetch_array($results, MYSQL_ASSOC);
-				$content .= "
-					<p>
-						Diese OAI-Quelle existiert bereits: Weiterleitung zur Bearbeitungsseite.
-					</p>
-					<form method=\"post\" id=\"forwarding\" action=\"index.php\" accept-charset=\"UTF-8\">
-						<input type=\"hidden\" name=\"id\" value=\"" . $match['id'] . "\">
-						<input type=\"hidden\" name=\"do\" value=\"edit_oai_source\">
-					</form>
-					<script type=\"text/javascript\">
-						jQuery(\"form#forwarding\").submit();
-					</script>
-					";
+				$this->contentElement->appendChild($this->makeElementWithText('p', 'Diese OAI-Quelle existiert bereits: Weiterleitung zur vorhandenen Seite.'));
+				$this->headElement->appendChild($this->makeRedirect('0; URL=./index.php?do=show_oai_source&id=' . $match['id']));
 			}
 			else {
 				// Versuchen, den Ländercode anhand der TLD zu erraten.
@@ -76,55 +63,57 @@ class command_addOAISource extends command {
 					$oai_identify = new oai_identify_parser($http_response);
 
 					if ($oai_identify->isResponseValid()) {
+						$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zur Startseite', 'gotoStart()'));
+						$this->contentElement->appendChild($this->makeElementWithText('h2', 'OAI-Quelle hinzufügen'));
 
-						$content .= "<p style=\"text-align: right; margin-top: -20px;\"><input type=\"button\" value=\" Zur Startseite\" onclick=\"gotoStart()\"></input></p>\n";
-						$content .= "<h2>OAI-Quelle hinzufügen</h2>";
-						$content .= "			<form method=\"post\" action=\"index.php\" onsubmit=\"return validate_add()\" accept-charset=\"UTF-8\">\n";
+						$form = $this->makeForm();
+						$this->contentElement->appendChild($form);
+						$form->setAttribute('class', 'edit new');
+						$form->setAttribute('onsubmit', 'return validate()');
+
+						$form->appendChild($this->makeInput('hidden', 'do', 'save_oai_source'));
 
 						// Allgemeine Einstellungen
+						$form->appendChild($this->makeElementWithText('h3', 'Allgemeine Eisntellungen'));
 
-						$content .= "				<h3>Allgemeine Einstellungen</h3>\n";
-						$content .= "				<table border=\"0\" width=\"100%\">\n";
-						$content .= "					<colgroup>\n";
-						$content .= "					    <col width=\"15%\" />\n";
-						$content .= "					    <col width=\"85%\" />\n";
-						$content .= "					 </colgroup>";
-						$content .= "					<tr>\n";
-						$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_name\" >Name:</td>\n";
-						$content .= "						<td align=\"left\"><input name=\"name\" type=\"text\" id=\"config_name\" size=\"100\" maxlength=\"250\" value=\"".$oai_identify->getRepositoryName()."\" /></td>\n";
-						$content .= "					</tr>\n";
-						$content .= "					<tr>\n";
-						$content .= "						<td align=\"right\" class=\"table_field_description\" >URL:</td>\n";
-						$content .= "						<td align=\"left\"><input name=\"url\" type=\"text\" size=\"100\" maxlength=\"250\" readonly=\"readonly\" value=\"".$_POST['add_oai_source']."\"/></td>\n";
-						$content .= "					</tr>\n";
-						$content .= "					<tr>\n";
-						$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_country\">Land:</td>\n";
-						$content .= "						<td align=\"left\">\n";
+						$form->appendChild($this->makeInputWithLabel('text', 'name', 'Name:', $oai_identify->getRepositoryName()));
 
-						require_once(dirname(__FILE__) . "/../classes/country_parser.php");
-						$countries = new country_parser($db_link);
-						$content .= $countries->getSelect($tld);
+						$urlFieldSpan = $this->makeInputWithLabel('text', 'url', 'URL:', $this->parameters['add_oai_source']);
+						$form->appendChild($urlFieldSpan);
+						$urlFieldSpan->firstChild->nextSibling->setAttribute('readonly', 'readonly');
 
-						$content .= "						</td>\n";
-						$content .= "					</tr>\n";
-						$content .= "					<tr>\n";
-						$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_from\">Harvesten ab:</td>\n";
-						$content .= "						<td align=\"left\"><input name=\"from\" id=\"config_from\" type=\"text\" size=\"10\" maxlength=\"10\" /></td>\n";
-						$content .= "					</tr>\n";
-						$content .= "					<tr>\n";
-						$content .= "						<td align=\"right\" class=\"table_field_description\" id=\"label_harvest\">Harvest-Rhythmus:</td>\n";
-						$content .= "						<td align=\"left\"><input name=\"harvest_period\" id=\"config_harvest\" type=\"text\" size=\"3\" maxlength=\"3\" value=\"7\" /> (Tage)</td>\n";
-						$content .= "					</tr>\n";
-						$content .= "					<tr>";
-						$content .= "						<td align=\"right\" valign=\"middle\" class=\"table_field_description\"><label for=\"harvest\">Aktiv:</label></td>\n";
-						$content .= "						<td align=\"left\" valign=\"middle\"><input id=\"harvest\" name=\"active\" type=\"checkbox\" checked=\"checked\"/></td>\n";
-						$content .= "					</tr>";
-						$content .= "					<tr>";
-						$content .= "						<td align=\"right\" valign=\"middle\" class=\"table_field_description\"><label for=\"harvest\">Kommentar:</label></td>\n";
-						$content .= "						<td align=\"left\" valign=\"middle\"><textarea name=\"comment\" cols=\"75\" rows=\"10\"></textarea></td>\n";
-						$content .= "					</tr>";
-						$content .= "				</table>\n";
+						$countrySpan = $this->document->createElement('span');
+						$form->appendChild($countrySpan);
+						$countrySpan->setAttribute('class', 'inputContainer');
+						$label = $this->makeLabel('country', 'Land:');
+						$countrySpan->appendChild($label);
+						require_once(dirname(__FILE__) . '/../classes/country_parser.php');
+						$countries = new country_parser($this);
+						$countrySelect = $countries->makeCountriesSelect($tld);
+						$countrySpan->appendChild($countrySelect);
+						$countrySelect->setAttribute('id', 'country');
 
+						$form->appendChild($this->makeInputWithLabel('text', 'from', 'Harvesten ab:'));
+
+						$rhythmus = $this->makeInputWithLabel('text', 'harvest_period', 'Harvest-Rhythmus:', 7);
+						$form->appendChild($rhythmus);
+
+						$checkboxAndLabel = $this->makeInputWithLabel('checkbox', 'active', 'Aktiv:');
+						$form->appendChild($checkboxAndLabel);
+						$checkbox = $checkboxAndLabel->lastChild;
+						$checkbox->setAttribute('checked', 'checked');
+
+						$commentSpan = $this->document->createElement('span');
+						$form->appendChild($commentSpan);
+						$commentSpan->setAttribute('class', 'inputContainer');
+						$commentSpan->appendChild($this->makeLabel('comment', 'Kommentare:'));
+						$textarea = $this->makeElementWithText('textarea', '');
+						$textarea->setAttribute('name', 'comment');
+						$commentSpan->appendChild($textarea);
+
+						$form->appendChild($this->makeClear());
+
+/*
 
 						// Nachbearbeitung
 
@@ -227,95 +216,68 @@ class command_addOAISource extends command {
 						$content .= "					<tr>\n";
 						$content .= "						<td align=\"right\" valign=\"middle\"><input id=\"view_dcpublisher\" name=\"view_publisher\" type=\"checkbox\" checked=\"checked\"/></td>\n";
 						$content .= "						<td align=\"left\" valign=\"middle\" class=\"table_field_description\"><label for=\"view_dcpublisher\">dc:publisher</label></td>\n";
-						$content .= "						<td><input type=\"hidden\" name=\"do\" value=\"save_oai_source\"></input></td>\n";
+						$content .= "
 						$content .= "					</tr>\n";
 						$content .= "					<tr>\n";
 						$content .= "						<td></td>\n";
 						$content .= "					</tr>\n";
 						$content .= "				</table>\n";
 
-
+*/
 						// Einstellungen zur Verlinkung
+						$form->appendChild($this->makeElementWithText('h3', 'Verlinkungseinstellungen'));
 
-						$content .= "				<h3>Verlinkungseinstellungen</h3>\n";
-						$content .= "				<table border=\"0\" width=\"100%\">\n";
-						$content .= "					<colgroup>\n";
-						$content .= "					    <col width=\"20%\" />\n";
-						$content .= "					    <col width=\"80%\" />\n";
-						$content .= "					 </colgroup>\n";
-						$content .= "					<tr>\n";
-						$content .= "						<td id=\"label_alternative\" align=\"right\" class=\"table_field_description\">Alternativer Link:</td>\n";
-						$content .= "						<td align=\"left\"><input name=\"identifier_alternative\" id=\"config_alternative\" type=\"text\" size=\"100\" maxlength=\"150\" value=\"" . preg_replace("/(.*\/\/[^\/]*\/).*/", "$1", $_POST['add_oai_source']) . "\"></input></td>\n";
-						$content .= "					</tr>\n";
-						$content .= "					<tr>\n";
-						$content .= "						<td id=\"label_filter\" align=\"right\" class=\"table_field_description\">Identifier-Filter:</td>\n";
-						$content .= "						<td align=\"left\"><input name=\"identifier_filter\" id=\"config_filter\" type=\"text\" size=\"100\" maxlength=\"100\" value=\"/^http.*/\"></input></td>\n";
-						$content .= "					</tr>\n";
-						$content .= "					<tr>\n";
-						$content .= "						<td align=\"right\" class=\"table_field_description\">Identifier-Resolver:</td>\n";
-						$content .= "						<td align=\"left\"><input name=\"identifier_resolver\" id=\"config_resolver\" type=\"text\" size=\"100\" maxlength=\"100\"></input></td>\n";
-						$content .= "					</tr>\n";
-						$content .= "					<tr>\n";
-						$content .= "						<td align=\"right\" class=\"table_field_description\">Identifier-Resolver-Filter:</td>\n";
-						$content .= "						<td align=\"left\"><input name=\"identifier_resolver_filter\" id=\"config_identifier_resolver\" type=\"text\" size=\"100\" maxlength=\"100\"></input></td>\n";
-						$content .= "					</tr>\n";
-						$content .= "				</table>\n";
+						$form->appendChild($this->makeInputWithLabel('text', 'identifier_alternative', 'Alternativer Link:', preg_replace("/(.*\/\/[^\/]*\/).*/", "$1", $this->parameters['add_oai_source'])));
+						$form->appendChild($this->makeInputWithLabel('text', 'identifier_filter', 'Identifier-Filter:', '/^http.*/'));
+						$form->appendChild($this->makeInputWithLabel('text', 'identifier_resolver', 'Identifier-Resolver:'));
+						$form->appendChild($this->makeInputWithLabel('text', 'identifier_resolver_filter', 'Identifier-Resolver-Filter:'));
+						$form->appendChild($this->makeClear());
 
 
 						// Geharvestete Sets
+						$form->appendChild($this->makeElementWithText('h3', 'Zu harvestende Sets'));
 
-						$content .= "
-						<h3>Zu harvestende Sets</h3>
-							<table class='sets realSets'>
-								<thead>
-									<th>Info</th>
-									<th></th>
-									<th>Name und ID</th>
-								</thead>
-								<tbody>";
+						require_once(dirname(__FILE__) . "/../classes/oai_set_list.php");
+						$OAISetList = new oai_set_list($this, $this->parameters['add_oai_source']);
 
-						require_once(dirname(__FILE__) . "/../classes/oai_listsets_parser.php");
-						$sets = new oai_listsets_parser($_POST['add_oai_source']);
-
-						if ($sets->listSetsSuccessful()) {
-							$content .= $sets->getSetTableRows();
+						$OAISetList->listSets();
+						if ($OAISetList->listSetsSuccessful()) {
+							$form->appendChild($OAISetList->makeTables());
 						} else {
-							$content .= $sets->getSetTableRows();
-							$content .= "<th colspan=\"3\" align=\"left\" style=\"text-indent: 3em; color: #272EC6;\">".$sets->getErrorMessage()."</th>";
+							$p = $this->makeElementWithText('p', $OAISetList->getErrorMessage(), 'error');
+							$form->appendChild($p);
+							$form->appendChild($OAISetList->makeTables($OAISetList->getErrorCode() === 'noSetHierarchy'));
 						}
 
-						$content .= "
-								</tbody>
-							</table>";
+						// Abbrechen und Speichern Knöpfe
+						$p = $this->document->createElement('p');
+						$form->appendChild($p);
+						$p->setAttribute('class', 'buttons');
 
+						$button = $this->makeInput('button', NULL, 'Abbrechen');
+						$p->appendChild($button);
+						$button->setAttribute('onclick', 'gotoStart()');
 
-						// Speichern- & Abbrechen-Button
+						$p->appendChild($this->makeInput('submit', NULL, 'Speichern'));
 
-						$content .= "			<p style=\"text-align: center; margin-top: 25px;\"><input type=\"button\" value=\" Abbrechen\" onclick=\"gotoStart()\"></input>&nbsp;&nbsp;<input type=\"submit\" value=\" Speichern\"></input></p>";
-						$content .= "			</form>";
-
-
-					} else {
-						$button_creator = new button_creator();
-						$content .= "			<p class=\"errormsg\">Die OAI-Quelle liefert eine nicht valide Antwort. Sie kann nicht hinzugefügt werden.</p>\n";
-						$content .= $button_creator->createButton("Zurück");
+					}
+					else {
+						$this->contentElement->appendChild($this->makeElementWithText('p', 'Die OAI-Quelle liefert eine nicht valide Antwort. Sie kann nicht hinzugefügt werden.', 'error'));
+						$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zurück'));
 					}
 
 				} else {
-					$button_creator = new button_creator();
-					$content .= "			<p class=\"errormsg\">Die URL ist ungültig oder der Sever nicht erreichbar.</p>\n";
-					$content .= $button_creator->createButton("Zurück");
+					$this->contentElement->appendChild($this->makeElementWithText('p', 'Die URL ist ungültig oder der Sever nicht erreichbar.', 'error'));
+					$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zurück'));
 				}
 
 				curl_close($ch);
 			}
-		} else {
-			$content .= "<meta http-equiv=\"refresh\" content=\"0; URL=./index.php\">";
 		}
-
-		return $content;
+		else {
+			$this->headElement->appendChild($this->makeRedirect());
+		}
 	}
-
 
 }
 

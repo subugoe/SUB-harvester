@@ -86,17 +86,13 @@ function preview(setSpec, setName, validationFunction) {
 
 // Verhindert, dass alle Sets und einzelne Sets gleichzeitig angewählt werden können.
 function validateSets() {
-	var set = 2;
-
-	if (document.getElementById('set1')) {
-		if (document.getElementById('set1').checked) {
-			for (var i = 2; document.getElementById('set' + i); i++) {
-				document.getElementById('set' + i).setAttribute('disabled', 'disabled');
-			}
-		} else {
-			for (var i = 2; document.getElementById('set' + i); i++) {
-				document.getElementById('set' + i).removeAttribute('disabled');
-			}
+	var jPseudoCheckbox = jQuery('.sets.pseudo input:checkbox');
+	if (jPseudoCheckbox.length > 0) {
+		if (jPseudoCheckbox[0].checked) {
+			jQuery('.sets.realSets input:checkbox').attr({'disabled': 'disabled'});
+		}
+		else {
+			jQuery('.sets.realSets input:checkbox').removeAttr('disabled');
 		}
 	}
 }

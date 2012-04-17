@@ -39,44 +39,49 @@ $(document).ready(function() {
 
 preview_counter = 1;
 
-function validate_edit(mode){
+function validate (mode) {
+	var result = false;
 
-	if (document.forms[0].elements['edit_abort'].value == 1 || document.forms[0].elements['do'].value == "list_oai_sources" ||  document.forms[0].elements['do'].value == "delete_oai_source") {
+	if (!jQuery('form.edit').hasClass('new')
+		&& (jQuery('form.edit')[0].elements['edit_abort'].value == 1
+			|| jQuery('form.edit')[0].elements['do'].value === 'list_oai_sources'
+			|| jQuery('form.edit')[0].elements['do'].value === 'delete_oai_source')){
 		// Änderungen sollen nicht gespeichert werden
-		return true;
-
-	} else {
-
-		// Änderungen werden gespeichert, müssen geprüft werden
+		result = true;
+	}
+	else {
 		var valid_config = 0;
 		var valid_set = false;
 
 		// Name
-		if (document.getElementById("name").value.length > 0) {
+	    if (document.getElementById("name").value.length > 0) {
 			valid_config++;
 			document.getElementById("label_name").style.color = "";
-		} else {
+		}
+		else {
 			document.getElementById("label_name").style.color = "red";
 		}
 
-		// Land
+		// Land (wird für Preview eigentlich nicht benötigt, aber sollte man ruhig setzen :-)
 		if (document.getElementById("country").selectedIndex > 0) {
 			valid_config++;
 			document.getElementById("label_country").style.color = "";
-		} else {
+		}
+		else {
 			document.getElementById("label_country").style.color = "red";
 		}
 
-		if (mode == "preview") {
+		if (mode === 'preview') {
 			// Für Preview nicht notwendig
 			valid_config++;
-		} else {
+		}
+		else {
 			// Harvest-Rhythmus
-			if (document.getElementById("harvest_period").value >= 0
-				&& document.getElementById("harvest_period").value != "") {
+			if (document.getElementById("harvest_period").value >= 0 && document.getElementById("harvest_period").value != "") {
 				valid_config++;
 				document.getElementById("label_harvest_period").style.color = "";
-			} else {
+			}
+			else {
 				document.getElementById("label_harvest_period").style.color = "red";
 			}
 		}
@@ -85,7 +90,8 @@ function validate_edit(mode){
 		if (document.getElementById("identifier_alternative").value != "") {
 			valid_config++;
 			document.getElementById("label_identifier_alternative").style.color = "";
-		} else {
+		}
+		else {
 			document.getElementById("label_identifier_alternative").style.color = "red";
 		}
 
@@ -93,37 +99,48 @@ function validate_edit(mode){
 		if (document.getElementById("identifier_filter").value != "") {
 			valid_config++;
 			document.getElementById("label_identifier_filter").style.color = "";
-		} else {
+		}
+		else {
 			document.getElementById("label_identifier_filter").style.color = "red";
 		}
 
-
-		// Soweit möglich mindestens ein Set selektiert?
+		// Soweit mögilch mindestens ein Set ausgewählt?
 		if (document.getElementById("noSetHierarchy")) {
 			// Die Quelle unterstützt keine Sets.
 			valid_set = true;
-		} else {
-			if (jQuery('.sets :checked').length > 0) {
-				valid_set = true;
-			}
+		}
+		else {
+			valid_set = (jQuery('.sets input:checked').length > 0);
 		}
 
 		// Ausgabe
-		if (valid_config == 5) {
+		var result = false;
+		if (valid_config === 5) {
 			if (mode === 'preview') {
-				return true;
+				result = true;
 			}
-			if (valid_set) {
-				return checkFromDate();
+			else if (valid_set) {
+				if (checkFromDate()) {
+					$("#label_from").css('color', '');
+					result = true;
+				}
+				else {
+					$("#label_from").css('color', 'red');
+					alert("Bitte den Wert vom Datumstool eingetragenen Wert nicht ändern.");
+				}
 			}
-			alert('Bitte mindestens ein Set zum Harvesten auswählen.');
-			return false;
-		} else {
-			alert('Bitte alle rot markierten Felder ausfüllen (Allgemeine Einstellungen)!');
-			return false;
-		}
+			else {
+				alert("Bitte mindestens ein Set zum Harvesten auswählen.");
+			}
+	    }
+	    else {
+			alert("Bitte alle rot markierten Felder im Bereich Allgemeine Einstellungen ausfüllen.");
+	    }
 	}
+
+	return result;
 }
+
 
 
 // Überprüft, ob Daten aus dem Index entfernt werden müssen, da ein neues "from" gesetzt wurde
@@ -138,26 +155,27 @@ function checkFromDate() {
 	// Für die Anzeige
 	var monate = new Array("Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember");
 
+	// Datumsangaben einlesen soweit vorhanden
+	var new_from_date;
+	if (new_from_string && new_from_string.length === 10) {
+		new_from_date = new Date(new_from_string.substr(0,4), new_from_string.substr(5,2), new_from_string.substr(8,2), 0, 0, 0);
+	}
+	var current_from_date;
+	if (current_from_string && current_from_string.length === 10) {
+		current_from_date = new Date(current_from_string.substr(0,4), current_from_string.substr(5,2), current_from_string.substr(8,2), 0, 0, 0);
+	}
+
 	// Evaluation, ob eine Zählung der zu löschenden Indexeinträge nötig ist
 	var need_index_count = false;
 
-	// Datumsangaben einlesen soweit vorhanden
-	if (new_from_string.length == 10) {
-		var new_from_date = new Date(new_from_string.substr(0,4), new_from_string.substr(5,2), new_from_string.substr(8,2), 0, 0, 0);
-	}
-	if (current_from_string.length == 10) {
-		var current_from_date = new Date(current_from_string.substr(0,4), current_from_string.substr(5,2), current_from_string.substr(8,2), 0, 0, 0);
-	}
-
 	// Sind beide Daten vorhanden? Vergleichen
-	if (new_from_string.length == 10 && current_from_string.length == 10) {
+	if (new_from_date && current_from_date) {
 		if (new_from_date > current_from_date) {
 			// Das neue from-Datum ist neuer, Prüfung ist nötig
 			need_index_count = true;
 		}
 	}
-
-	if (new_from_string.length == 10 && current_from_string.length == 0) {
+	else if (new_from_date && !current_from_date) {
 		// Bisher keine from-Datum gesetzt, Prüfung nötig
 		need_index_count = true;
 	}
@@ -184,7 +202,6 @@ function checkFromDate() {
 
 		var delete_date_string = "" + delete_date.getFullYear() + "-" + month + "-" + day;
 
-
 		// Für PHP Script speichern
 		$("#new_from_day_before").val(delete_date_string);
 
@@ -201,13 +218,13 @@ function checkFromDate() {
 
 		// Sind Einträge zu löschen, bestätigen lassen.
 		if (result_count > 0) {
-			save = confirm("Durch die Änderung des Startdatums ('Harvesten ab') auf den "+ new_from_date.getDate() +". "+ monate[new_from_date.getMonth()-1] + " "+ new_from_date.getFullYear() +" werden " + result_count + " Indexeinträge gelöscht. Änderungen trotzdem speichern?" );
+			save = confirm("Durch die Änderung des Startdatums »Harvesten ab« auf den " + new_from_date.getDate() + ". " + monate[new_from_date.getMonth()-1] + " " + new_from_date.getFullYear() + " werden " + result_count + " Indexeinträge gelöscht. Änderungen trotzdem speichern?");
 			return save;
 		}
 		// Keine Indexeinträge betroffen, Nutzer wird nicht gefragt.
 		return true;
-
-	} else if (new_from_string.length == 0 && current_from_string.length == 10) {
+	}
+	else if (!new_from_date && current_from_date) {
 
 		// Anzahl der zu löschenden Datensätze ermitteln
 		var solr_xml_reply = $.ajax({
@@ -220,26 +237,27 @@ function checkFromDate() {
 
 		var result_count = $(solr_xml_reply).find("result").attr("numFound");
 
-		save = confirm("Der 'Harvesten ab' Zeitpunkt wurde gelöscht. Im Index befinden sich zurzeit "+ result_count +" Einträge ab dem "+ current_from_date.getDate() +". "+ monate[current_from_date.getMonth()-1] + " "+ current_from_date.getFullYear() +". Soll die Quelle ohne Startzeitpunkt neu geharvested werden?");
+		save = confirm("Der »Harvesten ab« Zeitpunkt wurde gelöscht. Im Index befinden sich zurzeit "+ result_count +" Einträge ab dem "+ current_from_date.getDate() +". "+ monate[current_from_date.getMonth()-1] + " "+ current_from_date.getFullYear() +". Soll die Quelle ohne Startzeitpunkt neu geharvested werden?");
 
 		if (!save) {
 			$("#config_from").val(current_from_string);
-			alert("Voheriger 'Harvesten ab' Zeitpunkt wurde wieder eingetragen.");
+			alert("Voheriger »Harvesten ab« Zeitpunkt wurde wieder eingetragen.");
 			return false;
 		} else {
 			return true;
 		}
 
-	} else if (new_from_string.length != 0 && new_from_string.length != 10 ) {
+	}
+	else if (new_from_string && new_from_string.length != 0 && new_from_string.length != 10 ) {
 		// Markieren
 		$("#label_from").css('color', 'red');
 		// Wert zurücksetzen
 		$("#from").val(current_from_string);
-		alert("Ungültige Eingabe bei 'Harvsten ab'. Voheriger Zeitpunkt wurde wieder eingetragen.");
+		alert("Ungültige Eingabe bei »Harvesten ab«. Voheriger Zeitpunkt wurde wieder eingetragen.");
 
 		return false;
-
-	} else {
+	}
+	else {
 		// Kein "from" eingengeben, kein "from" bisher in der Datenbank, ohne Bestätigung speichern
 		return true;
 	}

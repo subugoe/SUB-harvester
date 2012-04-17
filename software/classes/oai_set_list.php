@@ -9,14 +9,151 @@ class oai_set_list {
 	protected $url;
 
 	protected $sets = array();
+	protected $pseudo_set = array('setName' => 'allSets', 'setSpec' => 'allSets');
 	protected $error = "";
 	protected $error_code = "";
+
 
 
 	public function __construct ($owner, $url) {
 		$this->owner = $owner;
 		$this->url = $url;
 	}
+
+
+
+	public function makeTables ($noSetHierarchy = FALSE) {
+		$container = $this->owner->document->createElement('div');
+
+		// Pseudo-Set
+		$container->appendChild($this->makeTableForSets(Array($this->pseudo_set), 'unchanged', 'pseudo', ($noSetHierarchy === FALSE)));
+
+		// Filter UI
+		$container->appendChild($this->makeFilterP());
+
+		// Sets
+		if (count($this->sets) > 0) {
+			$container->appendChild($this->owner->makeElementWithText('h3', 'Sets'));
+			$container->appendChild($this->makeTableForSets($this->sets, 'unchanged', 'realSets'));
+		}
+
+		return $container;
+	}
+
+
+
+	public function makeTableForSets ($sets, $setType, $extraClass = '', $active = TRUE, $IDOffset = 0) {
+		$table = $this->owner->document->createElement('table');
+		$table->setAttribute('class', trim('sets ' . $setType . ' ' . $extraClass));
+
+		if (count($sets) > 0) {
+			$thead = $this->owner->document->createElement('thead');
+			$table->appendChild($thead);
+			$thead->appendChild($this->owner->makeElementWithText('th', 'Info'));
+			$thead->appendChild($this->owner->document->createElement('th'));
+			$thead->appendChild($this->owner->makeElementWithText('th', 'Name und ID'));
+
+			$tbody = $this->owner->document->createElement('tbody');
+			$table->appendChild($tbody);
+
+			foreach ($sets as $setIndex => $set) {
+				$tbody->appendChild($this->makeRowForSet($set, $setType, $setIndex + $IDOffset, $active));
+			}
+		}
+
+		return $table;
+	}
+
+
+
+	public function makeRowForSet ($set, $setType, $setIndex, $active = TRUE) {
+		$tr = $this->owner->document->createElement('tr');
+		$td = $this->owner->document->createElement('td');
+		$tr->appendChild($td);
+		$td->setAttribute('class', 'column1');
+
+		// Preview button
+		$previewButton = $this->owner->makeInput('button', 'set_' . $setType . '_' . $setIndex . '_preview', 'Vorschau');
+		$td->appendChild($previewButton);
+		$previewButton->setAttribute('onclick', 'preview("' . $set['setSpec'] . '", "' . $set['setName'] . '", validate_edit)');
+
+		// Link to OAI ListRecords command.
+		$a = $this->owner->makeElementWithText('a', 'OAI-XML anzeigen', 'OAILink');
+		$td->appendChild($a);
+		$a->setAttribute('onclick', 'window.open(this.href, "_blank"); return false;');
+		$XMLURL = $this->url . '?verb=ListRecords&metadataPrefix=oai_dc';
+		if (array_key_exists('setSpec', $set) && $set['setSpec'] !== 'allSets') {
+			$XMLURL .= '&set=' . $set['setSpec'];
+		}
+		$a->setAttribute('href', $XMLURL);
+
+		$basicValueName = 'sets[' . $setType . '][' . $setIndex . ']';
+
+		// Checkbox
+		$checkbox = $this->owner->makeInput('checkbox', $basicValueName . '[harvest]');
+		$id = 'set-' . $setType . '-' . $setIndex;
+		$checkbox->setAttribute('id', $id);
+		$checkbox->setAttribute('onclick', 'validateSets()');
+		if (array_key_exists('harvest', $set) && $set['harvest']) {
+			$checkbox->setAttribute('checked', 'checked');
+		}
+		if (!$active) {
+			$checkbox->setAttribute('disabled', 'disabled');
+		}
+		$tr->appendChild($this->owner->makeElementWithContent('td', $checkbox, 'column2'));
+
+		// Set name and spec
+		$label = $this->owner->makeLabel($id, $set['setName']);
+		$label->appendChild($this->owner->document->createTextNode(' '));
+		$specSpan = $this->owner->makeElementWithText('span', '(' . $set['setSpec'] . ')', 'setSpec');
+		$label->appendChild($specSpan);
+
+		// Hidden fields with Set information
+		$td->appendChild($this->owner->makeInput('hidden', $basicValueName . '[setName]', $set['setName']));
+		$td->appendChild($this->owner->makeInput('hidden', $basicValueName . '[setSpec]', $set['setSpec']));
+		if (array_key_exists('id', $set)) {
+			$td->appendChild($this->owner->makeInput('hidden', $basicValueName . '[id]', $set['id']));
+		}
+		$tr->appendChild($this->owner->makeElementWithContent('td', $label, 'column3 table_field_description'));
+
+		return $tr;
+	}
+
+
+
+	public function makeFilterP () {
+		$filterP = $this->owner->document->createElement('p');
+
+		$filterP->appendChild($this->owner->makeLabel('filterField', 'Angezeigte Sets filtern:'));
+
+		$input = $this->owner->makeInput('search');
+		$filterP->appendChild($input);
+		$input->setAttribute('id', 'filterField');
+		$input->setAttribute('placeholder', 'Filter');
+		$input->setAttribute('onsearch', 'var myTables = jQuery("table.realSets"); jQuery.uiTableFilter(myTables, this.value);');
+		$input->setAttribute('onkeyup', 'var myTables = jQuery("table.realSets"); if (this.value.length >  2) { jQuery.uiTableFilter(myTables, this.value, "Name und ID");}');
+
+		$filterP->appendChild($this->owner->document->createTextNode('Sortieren nach:'));
+		$a = $this->owner->makeElementWithText('a', 'Name');
+		$filterP->appendChild($a);
+		$a->setAttribute('href', '#');
+		$a->setAttribute('onclick', 'jQuery("table.realSets").tablesorter({sortList:[[2,0]]}); return false;');
+
+		$filterP->appendChild($this->owner->document->createTextNode(', '));
+		$a = $this->owner->makeElementWithText('a', 'ID');
+		$filterP->appendChild($a);
+		$a->setAttribute('href', '#');
+		$a->setAttribute('onclick', 'jQuery("table.realSets").tablesorter({sortList:[[2,0]], textExtraction:function(node) {
+			var setSpecs = jQuery("span.setSpec", node);
+				if (setSpecs.length > 0) {
+					return setSpecs[0].innerHTML;
+				}
+				return "";
+			}}); return false;');
+
+		return $filterP;
+	}
+
 
 
 	public function listSets () {
@@ -176,20 +313,6 @@ class oai_set_list {
 	// Gibt den Fehlercode zurück, leerer String, falls kein Fehler.
 	public function getErrorCode() {
 		return $this->error_code;
-	}
-
-
-
-	public function makeInactiveTables () {
-		$container = $this->owner->document->createElement('div');
-
-		// Pseudo-Set
-		$container->appendChild($this->makeTableForSets(Array($this->pseudo_set), 'unchanged', NULL, FALSE));
-
-		// Sets
-		$container->appendChild($this->makeTableForSets($this->sets, 'unchanged', NULL, FALSE));
-
-		return $container;
 	}
 
 }

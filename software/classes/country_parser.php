@@ -31,7 +31,7 @@ class country_parser {
 		}
 
 		if (!$hasSelectedItem) {
-			$options = array_splice($options, 0, 0, Array(Array('value' => '', 'label' => 'Bitte auswählen', 'defaultSelection' => TRUE)));
+			array_splice($options, 0, 0, Array(Array('value' => '', 'label' => 'Bitte auswählen', 'defaultSelection' => TRUE)));
 		}
 
 		$select = $this->owner->makeSelectWithOptions('country', $options);
