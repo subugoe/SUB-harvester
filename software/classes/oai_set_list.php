@@ -75,7 +75,7 @@ class oai_set_list {
 		// Preview button
 		$previewButton = $this->owner->makeInput('button', 'set_' . $setType . '_' . $setIndex . '_preview', 'Vorschau');
 		$td->appendChild($previewButton);
-		$previewButton->setAttribute('onclick', 'preview("' . $set['setSpec'] . '", "' . $set['setName'] . '", validate_edit)');
+		$previewButton->setAttribute('onclick', 'preview("' . $set['setSpec'] . '", "' . $set['setName'] . '", validate)');
 
 		// Link to OAI ListRecords command.
 		$a = $this->owner->makeElementWithText('a', 'OAI-XML anzeigen', 'OAILink');

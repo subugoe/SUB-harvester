@@ -29,8 +29,9 @@ class command_showOAISource extends command {
 		$sql = "SELECT 	oai_sources.id ,
 						oai_sources.url ,
 						oai_sources.name ,
-						oai_sources.reindex ,
-						oai_sources.view_creator AS 'v_dc:creator',
+						oai_sources.reindex ," .
+
+/*						oai_sources.view_creator AS 'v_dc:creator',
 						oai_sources.view_contributor AS 'v_dc:contributor' ,
 						oai_sources.view_publisher AS 'v_dc:publisher' ,
 						oai_sources.view_date AS 'v_dc:date' ,
@@ -49,7 +50,8 @@ class command_showOAISource extends command {
 						oai_sources.identifier_resolver_filter ,
 						oai_sources.identifier_alternative ,
 						oai_sources.dc_date_postproc AS dc_date_postproc,
-						oai_sources.comment AS comment ,
+*/
+						"oai_sources.comment AS comment ,
 						countries.name_german AS country_name ,
 						oai_sources.active ,
 						DATE_FORMAT(oai_sources.added, '%W, %e. %M %Y, %k:%i Uhr') AS added ,
@@ -262,125 +264,6 @@ class command_showOAISource extends command {
 
 
 
-	private function makeGeneralInformation ($oai_source_data, $oai_source_status) {
-		$container = $this->document->createElement('div');
-		$container->appendChild($this->makeElementWithText('h3', 'Allgemeine Informationen'));
-
-		$dl = $this->document->createElement('dl');
-		$container->appendChild($dl);
-		$this->appendDTDDWithTextTo('Name:', $oai_source_data['name'], $dl);
-
-		if ($oai_source_status > 0) {
-			$lastDD = $dl->lastChild;
-			$a = $this->makeElementWithText('a', 'Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.', 'errorIcon');
-			$dl->lastChild->appendChild($a);
-			$a->setAttribute('href', '#logs');
-		}
-
-		$this->appendDTDDWithTextTo('Request URL:', $oai_source_data['url'], $dl);
-
-		$this->appendDTDDWithTextTo('Interne ID:', $oai_source_data['id'], $dl);
-
-		$this->appendDTDDWithTextTo('Hinzugefügt:', $oai_source_data['added'], $dl);
-
-		$this->appendDTDDWithTextTo('Land:', $oai_source_data['country_name'], $dl);
-
-		$img = $this->document->createElement('img');
-		if ($oai_source_data['active']) {
-			$img->setAttribute('src', 'resources/images/ok.png');
-			$img->setAttribute('alt', 'OAI-Quelle wird geharvestet.');
-		} else {
-			$img->setAttribute('src', 'resources/images/not_ok.png');
-			$img->setAttribute('alt', 'OAI-Quelle wird nicht geharvestet.');
-		}
-		$this->appendDTDDWithContentTo($this->document->createTextNode('Aktiv:'), $img, $dl);
-
-		$img = $this->document->createElement('img');
-		if ($oai_source_data['active']) {
-			$img->setAttribute('src', 'resources/images/ok.png');
-			$img->setAttribute('alt', 'OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert.');
-		} else {
-			$img->setAttribute('src', 'resources/images/not_ok.png');
-			$img->setAttribute('alt', 'OAI-Quelle ist nicht zur Neuindexierung markiert.');
-		}
-		$this->appendDTDDWithContentTo($this->document->createTextNode('Neuindexierung:'), $img, $dl);
-
-		$fromText = 'Für diese Quelle ist kein Startzeitpunkt festgelegt.';
-		if (!is_null($oai_source_data['from'])) {
-			$fromText = $oai_source_data['from'];
-		}
-		$this->appendDTDDWithTextTo('Request URL:', $fromText, $dl);
-
-		$intervalText = 'täglich';
-		if ($oai_source_data['harvest_period'] > 1) {
-			$intervalText = 'Alle ' . $oai_source_data['harvest_period'] . ' Tage';
-		}
-		$this->appendDTDDWithTextTo('Harvest-Rhythmus:', $intervalText, $dl);
-
-		$lastHarvestDate = 'Diese Quelle wurde noch nicht geharvested.';
-		if (!empty($oai_source_data['last_harvested'])) {
-			$lastHarvestDate = $oai_source_data['last_harvested'];
-		}
-		$this->appendDTDDWithTextTo('Letztes erfolgreiches Harvesten:', $lastHarvestDate, $dl);
-
-		$lastIndexDate = 'Diese Quelle wurde noch nicht indexiert.';
-		if (!empty($oai_source_data['last_indexed'])) {
-			$lastIndexDate = $oai_source_data['last_indexed'];
-		}
-		$this->appendDTDDWithTextTo('Letztes erfolgreiches Indizieren:', $lastIndexDate, $dl);
-
-		$nextHarvestDate = $oai_source_data['next_harvest'];
-		if ($nextHarvestDate === NULL) {
-			$nextHarvestDate = strftime('%A, %d. %B %Y', time() + 86400);
-		}
-		$this->appendDTDDWithTextTo('Nächstes Harvesten:', $nextHarvestDate, $dl);
-
-		$index_entry_count = $this->getIndexEntryCount($oai_source_data);
-		$class = '';
-		if ($index_entry_count === -1) {
-			$index_entry_count = 'Der Index ist zurzeit nicht erreichbar.';
-			$class = 'warning';
-		}
-		$this->appendDTDDWithTextTo('Anzahl der Indexeinträge:', $index_entry_count, $dl, $class);
-
-		$this->appendDTDDWithTextTo('Kommentar:', $oai_source_data['comment'], $dl);
-
-		$container->appendChild($this->makeClear());
-
-		return $container;
-	}
-
-
-
-	private function getIndexEntryCount ($oai_source_data) {
-		$index_entry_count = 0;
-
-		// Index abfragen
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, SOLR . '/select?version=2.2&rows=0&q=oai_repository_id%3A' . $oai_source_data['id']);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-		$http_response = curl_exec($ch);
-
-		if ($http_response && curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200) {
-			$dom = new DOMDocument();
-			$dom->loadXML($http_response);
-
-			$XPath = new DOMXPath($dom);
-			$XPath_count_query = $XPath->query('/response/result/@numFound');
-
-			$index_entry_count = $XPath_count_query->item(0)->nodeValue;
-		}
-		else {
-			// Der Server ist nicht erreichbar
-			$index_entry_count = -1;
-		}
-
-		return $index_entry_count;
-	}
-
-
-
 	private function makeIdentifierInformation ($oai_source_data) {
 		$container = $this->document->createElement('div');
 		$container->appendChild($this->makeElementWithText('h3', 'Allgemeine Informationen'));
@@ -415,47 +298,6 @@ class command_showOAISource extends command {
 		$container->appendChild($this->makeClear());
 
 		return $container;
-	}
-
-
-
-	private function makeButtons ($oai_source_data) {
-		$form = $this->makeForm();
-		$form->setAttribute('id', 'command');
-
-		$form->appendChild($this->makeInput('hidden', 'do', 'list_oai_sources'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_url'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_bool', 'AND'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_sortby', 'name'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_sorthow', 'ASC'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'id'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'start', 0));
-		$form->appendChild($this->makeInputForParameter('hidden', 'limit', 20));
-		$form->appendChild($this->makeInputForParameter('hidden', 'show_active', 0));
-		$form->appendChild($this->makeInputForParameter('hidden', 'show_status', 0));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
-		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
-
-		$p = $this->document->createElement('p');
-		$form->appendChild($p);
-		$p->setAttribute('class', 'buttons');
-
-		$button = $this->makeInput('submit', NULL, 'Bearbeiten');
-		$p->appendChild($button);
-		$button->setAttribute('onclick', 'edit(' . $oai_source_data['id'] . ')');
-
-		$button = $this->makeInput('submit', NULL, 'Löschen');
-		$p->appendChild($button);
-		$button->setAttribute('onclick', 'remove(' . $oai_source_data['id'] . ')');
-
-		$button = $this->makeInput('submit', NULL, 'Zurück zur Quellenliste');
-		$p->appendChild($button);
-
-		return $form;
 	}
 
 }

@@ -8,9 +8,7 @@ require_once(dirname(__FILE__) . '/commands.php');
  */
 class command_previewOAISet extends command {
 
-	public function getContent () {
-		global $db_link;
-		$content = '';
+	public function appendContent () {
 
 		/*
 		 * Erzeugt ein Preview einer Suchergebnisliste eines Sets anhand
@@ -22,11 +20,8 @@ class command_previewOAISet extends command {
 
 		set_time_limit(120);
 
-		$content = "";
-
-		//
-		$content .= "	<p style=\"text-align: right; margin-top: -20px;\"><input type=\"submit\" value=\" Previewfenster schließen\" onclick=\"window.close()\"></input></p>\n";
-		$content .= "	<h2>Preview</h2>\n";
+		$this->contentElement->appendChild($this->makeFormWithSubmitButton('Vorschaufenster schließen', 'window.close()'));
+		$this->contentElement->appendChild($this->makeElementWithText('h2', 'Vorschau'));
 
 		// Harvesten
 		$oai_listrecords_ch = curl_init();
@@ -40,9 +35,9 @@ class command_previewOAISet extends command {
 		// Ignoriere ungültige SSL-Zertifikate bei HTTPS
 		curl_setopt($oai_listrecords_ch, CURLOPT_SSL_VERIFYPEER, false);
 
-		$url = $_GET['url']."?verb=ListRecords&metadataPrefix=oai_dc";
+		$url = $this->parameters['url'] . '?verb=ListRecords&metadataPrefix=oai_dc';
 		// Set oder alles?
-		$url .= isset($_GET['setSpec']) ? "&set=".$_GET['setSpec'] : "";
+		$url .= isset($this->parameters['setSpec']) ? '&set=' . $this->parameters['setSpec'] : "";
 
 		curl_setopt($oai_listrecords_ch, CURLOPT_URL, $url);
 
@@ -55,7 +50,6 @@ class command_previewOAISet extends command {
 
 			// DOM-Element erzeugen
 			if ($dom->loadXML($http_response)) {
-
 				// Gibt es einen Error?
 				$error_node = $dom->getElementsByTagName('error');
 
@@ -65,31 +59,34 @@ class command_previewOAISet extends command {
 
 					if ($error_node->item(0)->getAttribute('code') == "noRecordsMatch") {
 						// Fehlercode für keine Records in der Selektierten Menge
-						if (isset($_GET['setSpec'])) {
-							$content .= "<p>Dieses Set enthält keine Datensätze.</p>";
-						} else {
-							$content .= "<p>Diese OAI-Quelle enthält keine Datensätze.</p>";
+						if (isset($this->parameters['setSpec'])) {
+							$this->contentElement->appendChild($this->makeElementWithText('p', 'Dieses Set enthält keine Datensätze.'));
 						}
-					} else {
-						$content .= "<p>Fehler beim Harvesten - ".$error_node->item(0)->getAttribute('code').": ".$error_node->item(0)->nodeValue."</p>";
+						else {
+							$this->contentElement->appendChild($this->makeElementWithText('p', 'Diese OAI-Quelle enthält keine Datensätze.'));
+						}
 					}
-				} else {
-
-					// Alle records ermitteln
+					else {
+						$this->contentElement->appendChild($this->makeElementWithText('p', 'Fehler beim Harvesten – ' . $error_node->item(0)->getAttribute('code') . ': ' . $error_node->item(0)->nodeValue), 'error');
+					}
+				}
+				else {
+					// Alle Records ermitteln
 					$record_nodes = $dom->getElementsByTagName('record');
 
 					if ($record_nodes->length < 1) {
 						// Es gibt keine Records
 						// Dieser Fall sollte gemäß Protokoll nicht eintreten, da es dafür einen
 						// Errorcode gibt... aber man weiß ja nie...
-						if (isset($_GET['setSpec'])) {
-							$content .= "<p>Dieses Set enthält keine Datensätze.</p>";
-						} else {
-							$content .= "<p>Diese OAI-Quelle enthält keine Datensätze.</p>";
+						if (isset($this->parameters['setSpec'])) {
+							$this->contentElement->appendChild($this->makeElementWithText('p', 'Dieses Set enthält keine Datensätze.'));
+						}
+						else {
+							$this->contentElement->appendChild($this->makeElementWithText('p', 'Diese OAI-Quelle enthält keine Datensätze.'));
 						}
 
-					} else {
-
+					}
+					else {
 						// Wenn keine oai_dc-Elemente gefunden werden, wird es auf false gesetzt
 						// und das Indexieren abgebrochen
 						$oai_dc = true;
@@ -116,24 +113,24 @@ class command_previewOAISet extends command {
 									$link_found = false;
 									foreach($dc_identifier_nodes as $dc_identifier) {
 
-										if (preg_match($_GET['identifier_filter'], $dc_identifier->nodeValue)) {
+										if (preg_match($this->parameters['identifier_filter'], $dc_identifier->nodeValue)) {
 
 											// Passendes Element gefunden
 											$link = $dc_identifier->nodeValue;
 											$link_found = true;
 
-											if ($_GET['identifier_resolver'] != "") {
-												if ($_GET['identifier_resolver_filter'] != "") {
+											if ($this->parameters['identifier_resolver'] != "") {
+												if ($this->parameters['identifier_resolver_filter'] != "") {
 
 													// Resolver-Filter ist gesetzt
 													// Resolver nur hinzufügen, wenn der Filter erfolgreich ist
-													if (preg_match($_GET['identifier_resolver_filter'], $link)) {
-														$link = $_GET['identifier_resolver'].$link;
+													if (preg_match($this->parameters['identifier_resolver_filter'], $link)) {
+														$link = $this->parameters['identifier_resolver'].$link;
 													}
 
 												} else {
 													// Kein Resolver-Filter gesetzt, Resolver einfach hinzufügen
-													$link = $_GET['identifier_resolver'].$link;
+													$link = $this->parameters['identifier_resolver'].$link;
 												}
 											}
 
@@ -149,7 +146,7 @@ class command_previewOAISet extends command {
 									if (!$link_found) {
 										// Aus keinem dc:identifier-Element konnte eine URL gebildet werden
 										// default setzen
-										$link = $_GET['identifier_alternative'];
+										$link = $this->parameters['identifier_alternative'];
 										// Neues oai_url-Element erzeugen
 										$node = $dom->createElementNS('http://www.eromm.org/eromm_oai_harvester/', 'eromm_oai:oai_url');
 										// Wert auf den link setzten
@@ -157,9 +154,10 @@ class command_previewOAISet extends command {
 										// und einhängen
 										$oai_dc_node->item(0)->appendChild($node);
 									}
-								} else {
+								}
+								else {
 									// Es kann keine URL gebildet werden, default setzen
-									$link = $_GET['identifier_alternative'];
+									$link = $this->parameters['identifier_alternative'];
 									// Neues oai_url-Element erzeugen
 									$node = $dom->createElementNS('http://www.eromm.org/eromm_oai_harvester/', 'eromm_oai:oai_url');
 									// Wert auf den link setzten
@@ -167,7 +165,8 @@ class command_previewOAISet extends command {
 									// und einhängen
 									$oai_dc_node->item(0)->appendChild($node);
 								}
-							} else { //Ende if $oai_dc_node->length > 0
+							} //Ende if $oai_dc_node->length > 0
+							else {
 								// Prüfen ob es eine Update-Meldung gibt
 								$header_node = $record_node->getElementsByTagName('header');
 
@@ -179,8 +178,17 @@ class command_previewOAISet extends command {
 									// Kann nur passieren, wenn der Namespace falsch benannt ist
 									// Sollte eigentlich nicht vorkommen, aber in Praxis leider schon gesehen (SBB)
 									// Damit sollte das Indexieren dieser Quelle abgebrochen werden
-									$content .= "	<p style=\"text-align: center;\"><a href=\"".$_GET['url']."?verb=ListRecords&amp;metadataPrefix=oai_dc".( isset($_GET['setSpec']) ? "&amp;set=".$_GET['setSpec'] : "" )."\" onclick=\"window.open(this.href, '_blank'); return false;\"><img style=\"vertical-align: top;\" src=\"resources/images/xml.png\" alt=\"OAI-XML anzeigen\" title=\"OAI-XML anzeigen\" /></a></p>";
-									$content .= "<p>Keine \"oai_dc-Elemente\" gefunden! Bitte XML prüfen!</p>";
+									$a = $this->makeElementWithText('a', 'OAI-XML anzeigen', 'OAILink');
+									$a->setAttribute('onclick', 'window.open(this.href, "_blank"); return false;');
+									$XMLURL = $this->url . '?verb=ListRecords&metadataPrefix=oai_dc';
+									if (array_key_exists('setSpec', $this->parameters) && $this->parameters['setSpec'] !== 'allSets') {
+										$XMLURL .= '&set=' . $set['setSpec'];
+									}
+									$a->setAttribute('href', $XMLURL);
+
+									$this->contentElement->appendChild($this->makeElementWithContent('p', $a));
+									$this->contentElement->appendChild($this->makeElementWithText('p', 'Keine »oai_dc-Elemente« gefunden! Bitte XML prüfen.'));
+
 									$oai_dc = false;
 									break;
 								}
@@ -199,22 +207,22 @@ class command_previewOAISet extends command {
 							// Parameter setzen
 							$xsl_parameters = array(
 							    'timestamp' 			=> date('Y.m.d, H:i:s'),
-							    'country_code' 			=> $_GET['country'],
+							    'country_code' 			=> $this->parameters['country'],
 								'oai_repository_id'		=> 'unset',
-								'i_cre' 				=> $_GET['i_cre'],
-								'i_con' 				=> $_GET['i_con'],
-								'i_pub' 				=> $_GET['i_pub'],
-								'i_dat' 				=> $_GET['i_dat'],
-								'i_ide' 				=> $_GET['i_ide'],
-								'i_rel' 				=> $_GET['i_rel'],
-								'i_sub' 				=> $_GET['i_sub'],
-								'i_des' 				=> $_GET['i_des'],
-								'i_sou' 				=> $_GET['i_sou'],
-								'v_cre' 				=> $_GET['v_cre'],
-								'v_con' 				=> $_GET['v_con'],
-								'v_pub' 				=> $_GET['v_pub'],
-								'v_dat' 				=> $_GET['v_dat'],
-								'v_ide' 				=> $_GET['v_ide']
+								'i_cre' 				=> $this->parameters['i_cre'],
+								'i_con' 				=> $this->parameters['i_con'],
+								'i_pub' 				=> $this->parameters['i_pub'],
+								'i_dat' 				=> $this->parameters['i_dat'],
+								'i_ide' 				=> $this->parameters['i_ide'],
+								'i_rel' 				=> $this->parameters['i_rel'],
+								'i_sub' 				=> $this->parameters['i_sub'],
+								'i_des' 				=> $this->parameters['i_des'],
+								'i_sou' 				=> $this->parameters['i_sou'],
+								'v_cre' 				=> $this->parameters['v_cre'],
+								'v_con' 				=> $this->parameters['v_con'],
+								'v_pub' 				=> $this->parameters['v_pub'],
+								'v_dat' 				=> $this->parameters['v_dat'],
+								'v_ide' 				=> $this->parameters['v_ide']
 							);
 
 							$oai2index_xsl->setParameter('', $xsl_parameters);
@@ -241,21 +249,24 @@ class command_previewOAISet extends command {
 								if ($solr_add_xml->loadXML($solr_add_string)) {
 
 									// Statisch
-
-									$content .= "	<h3 style=\"text-align: center; text-indent: 0; font-weight: normal; margin-top: -15px;\">".$_GET['name'];
-									// Sind Name oder setSpec gesetzt?
-									$content .= isset($_GET['setName']) || isset($_GET['setSpec']) ? " <span style=\"color: #424242;\">/</span>" : "";
-									// Ist ein setName gesetzt? => Anzeigen
-									$content .= isset($_GET['setName']) ? " ". htmlentities($_GET['setName'], ENT_QUOTES, 'UTF-8') : "";
-									// Ist ein setSpec gesetzt? => Anzeigen
-									$content .= isset($_GET['setSpec']) ? " (". htmlentities($_GET['setSpec'], ENT_QUOTES, 'UTF-8') .")" : "";
-									$content .= "</h3>";
+									$h3 = $this->makeElementWithText('h3', $this->parameters['name']);
+									$this->contentElement->appendChild($h3);
+									if ($this->parameters['setName']) {
+										$h3->appendChild($this->document->createTextNode(' / ' . $this->parameters['setName']));
+									}
+									if ($this->parameters['setSpec']) {
+										$h3->appendChild($this->document->createTextNode('(' . $this->parameters['setSpec'] . ')'));
+									}
 
 									// Link auf OAI-XML
-									$content .= "	<p style=\"text-align: center;\"><a href=\"".$_GET['url']."?verb=ListRecords&amp;metadataPrefix=oai_dc".( isset($_GET['setSpec']) ? "&amp;set=".$_GET['setSpec'] : "" )."\" onclick=\"window.open(this.href, '_blank'); return false;\"><img style=\"vertical-align: top;\" src=\"resources/images/xml.png\" alt=\"OAI-XML anzeigen\" title=\"OAI-XML anzeigen\" /></a></p>";
-
-									$content .= "	<hr style=\"margin-top: 20px; margin-bottom: 20px; color: #424242;; width: 60%;\" />";
-									$content .= "	<div style=\"width: 525px; margin-left: auto; margin-right: auto;\">";
+									$a = $this->makeElementWithText('a', 'OAI-XML anzeigen', 'OAILink');
+									$a->setAttribute('onclick', 'window.open(this.href, "_blank"); return false;');
+									$XMLURL = $this->url . '?verb=ListRecords&metadataPrefix=oai_dc';
+									if (array_key_exists('setSpec', $this->parameters) && $this->parameters['setSpec'] !== 'allSets') {
+										$XMLURL .= '&set=' . $set['setSpec'];
+									}
+									$a->setAttribute('href', $XMLURL);
+									$this->contentElement->appendChild($this->makeElementWithContent('p', $a));
 
 									// Einzelne "Suchergebnissse"
 									$doc_nodes = $solr_add_xml->getElementsByTagName('doc');
@@ -263,11 +274,8 @@ class command_previewOAISet extends command {
 									$i = 1;
 
 									foreach ($doc_nodes as $doc_node) {
-
 										// Für die Ausgabe relevante Elemente ermitteln
 										// Geht einfacher mit XPath, aber Konstruktion leider komplizierter...
-
-
 										$doc_node_domdocument = new DOMDocument();
 										$doc_node_domdocument->loadXML($solr_add_xml->saveXML($doc_node));
 
@@ -279,49 +287,56 @@ class command_previewOAISet extends command {
 										$index_node 	= $xpath_doc_node->query("field[@name='oai_index']");
 										$isbd_node 		= $xpath_doc_node->query("field[@name='oai_isbd']");
 
-										$content .= "			<div id=\"div_".$i."\" class=\"result_list_record\" onmouseover=\"show_index(this.id)\" onmouseout=\"hide_index(this.id)\">\n";
-										$content .= "				<p class=\"result_web\">\n";
+										$div = $this->document->createElement('div');
+										$this->contentElement->appendChild($div);
+										$div->setAttribute('id', 'div_' . $i);
+										$div->setAttribute('class', 'result_list_record');
+										$div->setAttribute('onmouseover', 'show_index(this.id)');
+										$div->setAttribute('onmouseout', 'hide_index(this.id)');
+
+										$p = $this->document->createElement('p');
+										$div->appendChild($p);
+										$p->setAttribute('class', 'result_web');
 
 										// Hier wird immer die erste URL zur Verlinkung verwendet, aber unterschiedliches Javascript
+										$a = $this->makeElementWithText('a', $title_node->item(0)->nodeValue);
+										$p->appendChild($a);
+										$a->setAttribute('class', 'result_link_top');
+										$a->setAttribute('href', $url_nodes->item(0)->nodeValue);
 										if ($url_nodes->length > 1) {
 											// Es gibt mehrere Links
-											$content .= "					<a class=\"result_link_top\" href=\"".$url_nodes->item(0)->nodeValue."\" onclick=\"show_links('#div_".$i."_link'); return false;\">\n";
-										} else {
-											// Es gibt nur einen Link
-											$content .= "					<a class=\"result_link_top\" href=\"".$url_nodes->item(0)->nodeValue."\" onclick=\"window.open(this.href, '_blank'); return false;\">\n";
-										}
+											$a->setAttribute('onclick', 'show_links("#div_' . $i . '_link"); return false;');
 
-										// Titel - Header des Eintrags
-										$content .= "						".htmlentities($title_node->item(0)->nodeValue, ENT_QUOTES, "UTF-8", false)."\n";
-										$content .= "					</a>\n";
-										$content .= "				</p>\n";
-
-										// Falls es mehrere Links gibt, Linkliste erstellen
-										if ($url_nodes->length > 1) {
-
-											$content .= "				<div id=\"div_".$i."_link\" class=\"link_div\" style=\"display: none;\">\n";
-											$content .= "					<ul class=\"result_links\">\n";
-
-											// Listenelemente für jeden Link
+											$ul = $this->document->createElement('ul');
+											$p->appendChild($ul);
+											$ul->setAttribute('class', 'result_links');
 											foreach ($url_nodes as $url_node) {
-												$content .= "						<li><a href=\"".$url_node->nodeValue."\" onclick=\"window.open(this.href, '_blank'); return false;\">".$url_node->nodeValue."</a></li>\n";
+												$a = $this->makeElementWithText('a', $url_node->nodeValue);
+												$ul->appendChild($this->makeElementWithContent('li', $a));
+												$a->setAttribute('href', '$url_node->nodeValue');
+												$a->setAttribute('onclick', 'window.open(this.href, "_blank"); return false;');
 											}
 
-											$content .= "					</ul>\n";
-											$content .= "				</div>\n";
 										}
+										else {
+											// Es gibt nur einen Link
+											$a->setAttribute('onclick', 'window.open(this.href, "_blank")');
+										}
+
 
 										// Gibt es außer dem Titel weiteres zum anzeigen?
 
 										if ($isbd_node->item(0)->nodeValue != "" || $url_nodes->length > 1 || $format_nodes->length > 0) {
 
-											$content .= "				<p class=\"result_web\">\n";
+											$p = $this->document->createElement('p');
+											$div->appendChild($p);
+											$p->setAttribute('class', 'result_web');
 
 											if ($isbd_node->item(0)->nodeValue != "") {
-												$content .= "					".htmlentities($isbd_node->item(0)->nodeValue, ENT_QUOTES, "UTF-8", false)."\n";
+												$p->appendChild($this->document->createTextNode($isbd_node->item(0)->nodeValue));
 
 												if ($url_nodes->length > 1 || $format_nodes->length > 0) {
-													$content .= "<br />\n";
+													$p->appendChild($this->document->createElement('br'));
 												}
 											}
 
@@ -330,9 +345,12 @@ class command_previewOAISet extends command {
 
 												// Gibt es mehrere Links?
 												if ($url_nodes->length > 1) {
-													$content .= "<img src=\"resources/images/multiple_links.png\" alt=\"This record contains ".$url_nodes->length." links.\" title=\"This record contains ".$url_nodes->length." links.\" />";
+													$img = $this->document->createElement('img');
+													$p->appendChild($img);
+													$img->setAttribute('src', 'resources/images/multiple_links.png');
+													$img->setAttribute('alt', 'Zu diesem Eintrag gibt es ' . $url_nodes->length . ' Links.');
 													if ($format_nodes->length > 0) {
-														$content .= "&nbsp;";
+														$p->appendChild($this->createTextNode(' ')); // Non-breaking space
 													}
 												}
 
@@ -340,79 +358,78 @@ class command_previewOAISet extends command {
 												if ($format_nodes->length > 0) {
 
 													foreach ($format_nodes as $format_node) {
-
+														$formatName = '';
 														// Alle unterstützten Formate
 														switch ($format_node->nodeValue) {
-
 															case "application/pdf":
-																$content .= "<img src=\"resources/images/pdf.png\" alt=\"PDF\" title=\"PDF\" />";
+																$formatName = 'pdf';
 																break;
 
 															case "image/jpeg":
-																$content .= "<img src=\"resources/images/jpeg.png\" alt=\"JPG\" title=\"JPG\" />";
+																$formatName = 'jpeg';
 																break;
 
 															case "image/png":
-																$content .= "<img src=\"resources/images/png.png\" alt=\"PNG\" title=\"PNG\" />";
+																$formatName = 'png';
 																break;
 
 															case "image/tiff":
-																$content .= "<img src=\"resources/images/png.png\" alt=\"TIFF\" title=\"TIFF\" />";
+																$formatName = 'tiff';
 																break;
+														}
 
+														if ($formatName !== '') {
+															$img = $this->document->createElement('img');
+															$p->appendChild('img');
+															$img->setAttribute('src', 'resources/images/' . $formatName . '.png');
+															$img->setAttribute('alt', strtoupper($formatName));
 														}
 
 														// Leerzeichen, falls noch weitere Symbole folgen
 														if ($format_node->nodeValue != $format_nodes->item($format_nodes->length - 1)->nodeValue) {
-															$content .= "&nbsp;";
+															$p->appendChild($this->createTextNode(' ')); // Non-breaking space
 														}
 													}
 												}
 											}
-
-											$content .= "					</p>\n";
 										}
 
-										$content .= "				</div>\n";
-
 										// Indexeintrag
-										$content .= "				<div id=\"div_".$i."_index\" class=\"index_div\" style=\"display: none; position: absolute;\">\n";
-										$content .= "					<p>\n";
-										$content .=	"						".htmlentities($index_node->item(0)->nodeValue, ENT_QUOTES, "UTF-8", false)."\n";
-										$content .= "					</p>\n";
-										$content .= "				</div>\n";
+										$p = $this->makeElementWithText('p', $index_node->item(0)->nodeValue);
+										$this->contentElement->appendChild($p);
+										$p->setAttribute('class', 'index_div');
+										$p->setAttribute('id', 'div_' . $i . '_index');
 
 										$i++;
 									}
 
-									$content .= "			</div>\n";
-
-								} else {
-									$content .= "<p>Fehler beim Konvertieren der ListRecords-Antwort.</p>";
+								}
+								else {
+									$this->contentElement->appendChild($this->makeElementWithText('p', 'Fehler beim Konvertieren der ListRecords-Antwort.', 'error'));
 								}
 
-							} else {
-								$content .= "<p>Fehler beim Konvertieren der ListRecords-Antwort.</p>";
+							}
+							else {
+								$this->contentElement->appendChild($this->makeElementWithText('p', 'Fehler beim Konvertieren der ListRecords-Antwort.', 'error'));
 							}
 						} // Ende if oai_dc
 					}
 				}
 
-			} else {
-				$content .= "<p>Fehler beim parsen der ListRecords-Antwort.</p>";
+			}
+			else {
+				$this->contentElement->appendChild($this->makeElementWithText('p', 'Fehler beim Parsen der ListRecords-Antwort.', 'error'));
 			}
 
-		} else {
-			$content .= "<p>Der Server ist nicht erreichbar. Fehler: <br /><tt>".curl_error($oai_listrecords_ch)."</tt></p>";
+		}
+		else {
+			$p = $this->makeElementWithText('p', 'Der Server ist nicht erreichbar. Fehler: ', 'error');
+			$this->contentElement->appendChild($p);
+			$p->appendChild($this->makeElementWithText('pre', curl_error($oai_listrecords_ch)));
 		}
 
 		curl_close($oai_listrecords_ch);
-		echo str_replace("%content%", $content, $output);
-
-
-		return $content;
 	}
-
 
 }
 

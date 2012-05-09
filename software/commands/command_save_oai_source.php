@@ -10,13 +10,11 @@ require_once(dirname(__FILE__) . '/commands.php');
 class command_saveOAISource extends command {
 
 	public function appendContent () {
-		require_once(dirname(__FILE__) . "/../classes/oai_source_data.php");
-
-		$oai_source = new oai_source_data("post", 0, 0);
 
 		$sql = "INSERT INTO oai_sources (
 					url,
-					name,
+					name," .
+					/*
 					view_creator,
 					view_contributor,
 					view_publisher,
@@ -32,21 +30,23 @@ class command_saveOAISource extends command {
 					index_description,
 					index_source,
 					dc_date_postproc,
-					identifier_filter,
+					*/
+					"identifier_filter,
 					identifier_resolver,
 					identifier_resolver_filter,
 					identifier_alternative,
 					country_code,
 					active,
 					added,
-					" . ( strlen($oai_source->getFrom()) == 10 ? "from, " : "" )."
+					" . (strlen($this->parameters['from']) === 10 ?  "from, " : "" )."
 					`harvest_period`,
-					" . ( strlen($oai_source->getFrom()) == 10 ? "last_harvest, ": "" )."
+					" . (strlen($this->parameters['from']) === 10 ?  "last_harvest, ": "" )."
 					`reindex`,
 					`comment` )
 				VALUES (
-				'" . mysql_real_escape_string($oai_source->getUrl()) . "',
-				'" . mysql_real_escape_string($oai_source->getName()) . "',
+				'" . mysql_real_escape_string($this->parameters['url']) . "',
+				'" . mysql_real_escape_string($this->parameters['name']) . "'," .
+				/*
 				" . intval($oai_source->getViewCreator()) . ",
 				" . intval($oai_source->getViewContributor()) . ",
 				" . intval($oai_source->getViewPublisher()) . ",
@@ -62,18 +62,19 @@ class command_saveOAISource extends command {
 				" . intval($oai_source->getIndexDescription()) . ",
 				" . intval($oai_source->getIndexSource()) . ",
 				" . intval($oai_source->getDcDatePostproc()) . ",
-				'" . mysql_real_escape_string($oai_source->getIdentifierFilter()) . "',
-				'" . mysql_real_escape_string($oai_source->getIdentifierResolver()) . "',
-				'" . mysql_real_escape_string($oai_source->getIdentifierResolverFilter()) . "',
-				'" . mysql_real_escape_string($oai_source->getIdentifierAlternative()) . "',
-				'" . mysql_real_escape_string($oai_source->getCountry()) . "',
-				" . intval($oai_source->getActive()) . ",
+				*/
+				"'" . mysql_real_escape_string($this->parameters['identifier_filter']) . "',
+				'" . mysql_real_escape_string($this->parameters['identifier_resolver']) . "',
+				'" . mysql_real_escape_string($this->parameters['identifier_resolver_filter']) . "',
+				'" . mysql_real_escape_string($this->parameters['identifier_alternative']) . "',
+				'" . mysql_real_escape_string($this->parameters['country']) . "',
+				" . (isset($this->parameters['active']) ? 1 : 0) . ",
 				NOW(),
-				" . (strlen($oai_source->getFrom()) == 10 ? "'" . mysql_real_escape_string($oai_source->getFrom()) . "', " : "") ."
-				'" . mysql_real_escape_string($oai_source->getHarvestPeriod()) . "',
-				" . (strlen($oai_source->getFrom()) == 10 ? "'" . mysql_real_escape_string($oai_source->getFrom()) . "', " : "") ."
+				" . (strlen($this->parameters['from']) === 10 ? "'" . mysql_real_escape_string($this->parameters['from']) . "', " : "") ."
+				'" . mysql_real_escape_string($this->parameters['harvest_period']) . "',
+				" . (strlen($this->parameters['from']) === 10 ?  "'" . mysql_real_escape_string($this->parameters['from']) . "', " : "") ."
 				0,
-				'" . mysql_real_escape_string($oai_source->getComment()) . "')";
+				'" . mysql_real_escape_string($this->parameters['comment']) . "')";
 
 
 		if (mysql_query($sql, $this->db_link)) {
@@ -91,8 +92,7 @@ class command_saveOAISource extends command {
 						)
 						VALUES ";
 
-			$sets = $oai_source->getSets();
-print_r($sets);
+			$sets = $this->parameters['sets']['unchanged'];
 			foreach($sets as $set) {
 				$sql .= "(NULL,"
 						. intval($source_id) . ",
@@ -109,14 +109,16 @@ print_r($sets);
 			if (mysql_query($sql, $this->db_link)) {
 				$this->contentElement->appendChild($this->makeElementWithText('p', 'OAI-Quelle gespeichert.'));
 				$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zur Startseite'));
-			} else {
-				$p = $this->makeElementWithText('p', 'Die Sets konnten nicht gespeichert werden. Bitte OAI-Quelle (zum Beispiel über phpMyAdmin) löschen und ggf. neu anlegen.');
+			}
+			else {
+				$p = $this->makeElementWithText('p', 'Die Sets konnten nicht gespeichert werden. Bitte die OAI-Quelle (zum Beispiel über phpMyAdmin) löschen und ggf. neu anlegen.');
 				$this->contentElement->appendChild($p);
 				$p->setAttribute('class', 'error');
 
 				$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zurück'));
 			}
-		} else {
+		}
+		else {
 			$error = new error($this->document);
 			$this->contentElement->appendChild($error->SQLError($sql, mysql_error()));
 			$this->contentElement->appendChild($this->makeFormWithSubmitButton('Zurück'));

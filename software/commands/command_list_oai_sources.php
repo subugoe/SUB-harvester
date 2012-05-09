@@ -292,7 +292,9 @@ class command_listOAISources extends command {
 	private function filterSection () {
 		$container = $this->document->createElement('div');
 
-		$container->appendChild($this->filterForm());
+		$filterForm = $this->filterForm();
+		$filterForm->setAttribute('id', 'command');
+		$container->appendChild($filterForm);
 
 		$form = $this->makeForm();
 		$container->appendChild($form);

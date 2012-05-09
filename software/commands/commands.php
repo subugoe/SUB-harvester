@@ -53,7 +53,7 @@ abstract class command {
 				break;
 			case 'delete_oai_source':
 				require_once(dirname(__FILE__) . '/command_delete_oai_source.php');
-				$commandObject = new command_listOAISource();
+				$commandObject = new command_deleteOAISource();
 				break;
 			case 'preview_oai_set':
 				require_once(dirname(__FILE__) . '/command_preview_oai_set.php');
@@ -462,6 +462,188 @@ abstract class command {
 		$container->appendChild($this->makeClear());
 
 		return $container;
+	}
+
+
+
+	public function makeGeneralInformation ($oai_source_data, $oai_source_status = 0) {
+		$container = $this->document->createElement('div');
+		$container->appendChild($this->makeElementWithText('h3', 'Allgemeine Informationen'));
+
+		$dl = $this->document->createElement('dl');
+		$container->appendChild($dl);
+		$this->appendDTDDWithTextTo('Name:', $oai_source_data['name'], $dl);
+
+		if ($oai_source_status > 0) {
+			$lastDD = $dl->lastChild;
+			$a = $this->makeElementWithText('a', 'Es liegen Fehlermeldungen für diese OAI-Quelle vor. Bitte klicken um zu den Logs zu springen.', 'errorIcon');
+			$dl->lastChild->appendChild($a);
+			$a->setAttribute('href', '#logs');
+		}
+
+		$this->appendDTDDWithTextTo('Request URL:', $oai_source_data['url'], $dl);
+
+		if (array_key_exists('id', $oai_source_data)) {
+			$this->appendDTDDWithTextTo('Interne ID:', $oai_source_data['id'], $dl);
+		}
+
+		if (array_key_exists('added', $oai_source_data)) {
+			$this->appendDTDDWithTextTo('Hinzugefügt:', $oai_source_data['added'], $dl);
+		}
+
+		if (array_key_exists('country_name', $oai_source_data)) {
+			$this->appendDTDDWithTextTo('Land:', $oai_source_data['country_name'], $dl);
+		}
+
+		if (array_key_exists('active', $oai_source_data)) {
+			$img = $this->document->createElement('img');
+			if ($oai_source_data['active']) {
+				$img->setAttribute('src', 'resources/images/ok.png');
+				$img->setAttribute('alt', 'OAI-Quelle wird geharvestet.');
+			} else {
+				$img->setAttribute('src', 'resources/images/not_ok.png');
+				$img->setAttribute('alt', 'OAI-Quelle wird nicht geharvestet.');
+			}
+			$this->appendDTDDWithContentTo($this->document->createTextNode('Aktiv:'), $img, $dl);
+		}
+
+		if (array_key_exists('reindex', $oai_source_data)) {
+			$img = $this->document->createElement('img');
+			if ($oai_source_data['reindex']) {
+				$img->setAttribute('src', 'resources/images/ok.png');
+				$img->setAttribute('alt', 'OAI-Quelle wird beim nächsten Harvesten komplett neu indexiert.');
+			} else {
+				$img->setAttribute('src', 'resources/images/not_ok.png');
+				$img->setAttribute('alt', 'OAI-Quelle ist nicht zur Neuindexierung markiert.');
+			}
+			$this->appendDTDDWithContentTo($this->document->createTextNode('Neuindexierung:'), $img, $dl);
+		}
+
+		if (array_key_exists('from', $oai_source_data)) {
+			$fromText = 'Für diese Quelle ist kein Startzeitpunkt festgelegt.';
+			if (!is_null($oai_source_data['from'])) {
+				$fromText = $oai_source_data['from'];
+			}
+			$this->appendDTDDWithTextTo('Request URL:', $fromText, $dl);
+		}
+
+		if (array_key_exists('harvest_period', $oai_source_data)) {
+			$intervalText = 'täglich';
+			if ($oai_source_data['harvest_period'] > 1) {
+				$intervalText = 'Alle ' . $oai_source_data['harvest_period'] . ' Tage';
+			}
+			$this->appendDTDDWithTextTo('Harvest-Rhythmus:', $intervalText, $dl);
+		}
+
+		if (array_key_exists('last_harvested', $oai_source_data)) {
+			$lastHarvestDate = 'Diese Quelle wurde noch nicht geharvested.';
+			if (!empty($oai_source_data['last_harvested'])) {
+				$lastHarvestDate = $oai_source_data['last_harvested'];
+			}
+			$this->appendDTDDWithTextTo('Letztes erfolgreiches Harvesten:', $lastHarvestDate, $dl);
+		}
+
+		if (array_key_exists('last_indexed', $oai_source_data)) {
+			$lastIndexDate = 'Diese Quelle wurde noch nicht indexiert.';
+			if (!empty($oai_source_data['last_indexed'])) {
+				$lastIndexDate = $oai_source_data['last_indexed'];
+			}
+			$this->appendDTDDWithTextTo('Letztes erfolgreiches Indizieren:', $lastIndexDate, $dl);
+		}
+
+		if (array_key_exists('next_harvest', $oai_source_data)) {
+			$nextHarvestDate = $oai_source_data['next_harvest'];
+			if ($nextHarvestDate === NULL) {
+				$nextHarvestDate = strftime('%A, %d. %B %Y', time() + 86400);
+			}
+			$this->appendDTDDWithTextTo('Nächstes Harvesten:', $nextHarvestDate, $dl);
+		}
+
+		$index_entry_count = $this->getIndexEntryCount($oai_source_data);
+		$class = '';
+		if ($index_entry_count === -1) {
+			$index_entry_count = 'Der Index ist zurzeit nicht erreichbar.';
+			$class = 'warning';
+		}
+		$this->appendDTDDWithTextTo('Anzahl der Indexeinträge:', $index_entry_count, $dl, $class);
+
+		if (array_key_exists('comment', $oai_source_data)) {
+			$this->appendDTDDWithTextTo('Kommentar:', $oai_source_data['comment'], $dl);
+		}
+
+		$container->appendChild($this->makeClear());
+
+		return $container;
+	}
+
+
+
+	public function getIndexEntryCount ($oai_source_data) {
+		$index_entry_count = 0;
+
+		// Index abfragen
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, SOLR . '/select?version=2.2&rows=0&q=oai_repository_id%3A' . $oai_source_data['id']);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+		$http_response = curl_exec($ch);
+
+		if ($http_response && curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200) {
+			$dom = new DOMDocument();
+			$dom->loadXML($http_response);
+
+			$XPath = new DOMXPath($dom);
+			$XPath_count_query = $XPath->query('/response/result/@numFound');
+
+			$index_entry_count = $XPath_count_query->item(0)->nodeValue;
+		}
+		else {
+			// Der Server ist nicht erreichbar
+			$index_entry_count = -1;
+		}
+
+		return $index_entry_count;
+	}
+
+
+
+	public function makeButtons ($oai_source_data) {
+		$form = $this->makeForm();
+		$form->setAttribute('id', 'command');
+
+		$form->appendChild($this->makeInput('hidden', 'do', 'list_oai_sources'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_url'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_bool', 'AND'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_sortby', 'name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_sorthow', 'ASC'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'id'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'start', 0));
+		$form->appendChild($this->makeInputForParameter('hidden', 'limit', 20));
+		$form->appendChild($this->makeInputForParameter('hidden', 'show_active', 0));
+		$form->appendChild($this->makeInputForParameter('hidden', 'show_status', 0));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+		$form->appendChild($this->makeInputForParameter('hidden', 'filter_name'));
+
+		$p = $this->document->createElement('p');
+		$form->appendChild($p);
+		$p->setAttribute('class', 'buttons');
+
+		$button = $this->makeInput('submit', NULL, 'Bearbeiten');
+		$p->appendChild($button);
+		$button->setAttribute('onclick', 'edit(' . $oai_source_data['id'] . ')');
+
+		$button = $this->makeInput('submit', NULL, 'Löschen');
+		$p->appendChild($button);
+		$button->setAttribute('onclick', 'remove(' . $oai_source_data['id'] . ')');
+
+		$button = $this->makeInput('submit', NULL, 'Zurück zur Quellenliste');
+		$p->appendChild($button);
+
+		return $form;
 	}
 
 }
