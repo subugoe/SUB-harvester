@@ -301,7 +301,7 @@ if (strlen($current_filter_name) >= 3) {
 	foreach ($current_filter_name_single as $filter_name) {
 		if (strlen($filter_name) >= 3) {
 			$current_filter_name_parsed .= strlen($current_filter_name_parsed) == 0 ? "" : " ";
-			$current_filter_name_parsed .= "+".$filter_name;
+			$current_filter_name_parsed .= $filter_name;
 		}
 	}
 }
@@ -328,12 +328,11 @@ if ((isset($current_filter_name_parsed) ? strlen($current_filter_name_parsed) >=
 
 	// Zum "where" string hinzufügen
 	$sql_query_select_oai_sources_where .= (isset($current_filter_name_parsed) ? strlen($current_filter_name_parsed) > 0 : false) ?
-		"MATCH (name) AGAINST ('" . $current_filter_name_parsed . "' IN BOOLEAN MODE)" : "";
+		"name LIKE '%" . $current_filter_name_parsed . "%'" : "";
 	$sql_query_select_oai_sources_where .= (isset($current_filter_name_parsed) && isset($current_filter_url_parsed) ? strlen($current_filter_name_parsed) > 0 && strlen($current_filter_url_parsed) > 0 : false) ? " " . $current_filter_bool . " " : "";
 	$sql_query_select_oai_sources_where .= (isset($current_filter_url_parsed) ? strlen($current_filter_url_parsed) > 0 : false) ? $current_filter_url_parsed : "";
 	$sql_query_select_oai_sources_where .= ")";
 }
-
 
 // Abfrage der Anzahl der ausgewählten OAI-Quellen, JOIN wird wenn möglich übergangen
 if($current_show_status > 0) {

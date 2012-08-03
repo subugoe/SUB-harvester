@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `countries` (
   `name_english` varchar(150) COLLATE utf8_unicode_ci NOT NULL,
   `name_german` varchar(150) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`code`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- Daten für Tabelle `countries`
@@ -305,7 +305,7 @@ CREATE TABLE IF NOT EXISTS `oai_logs` (
   `deleted` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `oai_set` (`oai_set`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 
 --
 -- Daten für Tabelle `oai_logs`
@@ -333,7 +333,7 @@ CREATE TABLE IF NOT EXISTS `oai_sets` (
   KEY `oai_source` (`oai_source`),
   KEY `harvest_status` (`harvest_status`),
   KEY `index_status` (`index_status`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 
 --
 -- Daten für Tabelle `oai_sets`
@@ -350,7 +350,7 @@ CREATE TABLE IF NOT EXISTS `oai_source_edit_sessions` (
   `oai_source` int(11) NOT NULL,
   `timestamp` datetime NOT NULL,
   PRIMARY KEY (`oai_source`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- Daten für Tabelle `oai_source_edit_sessions`
@@ -398,9 +398,7 @@ CREATE TABLE IF NOT EXISTS `oai_sources` (
   PRIMARY KEY (`id`),
   KEY `active` (`active`),
   KEY `next_harvest` (`last_harvest`),
-  FULLTEXT KEY `url` (`url`),
-  FULLTEXT KEY `name` (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 
 --
 -- Daten für Tabelle `oai_sources`
