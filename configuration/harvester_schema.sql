@@ -397,10 +397,9 @@ CREATE TABLE IF NOT EXISTS `oai_sources` (
   `comment` text COLLATE utf8_unicode_ci,
   PRIMARY KEY (`id`),
   KEY `active` (`active`),
-  KEY `next_harvest` (`last_harvest`),
+  KEY `next_harvest` (`last_harvest`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 
 --
 -- Daten für Tabelle `oai_sources`
 --
-

@@ -20,6 +20,11 @@ define("SOLR",				'http://localhost:8080/solr/test');
 define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/test');
 //define("DATA_FOLDER",		'C:/harvest_data');
 
+define("METADATA_FORMAT",	'extpp');
+
+// File name of stylesheet in software/xsl to convert the downloaded OAI-XML to Solr XML.
+define("XSL_FILENAME",		'pica2solr.xsl');
+
 
 
 // ***** gemeinsam genutzte Einstellungen *****

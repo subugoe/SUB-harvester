@@ -324,8 +324,8 @@ foreach($harvest_tasks as $oai_source) {
 					} else {
 						// Die erste Anfrage
 						// Format
-						$url .= "&metadataPrefix=oai_dc";
-						
+						$url .= "&metadataPrefix=".METADATA_FORMAT;
+
 						// Startzeitpunkt ermitteln
 						// Ist er von den Quelleneinstellungen vorgegeben?
 						if (strlen($source_from) > 1) {
