@@ -514,7 +514,7 @@ foreach ($day_folders as $day_folder) {
 												// Modifizierten DOM speichern und erneut parsen
 												$dom->loadXML($dom->saveXML());
 
-												// XSLT anwwenden
+												// XSLT anwenden
 												$solr_add_string = $xsl->transformToXML($dom);
 
 												if ($solr_add_string) {
