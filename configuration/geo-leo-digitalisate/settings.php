@@ -18,7 +18,6 @@ define("SERVICE_NAME", 		'GEO-LEO Digitalisate');
 define("SOLR",				'http://localhost:8080/solr/geo-leo-digitalisate');
 
 define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/geo-leo-digitalisate');
-//define("DATA_FOLDER",		'C:/harvest_data');
 
 define("METADATA_FORMAT",	'oai_dc');
 
