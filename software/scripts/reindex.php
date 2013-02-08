@@ -32,13 +32,13 @@ $archiveFileList = glob($archiveFolder . '/*.zip');
 /**
  * a) unzip harvest folders and move unzipped data
  */
-foreach ($archiveFileList as $id => $zipPath) {
+foreach ($archiveFileList as $nr => $zipPath) {
 	$zip = new ZipArchive;
 	if ($zip->open($zipPath)) {
 		echo("Extracting zip file " . $zipPath . "\n");
 
 		// extract to temp folder
-		$name = 'reindex-' . $id;
+		$name = 'reindex-' . sprintf('%05d', $nr);
 		$targetPath = $tempFolder . '/' . $name;
 		$zip->extractTo($targetPath);
 		$zip->close();
