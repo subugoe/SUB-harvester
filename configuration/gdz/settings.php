@@ -15,7 +15,7 @@ include(dirname(__FILE__) . '/db_connect.php');
 define("SERVICE_NAME", 		'Göttinger Digitalisierungszentrum');
 
 // Adresse des Solr-Index
-define("SOLR",				'http://localhost:8080/solr/gdz');
+define("SOLR",				'http://solr-harvest.tc.sub.uni-goettingen.de/solr/gdz');
 
 define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/gdz');
 //define("DATA_FOLDER",		'C:/harvest_data');

@@ -15,7 +15,7 @@ include(dirname(__FILE__) . '/db_connect.php');
 define("SERVICE_NAME", 		'DigiZeitschriften');
 
 // Adresse des Solr-Index
-define("SOLR",				'http://localhost:8080/solr/digizeitschriften');
+define("SOLR",				'http://solr-harvest.tc.sub.uni-goettingen.de/solr/digizeitschriften');
 
 define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/digizeitschriften');
 //define("DATA_FOLDER",		'C:/harvest_data');
