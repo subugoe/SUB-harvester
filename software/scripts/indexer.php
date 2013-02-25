@@ -70,6 +70,7 @@ $oai_indexer_ch = curl_init();
 curl_setopt($oai_indexer_ch, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($oai_indexer_ch, CURLOPT_URL, SOLR_INDEXER);
 curl_setopt($oai_indexer_ch, CURLOPT_POST, 1);
+curl_setopt($oai_indexer_ch, CURLOPT_HTTPHEADER, array("Content-Type: application/xml"));
 
 // Harvest-Verzeichnis einlesen
 $day_folders = scandir(HARVEST_FOLDER);
@@ -87,7 +88,6 @@ if (!file_exists(ARCHIVE_FOLDER)) {
 // Es wird nicht geprüft, ob das Verzeichnis einen Datumscode besitzt, es werden alle Verzeichnisse
 // durchgegangen, unabhängig von ihrer Bezeichnung
 foreach ($day_folders as $day_folder) {
-
 	// Gleiches Verzeichnis im Temp-Ordner anlegen
 	// Fehler abfangen TODO
 	@mkdir(TEMP_FOLDER."/".$day_folder, CHMOD);
@@ -211,7 +211,6 @@ foreach ($day_folders as $day_folder) {
 					// Setverzeichnisse z. B. "5497524"
 					// Gleich Prüfung wie bei den Quellenverzeichnissen.
 					foreach ($set_folders as $set_folder) {
-
 						// Hier werden nur Verzeichnisse beachtet, die aus Zahlen bestehen = Set-Id
 						if (preg_match("/[0-9]+/", $set_folder)) {
 
@@ -530,16 +529,9 @@ foreach ($day_folders as $day_folder) {
 													// Ergebnis Speichern
 
 													$solr_filename = $full_set_folder_path_temp."solr_".$i.".xml";
+													file_put_contents($solr_filename, $solr_add_string);
 
-													$file = fopen($solr_filename, "w");
-													fputs($file, $solr_add_string);
-													fclose($file);
-
-													// Datei Indexieren
-													$post = array('file' => '@'.$solr_filename);
-
-													curl_setopt($oai_indexer_ch, CURLOPT_POSTFIELDS, $post);
-
+													curl_setopt($oai_indexer_ch, CURLOPT_POSTFIELDS, $solr_add_string);
 													$http_response = curl_exec($oai_indexer_ch);
 
 													// Gibt es Fehlermeldungen vom Solr-Index?
@@ -633,7 +625,7 @@ foreach ($day_folders as $day_folder) {
 											WHERE id = ".$set_folder;
 
 									// Daten bleiben im Index
-									$post = array('file' => '@' . dirname(__FILE__) . '/../templates/commit.xml');
+									$post = file_get_contents(dirname(__FILE__) . '/../templates/commit.xml');
 
 									// Damit wurde ein Set der Quelle erfolgreich indexiert
 									$source_indexing_successful = true;
@@ -658,7 +650,7 @@ foreach ($day_folders as $day_folder) {
 											WHERE id = ".$set_folder;
 
 									// TODO Verzeichnisse müssen noch ersetzt werden!!!!!
-									$post = array('file' => '@' . dirname(__FILE__) . '/../templates/rollback.xml');
+									$post = file_get_contents(dirname(__FILE__) . '/../templates/rollback.xml');
 
 									// Da bei der Indexierung ein Fehler aufgetreten ist, werden die geharvesteten Dateien
 									// und die bisher konvertierten Dateien in den Fehlerordner verschoben.
@@ -759,7 +751,7 @@ foreach ($day_folders as $day_folder) {
 set_time_limit(600);
 // Alle Löschanfragen sind in der Datei postproc.xml,
 // dort können auch weitere Korrekturen eingfügt werden.
-$post = array('file' => '@' . dirname(__FILE__) . '/../templates/postproc.xml');
+$post = file_get_contents(dirname(__FILE__) . '/../templates/postproc.xml');
 curl_setopt($oai_indexer_ch, CURLOPT_POSTFIELDS, $post);
 $http_response = curl_exec($oai_indexer_ch);
 
@@ -769,7 +761,7 @@ $http_response = curl_exec($oai_indexer_ch);
 // Zur Sicherheit, falls optimize bei großen Commits länger dauert.
 set_time_limit(1200);
 // Fehler abfangen? TODO
-$post = array('file' => '@' . dirname(__FILE__) . '/../templates/optimize.xml');
+$post = file_get_contents(dirname(__FILE__) . '/../templates/optimize.xml');
 curl_setopt($oai_indexer_ch, CURLOPT_POSTFIELDS, $post);
 $http_response = curl_exec($oai_indexer_ch);
 // Doppelt, sonst gibt Solr den Speicher nicht frei (warum auch immer...)
