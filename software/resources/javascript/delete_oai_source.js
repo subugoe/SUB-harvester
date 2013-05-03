@@ -12,7 +12,7 @@ function show(id) {
 }
 
 // Ruft die Löschseite einer OAI-Quelle auf
-function remove(id) {
+function removeSource(id) {
 	document.forms[0].do.value = 'delete_oai_source';
 }
 

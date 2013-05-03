@@ -71,7 +71,7 @@ if (!$db_link) {
 			break;
 
 		case "add_oai_source":
-			$output = str_replace("%javascript%", "<script src=\"$jquery\" type=\"text/javascript\" charset=\"utf-8\"></script><script src=\"resources/javascript/add_oai_source.js\" type=\"text/javascript\" charset=\"utf-8\"></script><script src=\"resources/javascript/jquery-ui-1.8.14.custom.min.js\" type=\"text/javascript\" charset=\"utf-8\"></script><link type=\"text/css\" href=\"resources/css/jquery-ui-1.8.14.custom.css\" rel=\"stylesheet\" />", $output);
+			$output = str_replace("%javascript%", "<script src=\"$jquery\" type=\"text/javascript\" charset=\"utf-8\"></script><script src=\"resources/javascript/add_oai_source.js\" type=\"text/javascript\" charset=\"utf-8\"></script><script src=\"resources/javascript/jquery-ui-1.8.18.custom.min.js\" type=\"text/javascript\" charset=\"utf-8\"></script><link type=\"text/css\" href=\"resources/css/jquery-ui-1.8.18.custom.css\" rel=\"stylesheet\" />", $output);
 			require_once(dirname(__FILE__) . "/commands/add_oai_source.php");
 			break;
 
@@ -89,10 +89,10 @@ if (!$db_link) {
 			$output = str_replace("%javascript%", "
 			<script src=\"$jquery\" type='text/javascript' charset='utf-8'></script>
 			<script src='resources/javascript/edit_oai_source.js' type='text/javascript' charset='utf-8'></script>
-			<script src='resources/javascript/jquery-ui-1.8.14.custom.min.js' type='text/javascript' charset='utf-8'></script>
+			<script src='resources/javascript/jquery-ui-1.8.18.custom.min.js' type='text/javascript' charset='utf-8'></script>
 			<script src='resources/javascript/jquery.uitablefilter.js' type='text/javascript' charset='utf-8'></script>
 			<script src='resources/javascript/jquery.tablesorter.min.js' type='text/javascript' charset='utf-8'></script>
-			<link type='text/css' href='resources/css/jquery-ui-1.8.14.custom.css' rel='stylesheet'/>", $output);
+			<link type='text/css' href='resources/css/jquery-ui-1.8.18.custom.css' rel='stylesheet'/>", $output);
 			require_once(dirname(__FILE__) . "/commands/edit_oai_source.php");
 			break;
 

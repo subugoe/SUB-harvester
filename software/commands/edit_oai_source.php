@@ -323,7 +323,7 @@ if ($_POST['id'] != "") {
 
 		$content .= "
 			<p class='buttons'>
-				<input type='submit' value='Löschen' onclick='remove(" . $oai_source_data['id'] . ")'></input>
+				<input type='submit' value='Löschen' onclick='removeSource(" . $oai_source_data['id'] . ");return true;'></input>
 				<input type='submit' value='Abbrechen' onclick='document.forms[0].elements[\"edit_abort\"].value = 1;'></input>
 				<input " . ($sets->listSetsSuccessful() | $sets->getErrorCode() == 'noSetHierarchy' ? "" : "disabled='disabled'"). " type='submit' value='Speichern' class='default'></input>
 			</p>";
