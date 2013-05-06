@@ -194,7 +194,7 @@
   	
   	<xsl:template match="pan:entry[@key = 'hierarchyLevel']">
   		<field name="hierarchyLevel_s">
-  			<xsl:value-of select="."/>
+  			<xsl:value-of select="@value"/>
   		</field>
   	</xsl:template>
 
