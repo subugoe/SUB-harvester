@@ -55,9 +55,14 @@
 	
 	<xsl:template match="pan:URI">
 		<xsl:choose>
-			<xsl:when test="substring(., 1, 4) = 'doi:' or substring(., 1, 18) = 'http://dx.doi.org/'">
+			<xsl:when test="substring(., 1, 4) = 'doi:'">
 				<field name="doi">
-					<xsl:value-of select="."/>
+					<xsl:value-of select="substring-after(., 'doi:')"/>
+				</field>
+			</xsl:when>
+			<xsl:when test="substring(., 1, 18) = 'http://dx.doi.org/'">
+				<field name="doi">
+					<xsl:value-of select="substring-after(., 'http://dx.doi.org/')"/>
 				</field>
 			</xsl:when>
 			<xsl:otherwise>
@@ -66,6 +71,12 @@
 				</field>
 			</xsl:otherwise>
 		</xsl:choose>
+	</xsl:template>
+	
+	<xsl:template match="pan:abstract">
+		<field name="abstract">
+			<xsl:value-of select="."/>
+		</field>
 	</xsl:template>
 	
 	
