@@ -11,21 +11,24 @@ Der Harvester benötigt PHP 5.3, Zugang zu einer MySQL Datenbank und für die Ko
 
 Zur Installation, diesen Ordner über den Webserver zugänglich machen.
 
-Zur Konfiguration einer Harvester-Instanz mit einer gegebenen <ID> folgende Schritte durchführen:
+Zur Konfiguration einer Harvester-Instanz mit einer gegebenen `ID` folgende Schritte durchführen:
 
-1. Anlegen eines Ordners mit Namen <ID> im Ordner configuration. Dieser Ordner enthält die Dateien:
+1. Anlegen eines Ordners mit Namen `ID` im Ordner configuration. Dieser Ordner enthält die Dateien:
 
 	1. **db_connect.php** mit Zugangsdaten zur MySQL Datenbank, der Inhalt dieser Datei sollte folgendes Format haben:
-
+		
+		```
 		<?php
 			define("DB_SERVER",		"localhost");
 			define("DB_USERNAME", 	"harvest");
 			define("DB_PASSWORD", 	"");
 			define("DB_NAME", 		"harvest");
 		?>
+		```
 
 	2. **settings.php** mit Einstellungen für Pfade und den Solr Index. Der Inhalt dieser Date sollte folgendes Format haben:
 
+		```
 		<?php
 			// MySQL Verbindungsdaten
 			include(dirname(__FILE__) . '/db_connect.php');
@@ -38,8 +41,9 @@ Zur Konfiguration einer Harvester-Instanz mit einer gegebenen <ID> folgende Schr
 			// gemeinsam genutzte Einstellungen
 			include(dirname(__FILE__) . '/../settings-common.php');
 		?>
+		```
 
-2. Anlegen eines Ordners mit Namen <ID> im Hauptordner. Dieser Ordner enhält:
+2. Anlegen eines Ordners mit Namen `ID` im Hauptordner. Dieser Ordner enhält:
 
 	1. **.htaccess** mit dem Inhalt: `SetEnv HARVESTER_CONFIGURATION_NAME <ID>`
 	2. **index.php**: Symlink auf ../software/index.php
@@ -61,9 +65,9 @@ Der Harvester bietet über den Webserver eine Oberfläche zur Verwaltung der geh
 
 
 ## Harvesting und Indizieren
-Zum Ausführen des eigentlichen Harvestings:
+Zum Ausführen des eigentlichen Harvestings. In der Shell:
 
-1. die Umgebungsvariable `HARVESTER_CONFIGURATION_NAME` auf die <ID> der gewünschten Instanz setzen
+1. die Umgebungsvariable `HARVESTER_CONFIGURATION_NAME` auf die `ID` der gewünschten Instanz setzen
 2. das Skript *software/scripts/harvester.php* ausführen
 3. das Skript *software/scripts/indexer.php* ausführen
 
@@ -73,7 +77,7 @@ Erfolgs- und Fehlermeldungen dieser Skripte sind in der Weboberfläche einsehbar
 ## Interner Ablauf
 Die Software erfährt über die Umgebungsvariable `HARVESTER_CONFIGURATION_NAME` den Namen der gewünschten Konfiguration und lädt dementsprechend die Einstellungen für Pfade und Datenbankzugriff. In der MySQL-Datenbank sind die bekannten OAI-Repositories, deren Sets und die ausgewählten Sets gespeichert.
 
-Die geladenen Daten werden im Datenordner data/<ID>/ abgelegt. Dieser kann folgenden Unterordner haben:
+Die geladenen Daten werden im Datenordner data/`ID`/ abgelegt. Dieser kann folgenden Unterordner haben:
 
 * **harvest**: hier werden von harvester.php die geladenen OAI Daten abgelegt
 * **temp**: enthält kurzzeitig während der Konversion von OAI zu Solr anfallende Daten
