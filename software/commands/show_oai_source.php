@@ -571,7 +571,7 @@ $content .= "				</div>\n";
 // Buttons
 $content .= "				<p style=\"text-align: center; margin-top: 25px;\">\n";
 $content .= "					<input type=\"submit\" value=\"Bearbeiten\" onclick=\"edit(".$oai_source_data['id'].")\"></input>&nbsp;\n";
-$content .= "					<input type=\"submit\" value=\"Löschen\" onclick=\"remove(".$oai_source_data['id'].")\"></input>&nbsp;\n";
+$content .= "					<input type=\"submit\" value=\"Löschen\" onclick=\"removeSource(".$oai_source_data['id'].")\"></input>&nbsp;\n";
 $content .= "					<input type=\"submit\" value=\"Zur Trefferliste\" onclick=\"document.forms[0].action = 'index.php#filter'\"></input>\n";
 $content .= "				</p>\n";
 $content .= "			</form>\n";
