@@ -19,7 +19,7 @@ define("SOLR",				'http://solr-harvest.tc.sub.uni-goettingen.de/solr/jfk-institu
 
 define("DATA_FOLDER",		'/var/www/htdocs/harvester/data/jfk-institut-zeitungen');
 
-define("METADATA_FORMAT",	'oai_dc');
+define("METADATA_FORMAT",	'marc21');
 
 // File name of stylesheet in software/xsl to convert the downloaded OAI-XML to Solr XML.
 define("XSL_FILENAME",		'fu-marc2solr.xsl');
