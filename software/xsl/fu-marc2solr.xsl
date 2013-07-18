@@ -172,10 +172,31 @@
     	<xsl:variable name="field" select="@tag"/>
 
 		<xsl:choose>
-			<xsl:when test="@tag='245' and subfield[@code='a']">
+			<xsl:when test="@tag='245' and marc:subfield[@code='a']">
+				<xsl:variable name="title">
+					<xsl:value-of select="marc:subfield[@code='a']"/>			
+				</xsl:variable>
+				<xsl:variable name="title-sort">
+					<xsl:choose>
+						<xsl:when test="contains($title, '&gt;&gt;')">
+							<xsl:value-of select="normalize-space(substring-after(marc:subfield[@code='a'], '&gt;&gt;'))"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="normalize-space(marc:subfield[@code='a'])"/>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+			
 				<field name="title">
-					<xsl:value-of select="marc:subfield[@code='a']"/>
+					<xsl:value-of select="$title"/>
 				</field>
+				<field name="title_sort">
+					<xsl:value-of select="$title-sort"/>					
+				</field>
+				<field name="title_facet">
+					<xsl:value-of select="translate(substring($title-sort, 1, 1), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>
+				</field>
+				<field name="title_facet">0</field>
 			</xsl:when>
 			<xsl:when test="@tag='260'">
 				<xsl:if test="marc:subfield[@code='a'] or marc:subfield[@code='b']">
@@ -221,6 +242,18 @@
 				<field name="language">
 					<xsl:value-of select="marc:subfield[@code='a']"/>
 				</field>
+			</xsl:when>
+			<xsl:when test="@tag='022'">
+				<field name="issn">
+					<xsl:value-of select="marc:subfield[@code='a']"/>
+				</field>
+			</xsl:when>
+			<xsl:when test="@tag='016'">
+				<xsl:if test="marc:subfield[@code='2'] = 'DE-600'">
+					<field name="zdb">
+						<xsl:value-of select="marc:subfield[@code='a']"/>
+					</field>
+				</xsl:if>
 			</xsl:when>
 			
 		</xsl:choose>
